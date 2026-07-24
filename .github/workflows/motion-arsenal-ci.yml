@@ -1,0 +1,97 @@
+name: Motion Arsenal CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: motion-arsenal-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: validate
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Verify Chrome
+        shell: powershell
+        run: |
+          $chrome = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+          if (-not (Test-Path -LiteralPath $chrome)) {
+            throw "Chrome is required for browser verification: $chrome"
+          }
+          & $chrome --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Lint and typecheck
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit and security tests
+        run: npm test
+
+      - name: Start Vite and run browser tests
+        shell: powershell
+        run: |
+          $stdout = Join-Path $env:RUNNER_TEMP 'motion-arsenal-vite.stdout.log'
+          $stderr = Join-Path $env:RUNNER_TEMP 'motion-arsenal-vite.stderr.log'
+          $vite = Start-Process -FilePath 'npm.cmd' -ArgumentList @('run', 'dev', '--', '--host', '127.0.0.1') -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+
+          try {
+            $ready = $false
+            for ($attempt = 0; $attempt -lt 60; $attempt++) {
+              try {
+                $response = Invoke-WebRequest -Uri 'http://127.0.0.1:5195/' -UseBasicParsing -TimeoutSec 2
+                if ($response.StatusCode -eq 200) {
+                  $ready = $true
+                  break
+                }
+              } catch {
+                Start-Sleep -Seconds 1
+              }
+            }
+
+            if (-not $ready) {
+              Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue
+              Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue
+              throw 'Vite did not become ready on port 5195.'
+            }
+
+            npm run test:community:e2e
+            if ($LASTEXITCODE -ne 0) { throw 'Community E2E failed.' }
+
+            npm run test:favorites
+            if ($LASTEXITCODE -ne 0) { throw 'Favorites browser test failed.' }
+
+            npm run test:previews:smoke
+            if ($LASTEXITCODE -ne 0) { throw 'Preview smoke test failed.' }
+          } finally {
+            if ($vite -and -not $vite.HasExited) {
+              Stop-Process -Id $vite.Id -Force
+            }
+            Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue
+            Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue
+          }

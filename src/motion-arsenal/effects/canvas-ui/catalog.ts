@@ -1,0 +1,213 @@
+import { lazy } from 'react';
+import type { EffectEntry } from '../../types';
+
+// Mechanics studied from Canvas UI (canvasui.dev, DavidHDev/canvas-ui) — an
+// open-source library built on the experimental html-in-canvas API, which
+// lets WebGL effects read and redraw the *live* DOM as a texture (glass,
+// liquid, shatter). That API is currently gated behind a Chrome/Edge 140+
+// flag, so these are NOT 1:1 ports: each reproduces the visual mechanic on
+// self-drawn NOX demo content (shader/canvas/DOM, per the arsenal's usual
+// "reference → NOX-adapted" pipeline) instead of texturing the real page.
+// Swap in real content once html-in-canvas has broader support, or keep as
+// self-contained hero/cursor pieces — both are production-viable today.
+export const CANVAS_UI_CATALOG: EffectEntry[] = [
+  {
+    meta: {
+      id: 'canvasui-glass-lens',
+      name: 'GlassLens',
+      category: 'canvas-ui',
+      sourceWebsite: 'canvas-ui',
+      sourceFiles: ['canvasui.dev/components/glass'],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Hero-Reveal', 'Produkt-/Dashboard-Showcase', '"Premium-Tool"-Signal'],
+      performanceNotes: '1 WebGL-Shader-Quad, prozedurales Pattern im Fragment-Shader (keine Textur-Uploads).',
+      mobileNotes: 'Ohne Hover treibt ein Lissajous-Drift den Lens-Fokus — Touch bleibt lebendig.',
+      reducedMotionNotes: 'Lens friert auf Bildmitte ein, kein rAF-Loop.',
+      description:
+        'Cursor-folgende Glas-/Kristalllinse: zoomt und refraktiert einen prozeduralen NOX-Dashboard-Pattern mit radialer Magnifikation und Chromatic-Aberration-Rand — die "Crystal-Ball"-Lesbarkeit aus Canvas UIs Glass-Komponente, ohne die experimentelle html-in-canvas-API.',
+      importPath: '@/motion-arsenal/effects/canvas-ui/GlassLens',
+      usageJsx: '<GlassLens lensRadius={0.16} zoom={2.2} chroma={0.006} />',
+      props: [
+        { key: 'lensRadius', label: 'Lens Radius', type: 'range', default: 0.16, min: 0.08, max: 0.4, step: 0.01 },
+        { key: 'zoom', label: 'Zoom', type: 'range', default: 2.2, min: 1, max: 4, step: 0.1 },
+        { key: 'chroma', label: 'Chromatic Aberration', type: 'range', default: 0.006, min: 0, max: 0.02, step: 0.001 },
+      ],
+      productionSafe: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./GlassLens')),
+  },
+  {
+    meta: {
+      id: 'canvasui-liquid-ripple',
+      name: 'LiquidRipple',
+      category: 'canvas-ui',
+      sourceWebsite: 'canvas-ui',
+      sourceFiles: ['canvasui.dev/components/liquid', 'canvasui.dev/components/ripple'],
+      mode: 'nox-adapted',
+      complexity: 'high',
+      dependencies: [],
+      bestFor: ['Interaktive Hero-Fläche', '"Pond"-Klick-Feedback', 'Loading-/Idle-States'],
+      performanceNotes: 'Displacement läuft auf einem 240×150 Offscreen-Buffer (nicht auf voller Canvas-Auflösung) und wird hochskaliert — Kosten bleiben unabhängig von der Preview-Größe.',
+      mobileNotes: 'Klick/Tap löst Ripples aus; ambiente Liquid-Bewegung läuft ohne Interaktion weiter.',
+      reducedMotionNotes: 'Statisches erstes Frame ohne Displacement.',
+      description:
+        'Kombiniert Canvas UIs "Liquid" (ambiente Fluid-Verzerrung) und "Ripple" (Klick-Wellen, die die Fläche wie eine Teichoberfläche refraktieren) auf einem selbst gezeichneten NOX-Dashboard-Mock — Displacement pixelbasiert statt echtem Navier-Stokes-Solver, dafür ohne WebGL2-Anforderung.',
+      importPath: '@/motion-arsenal/effects/canvas-ui/LiquidRipple',
+      usageJsx: '<LiquidRipple ambientStrength={2.4} rippleStrength={16} />',
+      props: [
+        { key: 'ambientStrength', label: 'Ambient Wobble', type: 'range', default: 2.4, min: 0, max: 6, step: 0.2 },
+        { key: 'rippleStrength', label: 'Ripple Strength', type: 'range', default: 16, min: 0, max: 30, step: 1 },
+      ],
+      productionSafe: true,
+      clickToRun: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./LiquidRipple')),
+  },
+  {
+    meta: {
+      id: 'canvasui-glitch-burst',
+      name: 'GlitchBurst',
+      category: 'canvas-ui',
+      sourceWebsite: 'canvas-ui',
+      sourceFiles: ['canvasui.dev/components/glitch', 'canvasui.dev/components/vhs'],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['System-/Signal-Panels', 'Error-/Alert-States', 'Boot-/Transition-Momente'],
+      performanceNotes: 'Canvas2D drawImage-Slicing eines Offscreen-Buffers — kein Per-Pixel-Loop, günstig.',
+      mobileNotes: 'Bursts laufen zeitgesteuert, kein Pointer nötig — auf Touch identisch.',
+      reducedMotionNotes: 'Bursts pausieren, sauberes letztes Frame bleibt stehen.',
+      description:
+        'Kombiniert Canvas UIs "Glitch" (Broadcast-Tearing mit RGB-Split über die Fläche) und "VHS" (Scanline-/Grain-Idle) auf einem selbst gezeichneten NOX-Signal-Log-Panel: kurze, unregelmäßig getaktete Burst-Fenster reißen Slices seitlich auf, dazwischen läuft dezentes Tape-Flicker.',
+      importPath: '@/motion-arsenal/effects/canvas-ui/GlitchBurst',
+      usageJsx: '<GlitchBurst burstIntensity={0.7} burstFrequency={1.1} />',
+      props: [
+        { key: 'burstIntensity', label: 'Burst Intensity', type: 'range', default: 0.7, min: 0, max: 1, step: 0.05 },
+        { key: 'burstFrequency', label: 'Burst Frequency', type: 'range', default: 1.1, min: 0.3, max: 3, step: 0.1 },
+      ],
+      productionSafe: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./GlitchBurst')),
+  },
+  {
+    meta: {
+      id: 'canvasui-shatter-reveal',
+      name: 'ShatterReveal',
+      category: 'canvas-ui',
+      sourceWebsite: 'canvas-ui',
+      sourceFiles: ['canvasui.dev/components/shatter'],
+      mode: 'nox-adapted',
+      complexity: 'high',
+      dependencies: [],
+      bestFor: ['Premium-Hero', '"Glas-Interface"-Signal', 'Cursor-reaktive Flächen'],
+      performanceNotes: 'DOM-Grid (Standard 8×5 Shards) mit direkten Style-Writes im rAF-Loop statt React-Re-Renders — CSS-3D, keine WebGL-Kosten.',
+      mobileNotes: 'Ohne Hover treibt ein Lissajous-Drift den Lift-Fokus über das Grid.',
+      reducedMotionNotes: 'Shards bleiben flach (kein translateZ/rotate), Grid wirkt als ruhiges Mosaik.',
+      description:
+        'Die Fläche liegt als DOM-Grid aus pixelgenau ausgerichteten Shards vor (ein gemeinsamer NOX-Gradient-Hintergrund, per background-position gesliced); Nähe zum Cursor hebt, kippt und verstärkt jeden Shard mit echter CSS-Perspektive + Schatten — Canvas UIs "Glass Shards, die um den Cursor floaten" ohne WebGL-Geometrie.',
+      importPath: '@/motion-arsenal/effects/canvas-ui/ShatterReveal',
+      usageJsx: '<ShatterReveal cols={8} rows={5} liftRadius={0.32} liftStrength={46} />',
+      props: [
+        { key: 'cols', label: 'Columns', type: 'range', default: 8, min: 4, max: 12, step: 1 },
+        { key: 'rows', label: 'Rows', type: 'range', default: 5, min: 3, max: 8, step: 1 },
+        { key: 'liftRadius', label: 'Lift Radius', type: 'range', default: 0.32, min: 0.15, max: 0.6, step: 0.01 },
+        { key: 'liftStrength', label: 'Lift Strength', type: 'range', default: 46, min: 0, max: 60, step: 2 },
+      ],
+      productionSafe: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./ShatterReveal')),
+  },
+  {
+    meta: {
+      id: 'canvasui-particle-reveal',
+      name: 'ParticleReveal',
+      category: 'canvas-ui',
+      sourceWebsite: 'canvas-ui',
+      sourceFiles: ['canvasui.dev/components/particle-reveal'],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Hero-Wordmark', '"Signal aus Rauschen"-Intro', 'Loading-/Boot-Momente'],
+      performanceNotes: 'Punktwolke wird einmalig aus einem Text-Sampling-Canvas erzeugt (600–4.200 Partikel, uv-Koordinaten) — pro Frame nur Canvas2D-Arcs, kein erneutes Sampling.',
+      mobileNotes: 'Ohne Hover treibt ein Lissajous-Drift die Auflöse-Zone über das Wort.',
+      reducedMotionNotes: 'Partikel bleiben in Ruheposition (kein Scatter), Wort ist direkt lesbar.',
+      description:
+        'Der NOX-Schriftzug liegt standardmäßig als feines, diffuses Partikelfeld vor; in der Nähe des Cursors lösen sich die Partikel zu scharfer, lesbarer Typografie auf — Canvas UIs "Particle Reveal"-Mechanik (Live-DOM als Partikel, die um den Cursor zur UI verschmelzen) auf einer selbst gesampelten Wordmark statt echtem DOM-Read.',
+      importPath: '@/motion-arsenal/effects/canvas-ui/ParticleReveal',
+      usageJsx: '<ParticleReveal text="NOX SIGNAL" density={2600} color="#d6a24a" cloudScale={0.92} resolveRadius={0.24} scatter={11} />',
+      props: [
+        { key: 'density', label: 'Particle Density', type: 'range', default: 2600, min: 600, max: 4200, step: 100, group: 'Particles' },
+        { key: 'particleSize', label: 'Particle Size', type: 'range', default: 1.15, min: 0.6, max: 2.4, step: 0.05, group: 'Particles' },
+        { key: 'cloudScale', label: 'Cloud Scale', type: 'range', default: 0.92, min: 0.65, max: 1.15, step: 0.01, group: 'Particles' },
+        { key: 'scatter', label: 'Ambient Scatter', type: 'range', default: 11, min: 0, max: 40, step: 1, group: 'Motion' },
+        { key: 'resolveRadius', label: 'Reveal Radius', type: 'range', default: 0.24, min: 0.1, max: 0.5, step: 0.01, group: 'Motion' },
+        { key: 'color', label: 'Particle Color', type: 'color', default: '#d6a24a', group: 'Color' },
+      ],
+      productionSafe: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./ParticleReveal')),
+  },
+  {
+    meta: {
+      id: 'canvasui-laser',
+      name: 'Laser',
+      category: 'canvas-ui',
+      sourceWebsite: 'canvas-ui',
+      sourceFiles: ['canvasui.dev/components/laser'],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Scroll-Storytelling', 'Feature-/Case-Study-Seiten', '"System bootet auf"-Narrativ'],
+      performanceNotes: 'Reiner CSS-mask-image-Ansatz, ein Wert pro Frame neu gesetzt — kein Canvas/WebGL nötig.',
+      mobileNotes: 'Funktioniert 1:1 mit Touch-Scroll im internen Scroll-Container.',
+      reducedMotionNotes: 'Maske folgt sofort ohne Damping, Sweep-Animation des Strahls pausiert.',
+      description:
+        'Ein Laser-Strahl sitzt fix nahe am unteren Rand der Vorschaufläche; eine entsättigte "Dormant"-Kopie des Contents liegt in derselben Grid-Zelle wie der echte Content (beide scrollen synchron, kein JS-Alignment nötig) und wird per Live-CSS-Maske (scrollTop + Beam-Position) freigeschnitten — was den Strahl passiert hat, ist sichtbar, der Rest bleibt im Scan-Line-Look dahinter.',
+      importPath: '@/motion-arsenal/effects/canvas-ui/Laser',
+      usageJsx: '<Laser beamPosition={0.78} softness={26} />',
+      props: [
+        { key: 'beamPosition', label: 'Beam Position', type: 'range', default: 0.78, min: 0.5, max: 0.95, step: 0.01 },
+        { key: 'softness', label: 'Reveal Softness', type: 'range', default: 26, min: 4, max: 80, step: 2 },
+      ],
+      productionSafe: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./Laser')),
+  },
+  {
+    meta: {
+      id: 'canvasui-particle-object',
+      name: 'ParticleObject',
+      category: 'canvas-ui',
+      sourceWebsite: 'canvas-ui',
+      sourceFiles: ['canvasui.dev/components/particle-object'],
+      mode: 'nox-adapted',
+      complexity: 'high',
+      dependencies: [],
+      bestFor: ['Logo-/Produkt-Reveal', 'Interaktive Hero-Objekte', 'Kunden-Asset-Demos direkt im Arsenal'],
+      performanceNotes: 'Bis zu 3400 Partikel, Canvas2D-Federphysik (Spring + Pointer-Repulsion) + additive Blend fürs Pop — Sampling passiert einmalig beim Asset-Laden (Luminanz-Floor bei opaken Fotos, Alpha-Gate bei transparenten Logos), nicht pro Frame. Bild-Seitenverhältnis wird contain-gefittet, nicht gestreckt.',
+      mobileNotes: 'Ohne Hover treibt ein Lissajous-Drift die Repulsions-Zone; Drag&Drop entfällt auf Touch, der Datei-Button funktioniert weiter.',
+      reducedMotionNotes: 'Partikel bleiben in Ruheposition (keine Feder-/Repulsions-Updates), Objekt ist direkt als Punktwolke erkennbar.',
+      description:
+        'Rebuilt ein Bild/SVG als 2D-Partikelwolke, die um den Cursor auseinanderstiebt und elastisch zurückfedert — leichtgewichtig und ohne WebGL. Assets werden ausschließlich lokal per Drag&Drop oder Datei-Button eingelesen und live neu gesampelt.',
+      importPath: '@/motion-arsenal/effects/canvas-ui/ParticleObject',
+      usageJsx: '<ParticleObject particleSize={2.4} springStrength={14} repelRadius={0.18} />',
+      props: [
+        { key: 'particleSize', label: 'Particle Size', type: 'range', default: 2.4, min: 1, max: 4, step: 0.2 },
+        { key: 'springStrength', label: 'Spring Strength', type: 'range', default: 14, min: 4, max: 30, step: 1 },
+        { key: 'repelRadius', label: 'Repel Radius', type: 'range', default: 0.18, min: 0.08, max: 0.4, step: 0.01 },
+      ],
+      productionSafe: true,
+      clickToRun: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./ParticleObject')),
+  },
+];

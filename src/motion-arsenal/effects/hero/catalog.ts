@@ -1,0 +1,238 @@
+import { lazy } from 'react';
+import type { EffectEntry } from '../../types';
+
+// ---------------------------------------------------------------------------
+// HERO_CATALOG — Hero-/Entrance-Effekte des NOX Motion Arsenal v2.
+// Alle Einträge sind NOX-Eigenbauten nach Referenz-Mechanik (nox-adapted).
+// ---------------------------------------------------------------------------
+
+export const HERO_CATALOG: EffectEntry[] = [
+  {
+    meta: {
+      id: 'hero-massive-typography-reveal',
+      name: 'Massive Typography Reveal',
+      category: 'hero',
+      sourceWebsite: 'shopify-editions',
+      sourceFiles: [
+        'body_html.ts — Nav-Entrance-Cascade (animation-delay 500ms + 100ms-Steps, -translate-y-full opacity-0 → 0/1, motion-safe:)',
+        'shopify.css — mask-/clip-Reveal-Technik (46 mask-Refs)',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'low',
+      dependencies: [],
+      bestFor: ['Hero-Headline beim Seiteneinstieg', 'Section-Openings mit Statement-Typo', 'Landingpage Above-the-fold'],
+      performanceNotes:
+        'Nur transform/letter-spacing-Keyframes auf wenigen Zeilen; letter-spacing-Settle verursacht kurze Reflows, aber nur ~0.9s pro Replay. Kein Canvas, kein rAF.',
+      mobileNotes: 'clamp()-Typo skaliert bis 30px runter; Stagger wirkt auch bei kleinen Viewports. Touch: reine Entrance, keine Interaktion nötig.',
+      reducedMotionNotes: 'Zeilen stehen sofort im End-Zustand (Weight 800, enges Tracking), Underline voll ausgefahren, kein Replay-Loop.',
+      description:
+        'Riesige Display-Typografie: jede Zeile ist per overflow-clip maskiert und slidet gestaffelt mit outExpo herauf; danach settlet die Typo sichtbar von leichtem Weight/Tracking in den finalen Zustand — der Shopify-Cascade-Rhythmus als NOX-Statement-Hero.',
+      importPath: '@/motion-arsenal/effects/hero/MassiveTypographyReveal',
+      usageJsx: '<MassiveTypographyReveal lines={["FORGE", "THE", "SIGNAL"]} speed={1} stagger={0.14} accent="#C93030" loop />',
+      props: [
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.4, max: 2, step: 0.1 },
+        { key: 'stagger', label: 'Line Stagger (s)', type: 'range', default: 0.14, min: 0.05, max: 0.4, step: 0.01 },
+        { key: 'accent', label: 'Accent', type: 'color', default: '#C93030' },
+        { key: 'loop', label: 'Loop Replay', type: 'boolean', default: true },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./MassiveTypographyReveal')),
+  },
+  {
+    meta: {
+      id: 'hero-masked-text-reveal',
+      name: 'Masked Text Reveal',
+      category: 'hero',
+      sourceWebsite: 'shopify-editions',
+      sourceFiles: [
+        'shopify.css — mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent) (46 mask-Refs)',
+        'shopify.css — slideIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'low',
+      dependencies: [],
+      bestFor: ['Hero-Subline / Statement-Sätze', 'Zitat- und Claim-Sektionen', 'Feature-Intro-Texte'],
+      performanceNotes:
+        'mask-position + transform in Keyframes, GPU-freundlich; pro Wort zwei Textknoten (Reveal + Ember-Edge). Bei sehr langen Texten (>25 Wörter) Stagger reduzieren.',
+      mobileNotes: 'Wortweise Reveals brechen sauber um (inline-block pro Wort); Schriftgröße clamp()-basiert.',
+      reducedMotionNotes: 'Kein mask-image, kein Slide — Text steht sofort vollständig und ruhig da.',
+      description:
+        'Text-Reveal über ein wanderndes linear-gradient mask-image: eine weiche Licht-Kante wischt Wort für Wort über den Satz (Shopify-Editions-Pattern, exaktes 1.2s-outBack-Timing), mit leichter per-Wort-Verzögerung und einer schmalen Ember-Leading-Edge vor der Wipe-Front.',
+      importPath: '@/motion-arsenal/effects/hero/MaskedTextReveal',
+      usageJsx: '<MaskedTextReveal text="SIGNAL OVER NOISE — THE NOX SYSTEM IS ONLINE" speed={1} stagger={0.09} loop />',
+      props: [
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.4, max: 2, step: 0.1 },
+        { key: 'stagger', label: 'Word Stagger (s)', type: 'range', default: 0.09, min: 0.02, max: 0.25, step: 0.01 },
+        { key: 'textColor', label: 'Text', type: 'color', default: '#f0ece4' },
+        { key: 'accent', label: 'Edge Accent', type: 'color', default: '#ff4d4d' },
+        { key: 'loop', label: 'Loop Replay', type: 'boolean', default: true },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./MaskedTextReveal')),
+  },
+  {
+    meta: {
+      id: 'hero-image-reveal-behind-text',
+      name: 'Image Reveal Behind Text',
+      category: 'hero',
+      sourceWebsite: 'shopify-editions',
+      sourceFiles: [
+        'shopify.css — Mask-Image-Reveal-Mechanik (46 mask-Refs) als Reveal-Grundlage',
+        'KRANK hoisted.js — Cursor-Klasse: lerp-Follow (α≈0.1–0.3) für die Pointer-Physik des Spotlights',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Hero mit Marken-Wordmark', 'Portfolio-/Case-Openings', 'Interaktive Section-Header'],
+      performanceNotes:
+        'Ein rAF-Loop schreibt nur zwei CSS-Vars (--irb-x/--irb-y); mask-image mit var()-Position wird per Compositor aktualisiert. Gradient-„Bild" ist rein prozedural, kein Asset-Load.',
+      mobileNotes: 'Ohne Pointer greift der Auto-Sweep — der Effekt lebt auch auf Touch. Radius ggf. auf ~100px reduzieren.',
+      reducedMotionNotes: 'Mask entfällt komplett: die Gradient-Füllung steht voll sichtbar in den Glyphen, kein Sweep, kein Drift.',
+      description:
+        'Große Outline-Typo, dahinter ein prozedurales Gradient-„Bild" (conic + radiale Ember-/Gold-Felder), das per background-clip:text IN den Buchstaben liegt und von einem gedämpften Pointer-Spotlight (oder Auto-Sweep) per radialem mask aufgedeckt wird.',
+      importPath: '@/motion-arsenal/effects/hero/ImageRevealBehindText',
+      usageJsx: '<ImageRevealBehindText text="NOX FORGE" revealRadius={150} sweepSpeed={1} palette="ember" autoSweep />',
+      props: [
+        { key: 'revealRadius', label: 'Reveal Radius (px)', type: 'range', default: 150, min: 60, max: 280, step: 5 },
+        { key: 'sweepSpeed', label: 'Sweep Speed', type: 'range', default: 1, min: 0.3, max: 2.5, step: 0.1 },
+        { key: 'palette', label: 'Palette', type: 'select', default: 'ember', options: ['ember', 'gold', 'mono'] },
+        { key: 'autoSweep', label: 'Auto Sweep', type: 'boolean', default: true },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./ImageRevealBehindText')),
+  },
+  {
+    meta: {
+      id: 'hero-blur-to-sharp-boot',
+      name: 'Blur-to-Sharp Hero Boot',
+      category: 'hero',
+      sourceWebsite: 'krank-lusion',
+      sourceFiles: [
+        'KRANK index.css — Filter-Chain via CSS-Var: filter: saturate(calc(.4 + var(--pulse)*1.6)) brightness(calc(.6 + var(--pulse)*.6))',
+        'KRANK hoisted.js — eine Physik-Quelle treibt CSS-Custom-Props + Uniforms gleichzeitig (Layering-Kapitel)',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Seiten-Einstieg / First Paint-Moment', 'Systemstart-/Dashboard-Intros', 'Kampagnen-Hero mit Boot-Dramaturgie'],
+      performanceNotes:
+        'Ein rAF-Loop schreibt eine einzige CSS-Var, die die komplette filter-Kette (blur/brightness/saturate/contrast) treibt. blur auf großem Container ist der teuerste Teil — maxBlur > 30px auf Low-End vermeiden.',
+      mobileNotes: 'Funktioniert ohne Interaktion; maxBlur auf Mobile eher 12–16px für flüssiges Boot.',
+      reducedMotionNotes: 'Kein rAF, keine Filter: Hero steht sofort scharf und korrekt belichtet, Scanline/Schleier werden nicht gerendert.',
+      description:
+        'Der Hero bootet aus Unschärfe + Überbelichtung in die Schärfe: JS animiert eine CSS-Var (KRANKs --pulse-Pattern), die eine choreografierte filter-Kette aus blur, brightness, saturate und contrast treibt — synchron dazu läuft ein kurzer Scanline-Blitz durch das Bild.',
+      importPath: '@/motion-arsenal/effects/hero/BlurToSharpHeroBoot',
+      usageJsx: '<BlurToSharpHeroBoot speed={1} maxBlur={22} overexposure={1} accent="#ff4d4d" loop />',
+      props: [
+        { key: 'speed', label: 'Boot Speed', type: 'range', default: 1, min: 0.3, max: 2.5, step: 0.1 },
+        { key: 'maxBlur', label: 'Max Blur (px)', type: 'range', default: 22, min: 6, max: 40, step: 1 },
+        { key: 'overexposure', label: 'Overexposure', type: 'range', default: 1, min: 0, max: 2, step: 0.1 },
+        { key: 'accent', label: 'Scanline', type: 'color', default: '#ff4d4d' },
+        { key: 'loop', label: 'Loop Re-Boot', type: 'boolean', default: true },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./BlurToSharpHeroBoot')),
+  },
+  {
+    meta: {
+      id: 'hero-split-entrance',
+      name: 'Split Hero Entrance',
+      category: 'hero',
+      sourceWebsite: 'krank-lusion',
+      sourceFiles: [
+        'KRANK index.css — Overshoot-Easing cubic-bezier(.3, 0, .66, -.3) auf 500ms-Transforms (Kontrollpunkt unter 0 → elastischer Bounce-Back)',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'low',
+      dependencies: [],
+      bestFor: ['Mehrspaltige Hero-Layouts', 'Split-Screen-Landingpages', 'Editorial-/Kampagnen-Openings'],
+      performanceNotes: 'Nur transform-Keyframes auf 2–3 Panels + kurze Edge-Sweeps; komplett Compositor-freundlich, kein rAF.',
+      mobileNotes: 'Panels bleiben vertikale Spalten (flex) — bei sehr schmalen Screens 2 Panels wählen.',
+      reducedMotionNotes: 'Panels stehen angedockt, Inhalte voll sichtbar, kein Sweep, kein Replay.',
+      description:
+        'Der Hero ist in 2–3 vertikale Panels geteilt, die gestaffelt aus entgegengesetzten Richtungen einfahren und mit dem KRANK-Overshoot-Bezier elastisch andocken — direkt nach dem Dock läuft ein Licht-Sweep die Panel-Kanten entlang.',
+      importPath: '@/motion-arsenal/effects/hero/SplitHeroEntrance',
+      usageJsx: '<SplitHeroEntrance panels={3} speed={1} accent="#C93030" sweep loop />',
+      props: [
+        { key: 'panels', label: 'Panels', type: 'range', default: 3, min: 2, max: 3, step: 1 },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.4, max: 2, step: 0.1 },
+        { key: 'accent', label: 'Accent', type: 'color', default: '#C93030' },
+        { key: 'sweep', label: 'Edge Sweep', type: 'boolean', default: true },
+        { key: 'loop', label: 'Loop Replay', type: 'boolean', default: true },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./SplitHeroEntrance')),
+  },
+  {
+    meta: {
+      id: 'hero-word-letter-cascade',
+      name: 'Word Letter Cascade',
+      category: 'hero',
+      sourceWebsite: 'shopify-editions',
+      sourceFiles: [
+        'Butterflies-CFpdR9tM.js:307-390 — 3 überlagerte Sinuswellen: wave = sin(t*flapSpeed+phase)*amp + sin(t*2.1+…)*0.2 + sin(t*0.37+…)*0.3',
+        'body_html.ts — Nav-Entrance-Cascade (Stagger-Grundmuster)',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Hero-Claims mit organischem Timing', 'Poetische/editoriale Openings', 'Wortmarken-Inszenierung'],
+      performanceNotes:
+        'Ein Keyframe pro Buchstabe (transform + filter:blur); Delays sind vorberechnet (deterministisch, seededRandom). Bei >60 Buchstaben blur ggf. rausnehmen.',
+      mobileNotes: 'Wörter sind nowrap-Gruppen und brechen sauber um; Kaskade wirkt auf kleinen Screens durch die Wellen-Delays besonders.',
+      reducedMotionNotes: 'Alle Buchstaben stehen sofort aufrecht, scharf und voll deckend — keine Kaskade, kein Replay.',
+      description:
+        'Buchstaben-Kaskade mit per-Letter rotation/translateY/blur — die Einsatz-Delays folgen keinem linearen Stagger, sondern drei überlagerten Sinus-Phasen (Shopify-Butterfly-Wave), wodurch die Welle organisch und nie mechanisch durch den Satz läuft; die Welle moduliert zugleich die Einfall-Rotation jedes Buchstabens.',
+      importPath: '@/motion-arsenal/effects/hero/WordLetterCascade',
+      usageJsx: '<WordLetterCascade text="SIGNAL FORGED IN THE DARK" speed={1} waviness={1} rotation={14} loop />',
+      props: [
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.4, max: 2, step: 0.1 },
+        { key: 'waviness', label: 'Waviness', type: 'range', default: 1, min: 0, max: 2, step: 0.1 },
+        { key: 'rotation', label: 'Letter Rotation (°)', type: 'range', default: 14, min: 0, max: 40, step: 1 },
+        { key: 'color', label: 'Text', type: 'color', default: '#f0ece4' },
+        { key: 'seed', label: 'Wave Seed', type: 'range', default: 5, min: 1, max: 20, step: 1 },
+        { key: 'loop', label: 'Loop Replay', type: 'boolean', default: true },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./WordLetterCascade')),
+  },
+  {
+    meta: {
+      id: 'hero-object-float',
+      name: 'Hero Object Float',
+      category: 'hero',
+      sourceWebsite: 'shopify-editions',
+      sourceFiles: [
+        'Butterflies-CFpdR9tM.js:307-390 — Butterfly-Wave-Mechanik: wave = sin(t*flapSpeed+phase)*flapAmp + sin(t*2.1+…)*0.2 + sin(t*0.37+…)*0.3',
+        'KRANK hoisted.js — Cursor-Klasse: lerp-Follow (α≈0.1–0.3, damping 8–15) für den Pointer-Tilt',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Produkt-/Artefakt-Hero', 'Membership-/Card-Inszenierung', 'Hero-Split mit schwebendem Objekt rechts'],
+      performanceNotes:
+        'Ein rAF-Loop, drei direkte style.transform-Writes (Karte, Schatten, Glare) — kein React-Re-Render pro Frame. CSS-3D statt WebGL, sehr günstig.',
+      mobileNotes: 'Ohne Pointer schwenkt die Karte in ein sanftes Idle-Schwanken — lebt auch auf Touch. Kartenbreite skaliert mit Container.',
+      reducedMotionNotes: 'Kein rAF: Karte steht ruhig in Neutralposition mit statischem Kontaktschatten.',
+      description:
+        'Ein prozedural gebautes CSS-3D-Emblem (Karte + Glyph aus svgUtils, kein Asset) schwebt auf drei überlagerten Sinuswellen (Shopify-Butterfly-Wave: 1.0 / 2.1 / 0.37 Hz-Verhältnis) — Pointer-Tilt mit gedämpftem Follow, Glare wandert gegenläufig, und ein weicher Kontaktschatten koppelt invers an die Flughöhe.',
+      importPath: '@/motion-arsenal/effects/hero/HeroObjectFloat',
+      usageJsx: '<HeroObjectFloat amplitude={14} speed={1} tilt={1} accent="#C93030" />',
+      props: [
+        { key: 'amplitude', label: 'Float Amplitude (px)', type: 'range', default: 14, min: 4, max: 34, step: 1 },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.3, max: 2.5, step: 0.1 },
+        { key: 'tilt', label: 'Tilt Strength', type: 'range', default: 1, min: 0, max: 2, step: 0.1 },
+        { key: 'accent', label: 'Accent', type: 'color', default: '#C93030' },
+        { key: 'seed', label: 'Emblem Seed', type: 'range', default: 9, min: 1, max: 20, step: 1 },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./HeroObjectFloat')),
+  },
+];

@@ -1,0 +1,37 @@
+{
+  "name": "nox-motion-arsenal",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:favorites": "node scripts/test-favorites.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:previews": "node scripts/audit-previews.mjs",
+    "test:previews:smoke": "node scripts/audit-previews.mjs --ids bg-orbital-light-trails,premium-signal-particles,canvasui-particle-reveal,canvasui-shatter-reveal,cursor-magnetic-cta,img2threejs-nox-orbital-station",
+    "typecheck:server": "tsc -p tsconfig.server.json",
+    "lint": "npm run typecheck && npm run typecheck:server",
+    "test": "npm run test:community && npm run test:community:security",
+    "test:community": "node scripts/test-community.mjs",
+    "test:community:security": "node scripts/test-community-security.mjs",
+    "test:community:e2e": "node scripts/test-community-e2e.mjs"
+  },
+  "dependencies": {
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "three": "^0.178.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.178.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "playwright-core": "^1.61.1",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3"
+  }
+}
