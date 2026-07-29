@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   patch:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,10 +48,11 @@ jobs:
 
           scroll_catalog = Path('src/motion-arsenal/effects/scroll/catalog.ts')
           text = scroll_catalog.read_text()
-          text = text.replace(
-              "        'PinnedProductStageVariants.tsx (NOX preset registry)',\n",
-              "        'PinnedProductStageVariants.tsx (NOX preset registry)',\n        'ProductStageCore.tsx (five semantic product artifacts)',\n",
-          )
+          if 'ProductStageCore.tsx (five semantic product artifacts)' not in text:
+              text = text.replace(
+                  "        'PinnedProductStageVariants.tsx (NOX preset registry)',\n",
+                  "        'PinnedProductStageVariants.tsx (NOX preset registry)',\n        'ProductStageCore.tsx (five semantic product artifacts)',\n",
+              )
           text = text.replace(
               "      description: 'Referenzierbares Produkt-Story-System mit fünf fertigen NOX-Presets. Jede Variante besitzt eigene Kapitel, Module, Kennzahlen, CTA und eine stabile Agenten-Referenz für den späteren Einbau in NOX- oder Kundenwebseiten.',",
               "      description: 'Referenzierbares Produkt-Story-System mit fünf fertigen NOX-Presets. Jede Variante besitzt eigene Kapitel, Module, Kennzahlen, CTA, eine stabile Agenten-Referenz und ein sichtbar unterschiedliches semantisches Core-Artefakt statt eines generischen Symbols.',",
@@ -148,8 +148,7 @@ jobs:
               variant['coreArtifact'] = core_types[variant['id']]
           manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
 
-          workflow = Path('.github/workflows/apply-core-energy-patches.yml')
-          workflow.unlink()
+          Path('.github/workflows/apply-core-energy-patches.yml').unlink()
           PY
 
       - name: Commit wired effects
