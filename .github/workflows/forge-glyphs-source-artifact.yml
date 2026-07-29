@@ -1,0 +1,28 @@
+name: Forge Glyphs Source Artifact
+
+on:
+  push:
+    branches:
+      - agent/forge-energy-glyphs-overdrive
+
+permissions:
+  contents: read
+
+jobs:
+  package-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Locate forge glyph files
+        run: |
+          find src -type f | sort | grep -Ei 'forge|glyph|background|catalog' || true
+      - name: Upload repository source
+        uses: actions/upload-artifact@v4
+        with:
+          name: nox-motion-arsenal-source
+          path: |
+            .
+            !node_modules
+            !dist
+          include-hidden-files: true
+          retention-days: 1
