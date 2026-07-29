@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0.0",
+  "effectId": "hero-object-float",
+  "component": "HeroObjectFloat",
+  "importPath": "@/motion-arsenal/effects/hero/HeroObjectFloat",
+  "previewRoute": "/#/effect/hero-object-float",
+  "selectionRule": "Select one stable object variant and one energy state. Disable internal switchers on production pages unless visitors should compare objects.",
+  "energies": ["calm", "charged", "overdrive"],
+  "variants": [
+    {
+      "id": "forge-obsidian-relic",
+      "reference": "motion:hero-object-float@forge-obsidian-relic",
+      "bestFor": ["NOX Forge", "skill unlock hero", "premium artifact reveal"],
+      "jsx": "<HeroObjectFloat variant=\"forge-obsidian-relic\" energy=\"charged\" showVariantSwitcher={false} showEnergySwitcher={false} />"
+    },
+    {
+      "id": "project-x-nexus-cube",
+      "reference": "motion:hero-object-float@project-x-nexus-cube",
+      "bestFor": ["Project X", "agent command center", "AI orchestration product"],
+      "jsx": "<HeroObjectFloat variant=\"project-x-nexus-cube\" energy=\"overdrive\" showVariantSwitcher={false} showEnergySwitcher={false} />"
+    },
+    {
+      "id": "revenue-ascension-prism",
+      "reference": "motion:hero-object-float@revenue-ascension-prism",
+      "bestFor": ["Global Sales OS", "high-ticket offer", "revenue engine hero"],
+      "jsx": "<HeroObjectFloat variant=\"revenue-ascension-prism\" energy=\"charged\" showVariantSwitcher={false} showEnergySwitcher={false} />"
+    },
+    {
+      "id": "automation-kernel-chip",
+      "reference": "motion:hero-object-float@automation-kernel-chip",
+      "bestFor": ["automation systems", "n8n workflows", "operations platform"],
+      "jsx": "<HeroObjectFloat variant=\"automation-kernel-chip\" energy=\"charged\" showVariantSwitcher={false} showEnergySwitcher={false} />"
+    },
+    {
+      "id": "signal-resonance-orb",
+      "reference": "motion:hero-object-float@signal-resonance-orb",
+      "bestFor": ["AI Growth Engine", "signal intelligence", "content and demand system"],
+      "jsx": "<HeroObjectFloat variant=\"signal-resonance-orb\" energy=\"overdrive\" showVariantSwitcher={false} showEnergySwitcher={false} />"
+    }
+  ]
+}
