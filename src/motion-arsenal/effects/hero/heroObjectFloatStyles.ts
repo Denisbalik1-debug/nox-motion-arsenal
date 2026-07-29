@@ -8,14 +8,16 @@ export const HERO_OBJECT_FLOAT_STYLES = `
 .hof-aura { position:absolute; inset:7%; border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--hof-accent) 38%, transparent) 0%, transparent 68%); filter:blur(calc(22px * var(--hof-glow))); opacity:.72; transform:translateZ(-80px); pointer-events:none; }
 .hof-backplate { position:absolute; inset:17%; border-radius:50%; border:1px solid color-mix(in srgb, var(--hof-accent) 28%, transparent); box-shadow:0 0 calc(28px * var(--hof-glow)) color-mix(in srgb, var(--hof-accent) 25%, transparent), inset 0 0 26px color-mix(in srgb, var(--hof-secondary) 10%, transparent); transform:translateZ(-42px); }
 .hof-orbit { position:absolute; inset:4%; border-radius:50%; border:1px solid color-mix(in srgb, var(--hof-light) 16%, transparent); transform-style:preserve-3d; pointer-events:none; animation:hof-orbit var(--hof-orbit-speed) linear infinite; }
-.hof-orbit:nth-of-type(2) { inset:12%; transform:rotateX(67deg) rotateZ(21deg); animation-duration:calc(var(--hof-orbit-speed) * .72); animation-direction:reverse; border-color:color-mix(in srgb, var(--hof-accent) 28%, transparent); }
-.hof-orbit:nth-of-type(3) { inset:20%; transform:rotateY(66deg) rotateZ(-16deg); animation-duration:calc(var(--hof-orbit-speed) * .54); border-color:color-mix(in srgb, var(--hof-secondary) 30%, transparent); }
+.hof-orbit-two { inset:12%; transform:rotateX(67deg) rotateZ(21deg); animation-duration:calc(var(--hof-orbit-speed) * .72); animation-direction:reverse; border-color:color-mix(in srgb, var(--hof-accent) 28%, transparent); }
+.hof-orbit-three { inset:20%; transform:rotateY(66deg) rotateZ(-16deg); animation-duration:calc(var(--hof-orbit-speed) * .54); border-color:color-mix(in srgb, var(--hof-secondary) 30%, transparent); }
 .hof-satellite { position:absolute; width:8px; height:8px; border-radius:50%; left:50%; top:-4px; transform:translateX(-50%); background:var(--hof-light); box-shadow:0 0 8px var(--hof-light), 0 0 20px var(--hof-accent); }
 .hof-shadow { position:absolute; left:50%; bottom:5%; width:48%; height:18px; border-radius:50%; background:#000; opacity:.52; filter:blur(14px); transform:translateX(-50%); will-change:transform,opacity,filter; }
 .hof-glare { position:absolute; inset:0; pointer-events:none; border-radius:inherit; background:linear-gradient(135deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.035) 26%, transparent 48%); mix-blend-mode:screen; opacity:.74; will-change:transform; }
 .hof-scan { position:absolute; inset:0; overflow:hidden; border-radius:inherit; pointer-events:none; opacity:.42; }
 .hof-scan::after { content:''; position:absolute; left:-10%; right:-10%; height:22%; top:-24%; background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--hof-light) 14%, transparent), transparent); filter:blur(2px); animation:hof-scan 4.8s ease-in-out infinite; }
 .hof-grid { position:absolute; inset:0; opacity:.28; background-image:linear-gradient(color-mix(in srgb, var(--hof-light) 9%, transparent) 1px, transparent 1px),linear-gradient(90deg,color-mix(in srgb, var(--hof-light) 9%, transparent) 1px,transparent 1px); background-size:18px 18px; mask-image:radial-gradient(circle at center,#000 30%,transparent 78%); }
+.hof-field-dot { position:absolute; border-radius:50%; background:var(--hof-light); box-shadow:0 0 8px var(--hof-accent); pointer-events:none; animation:hof-field 7s ease-in-out infinite; }
+.hof-impact { position:absolute; width:18px; height:18px; border-radius:50%; border:1px solid var(--hof-light); box-shadow:0 0 18px var(--hof-accent), inset 0 0 12px var(--hof-secondary); transform:translate(-50%,-50%) scale(.15); opacity:0; pointer-events:none; z-index:9; }
 .hof-label { position:absolute; left:50%; top:calc(100% + 36px); transform:translateX(-50%); text-align:center; width:260px; pointer-events:none; }
 .hof-label-title { font-size:11px; font-weight:800; letter-spacing:.2em; color:var(--hof-light); text-transform:uppercase; }
 .hof-label-kicker { margin-top:7px; font:8px/1.2 var(--mono,monospace); letter-spacing:.34em; color:color-mix(in srgb, var(--hof-light) 48%, transparent); }
@@ -63,6 +65,8 @@ export const HERO_OBJECT_FLOAT_STYLES = `
 @keyframes hof-cube-breathe { 0%,100% { transform:rotateX(-13deg) rotateY(34deg) scale(.94); } 50% { transform:rotateX(-8deg) rotateY(42deg) scale(1); } }
 @keyframes hof-bars { from { transform:scaleY(.72); filter:brightness(.85); } to { transform:scaleY(1); filter:brightness(1.25); } }
 @keyframes hof-dot { 0%,100% { opacity:.28; transform:scale(.7); } 50% { opacity:1; transform:scale(1.35); } }
+@keyframes hof-field { 0%,100% { transform:translate3d(0,0,0); filter:brightness(.65); } 50% { transform:translate3d(0,-9px,0); filter:brightness(1.35); } }
+@keyframes hof-impact { 0% { opacity:0; transform:translate(-50%,-50%) scale(.15); } 18% { opacity:1; } 100% { opacity:0; transform:translate(-50%,-50%) scale(9); border-width:.2px; } }
 @media (max-width:620px) { .hof-stage{width:min(78vw,300px)} .hof-ui{top:10px;left:10px;right:10px}.hof-button{padding:5px 7px;font-size:7px}.hof-reference{right:10px;bottom:10px}.hof-hint{left:10px;bottom:13px}.hof-label{top:calc(100% + 28px)} }
-@media (prefers-reduced-motion:reduce) { .hof-orbit,.hof-scan::after,.hof-cube,.hof-bar,.hof-orb::after,.hof-pulse-dot{animation:none!important} }
+@media (prefers-reduced-motion:reduce) { .hof-orbit,.hof-scan::after,.hof-cube,.hof-bar,.hof-orb::after,.hof-pulse-dot,.hof-field-dot{animation:none!important} }
 `;
