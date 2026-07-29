@@ -2,18 +2,24 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import { damp, seededRandom, usePointer, usePrefersReducedMotion, useRafLoop } from '../../lib/animationUtils';
 import { PHYSICS } from '../../lib/motionPresets';
 import { HeroObjectVisual } from './heroObjectFloatObjects';
+import { HeroObjectGlassShell } from './heroObjectFloatShells';
 import {
+  HERO_OBJECT_DEFAULT_SHELL,
   HERO_OBJECT_ENERGIES,
   HERO_OBJECT_ENERGY_PRESETS,
   HERO_OBJECT_PRESETS,
+  HERO_OBJECT_SHELL_PRESETS,
+  HERO_OBJECT_SHELL_VARIANTS,
   HERO_OBJECT_VARIANTS,
   type HeroObjectEnergy,
+  type HeroObjectShellVariant,
   type HeroObjectVariant,
 } from './heroObjectFloatPresets';
 import { HERO_OBJECT_FLOAT_STYLES } from './heroObjectFloatStyles';
 
 export interface HeroObjectFloatProps {
   variant?: HeroObjectVariant;
+  shellVariant?: HeroObjectShellVariant;
   energy?: HeroObjectEnergy;
   amplitude?: number;
   speed?: number;
@@ -23,7 +29,10 @@ export interface HeroObjectFloatProps {
   objectScale?: number;
   depth?: number;
   orbit?: boolean;
+  glassIntensity?: number;
+  shellDepth?: number;
   showVariantSwitcher?: boolean;
+  showShellSwitcher?: boolean;
   showEnergySwitcher?: boolean;
 }
 
@@ -39,6 +48,7 @@ interface MotionState {
 
 export function HeroObjectFloat({
   variant = 'forge-obsidian-relic',
+  shellVariant,
   energy = 'charged',
   amplitude = 18,
   speed = 1,
@@ -48,7 +58,10 @@ export function HeroObjectFloat({
   objectScale = 1,
   depth = 1,
   orbit = true,
+  glassIntensity = 1,
+  shellDepth = 1,
   showVariantSwitcher = true,
+  showShellSwitcher = true,
   showEnergySwitcher = true,
 }: HeroObjectFloatProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -58,12 +71,21 @@ export function HeroObjectFloat({
   const pointer = usePointer(rootRef);
   const reduced = usePrefersReducedMotion();
   const [activeVariant, setActiveVariant] = useState<HeroObjectVariant>(variant);
+  const [activeShell, setActiveShell] = useState<HeroObjectShellVariant>(
+    shellVariant ?? HERO_OBJECT_DEFAULT_SHELL[variant],
+  );
   const [activeEnergy, setActiveEnergy] = useState<HeroObjectEnergy>(energy);
   const [copied, setCopied] = useState(false);
   const motion = useRef<MotionState>({ rx: 0, ry: 0, rz: 0, x: 0, y: 0, z: 0, scale: objectScale });
   const impact = useRef({ startedAt: -20, x: 0.5, y: 0.5 });
 
-  useEffect(() => setActiveVariant(variant), [variant]);
+  useEffect(() => {
+    setActiveVariant(variant);
+    if (!shellVariant) setActiveShell(HERO_OBJECT_DEFAULT_SHELL[variant]);
+  }, [variant, shellVariant]);
+  useEffect(() => {
+    if (shellVariant) setActiveShell(shellVariant);
+  }, [shellVariant]);
   useEffect(() => setActiveEnergy(energy), [energy]);
 
   const phases = useMemo(() => {
@@ -88,6 +110,7 @@ export function HeroObjectFloat({
   }, [seed]);
 
   const preset = HERO_OBJECT_PRESETS[activeVariant];
+  const shellPreset = HERO_OBJECT_SHELL_PRESETS[activeShell];
   const energyPreset = HERO_OBJECT_ENERGY_PRESETS[activeEnergy];
   const resolvedAccent = accent ?? preset.accent;
 
@@ -164,13 +187,19 @@ export function HeroObjectFloat({
   };
 
   const copyReference = async () => {
+    const configuration = `${preset.reference} + ${shellPreset.reference} + energy:${activeEnergy}`;
     try {
-      await navigator.clipboard.writeText(preset.reference);
+      await navigator.clipboard.writeText(configuration);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1200);
     } catch {
       setCopied(false);
     }
+  };
+
+  const selectObject = (id: HeroObjectVariant) => {
+    setActiveVariant(id);
+    if (!shellVariant) setActiveShell(HERO_OBJECT_DEFAULT_SHELL[id]);
   };
 
   const rootStyle = {
@@ -180,6 +209,8 @@ export function HeroObjectFloat({
     '--hof-glow': energyPreset.glow,
     '--hof-orbit-speed': `${12 / energyPreset.orbit}s`,
     '--hof-depth': depth,
+    '--hof-glass': glassIntensity,
+    '--hof-shell-depth': shellDepth,
     position: 'absolute',
     inset: 0,
     overflow: 'hidden',
@@ -195,6 +226,7 @@ export function HeroObjectFloat({
       className="hof-root"
       data-energy={activeEnergy}
       data-variant={activeVariant}
+      data-shell={activeShell}
       style={rootStyle}
       onPointerDown={onImpact}
     >
@@ -216,24 +248,42 @@ export function HeroObjectFloat({
       ))}
 
       <div className="hof-ui">
-        {showVariantSwitcher ? (
-          <div className="hof-controls" aria-label="Hero object variants">
-            {HERO_OBJECT_VARIANTS.map((id) => (
-              <button
-                key={id}
-                type="button"
-                className="hof-button"
-                data-active={id === activeVariant}
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={() => setActiveVariant(id)}
-              >
-                {HERO_OBJECT_PRESETS[id].shortLabel}
-              </button>
-            ))}
-          </div>
-        ) : <span />}
+        <div className="hof-control-stack">
+          {showVariantSwitcher ? (
+            <div className="hof-controls" aria-label="Hero object variants">
+              {HERO_OBJECT_VARIANTS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className="hof-button"
+                  data-active={id === activeVariant}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={() => selectObject(id)}
+                >
+                  {HERO_OBJECT_PRESETS[id].shortLabel}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {showShellSwitcher ? (
+            <div className="hof-controls hof-shell-controls" aria-label="Glass shell variants">
+              {HERO_OBJECT_SHELL_VARIANTS.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  className="hof-button hof-shell-button"
+                  data-active={id === activeShell}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={() => setActiveShell(id)}
+                >
+                  {HERO_OBJECT_SHELL_PRESETS[id].shortLabel}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
         {showEnergySwitcher ? (
-          <div className="hof-controls" aria-label="Hero object energy">
+          <div className="hof-controls hof-energy-controls" aria-label="Hero object energy">
             {HERO_OBJECT_ENERGIES.map((id) => (
               <button
                 key={id}
@@ -261,13 +311,15 @@ export function HeroObjectFloat({
               <div className="hof-orbit hof-orbit-three"><span className="hof-satellite" /></div>
             </>
           ) : null}
-          <HeroObjectVisual variant={activeVariant} seed={seed} />
+          <HeroObjectGlassShell variant={activeShell} seed={seed}>
+            <HeroObjectVisual variant={activeVariant} seed={seed} />
+          </HeroObjectGlassShell>
           <div ref={impactRef} className="hof-impact" />
         </div>
         <div ref={shadowRef} className="hof-shadow" />
         <div className="hof-label">
           <div className="hof-label-title">{preset.label}</div>
-          <div className="hof-label-kicker">{preset.kicker}</div>
+          <div className="hof-label-kicker">{shellPreset.label} // {preset.kicker}</div>
         </div>
       </div>
 
@@ -278,7 +330,7 @@ export function HeroObjectFloat({
         onPointerDown={(event) => event.stopPropagation()}
         onClick={copyReference}
       >
-        {copied ? 'COPIED' : 'COPY REF'}
+        {copied ? 'COPIED' : 'COPY CONFIG'}
       </button>
     </div>
   );

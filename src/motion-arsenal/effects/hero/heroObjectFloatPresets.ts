@@ -5,6 +5,13 @@ export type HeroObjectVariant =
   | 'automation-kernel-chip'
   | 'signal-resonance-orb';
 
+export type HeroObjectShellVariant =
+  | 'classic-glass-card'
+  | 'obsidian-plaque'
+  | 'frosted-command-panel'
+  | 'museum-slab'
+  | 'holo-sigil-tablet';
+
 export type HeroObjectEnergy = 'calm' | 'charged' | 'overdrive';
 
 export interface HeroObjectPreset {
@@ -17,6 +24,14 @@ export interface HeroObjectPreset {
   secondary: string;
   light: string;
   background: string;
+  bestFor: string[];
+}
+
+export interface HeroObjectShellPreset {
+  id: HeroObjectShellVariant;
+  shortLabel: string;
+  label: string;
+  reference: string;
   bestFor: string[];
 }
 
@@ -38,7 +53,61 @@ export const HERO_OBJECT_VARIANTS: HeroObjectVariant[] = [
   'signal-resonance-orb',
 ];
 
+export const HERO_OBJECT_SHELL_VARIANTS: HeroObjectShellVariant[] = [
+  'classic-glass-card',
+  'obsidian-plaque',
+  'frosted-command-panel',
+  'museum-slab',
+  'holo-sigil-tablet',
+];
+
 export const HERO_OBJECT_ENERGIES: HeroObjectEnergy[] = ['calm', 'charged', 'overdrive'];
+
+export const HERO_OBJECT_DEFAULT_SHELL: Record<HeroObjectVariant, HeroObjectShellVariant> = {
+  'forge-obsidian-relic': 'classic-glass-card',
+  'project-x-nexus-cube': 'frosted-command-panel',
+  'revenue-ascension-prism': 'museum-slab',
+  'automation-kernel-chip': 'frosted-command-panel',
+  'signal-resonance-orb': 'holo-sigil-tablet',
+};
+
+export const HERO_OBJECT_SHELL_PRESETS: Record<HeroObjectShellVariant, HeroObjectShellPreset> = {
+  'classic-glass-card': {
+    id: 'classic-glass-card',
+    shortLabel: 'GLASS',
+    label: 'Classic Glass Card',
+    reference: 'motion:hero-object-float-shell@classic-glass-card',
+    bestFor: ['premium product card', 'NOX Forge artifact', 'clean dark hero'],
+  },
+  'obsidian-plaque': {
+    id: 'obsidian-plaque',
+    shortLabel: 'OBSIDIAN',
+    label: 'Obsidian Plaque',
+    reference: 'motion:hero-object-float-shell@obsidian-plaque',
+    bestFor: ['ritual artifact', 'luxury dark product', 'forge identity'],
+  },
+  'frosted-command-panel': {
+    id: 'frosted-command-panel',
+    shortLabel: 'FROST',
+    label: 'Frosted Command Panel',
+    reference: 'motion:hero-object-float-shell@frosted-command-panel',
+    bestFor: ['agent dashboard', 'Project X', 'technical system hero'],
+  },
+  'museum-slab': {
+    id: 'museum-slab',
+    shortLabel: 'MUSEUM',
+    label: 'Museum Glass Slab',
+    reference: 'motion:hero-object-float-shell@museum-slab',
+    bestFor: ['high-ticket offer', 'editorial product display', 'premium showcase'],
+  },
+  'holo-sigil-tablet': {
+    id: 'holo-sigil-tablet',
+    shortLabel: 'HOLO',
+    label: 'Holo Sigil Tablet',
+    reference: 'motion:hero-object-float-shell@holo-sigil-tablet',
+    bestFor: ['AI growth system', 'signal intelligence', 'futuristic product hero'],
+  },
+};
 
 export const HERO_OBJECT_PRESETS: Record<HeroObjectVariant, HeroObjectPreset> = {
   'forge-obsidian-relic': {
