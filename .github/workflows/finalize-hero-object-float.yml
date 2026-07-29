@@ -1,0 +1,80 @@
+name: Finalize Hero Object Float Catalog
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: ${{ github.head_ref == 'agent/hero-object-float-overdrive' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/hero-object-float-overdrive
+          fetch-depth: 0
+      - name: Update catalog and remove temporary workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/motion-arsenal/effects/hero/catalog.ts')
+          text = path.read_text(encoding='utf-8')
+          start = text.index("  {\n    meta: {\n      id: 'hero-object-float'")
+          end = text.index("  },\n];", start) + len("  },\n")
+          replacement = '''  {
+    meta: {
+      id: 'hero-object-float',
+      name: 'Hero Object Float Lab',
+      category: 'hero',
+      sourceWebsite: 'nox-original',
+      sourceFiles: [
+        'HeroObjectFloat.tsx — damped pointer tilt, three-wave flight and impact physics',
+        'heroObjectFloatObjects.tsx — five semantic CSS-3D product geometries',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'high',
+      dependencies: [],
+      bestFor: ['Produkt-/Artefakt-Hero', 'Agenten-/Systemprodukt-Inszenierung', 'High-Ticket-Angebotsvisualisierung'],
+      performanceNotes:
+        'Ein rAF-Loop schreibt ausschließlich Transform-, Schatten- und CSS-Variablen. Die fünf Objekte bestehen aus DOM/SVG/CSS-3D; kein WebGL, keine Textur-Uploads und keine Runtime-Requests.',
+      mobileNotes: 'Ohne Hover übernimmt die autonome Drei-Wellen-Bewegung. Tap löst den Impuls aus; Objekt und UI skalieren responsiv.',
+      reducedMotionNotes: 'Objekt steht ruhig in Neutralposition; Orbit-, Scan-, Pulse- und Field-Animationen sind deaktiviert.',
+      description:
+        'Ein vollständiges Hero-Object-Labor mit fünf semantisch unterschiedlichen Produktartefakten: Obsidian Relic, Agent Nexus Cube, Revenue Prism, Automation Kernel und Signal Orb. Magnetischer Pointer-Tilt, Tiefen-Parallax, gekoppelte Schattenphysik, Orbit-Satelliten und Tap-Impulse reagieren je nach CALM/CHARGED/OVERDRIVE-Zustand.',
+      importPath: '@/motion-arsenal/effects/hero/HeroObjectFloat',
+      usageJsx: '<HeroObjectFloat variant="project-x-nexus-cube" energy="overdrive" showVariantSwitcher={false} showEnergySwitcher={false} />',
+      props: [
+        { key: 'variant', label: 'Object Variant', type: 'select', default: 'forge-obsidian-relic', options: ['forge-obsidian-relic', 'project-x-nexus-cube', 'revenue-ascension-prism', 'automation-kernel-chip', 'signal-resonance-orb'], group: 'Object' },
+        { key: 'energy', label: 'Energy', type: 'select', default: 'charged', options: ['calm', 'charged', 'overdrive'], group: 'Object' },
+        { key: 'objectScale', label: 'Object Scale', type: 'range', default: 1, min: 0.7, max: 1.3, step: 0.05, group: 'Object' },
+        { key: 'amplitude', label: 'Float Amplitude', type: 'range', default: 18, min: 4, max: 42, step: 1, group: 'Motion' },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.3, max: 2.5, step: 0.1, group: 'Motion' },
+        { key: 'tilt', label: 'Tilt Strength', type: 'range', default: 1, min: 0, max: 2, step: 0.1, group: 'Motion' },
+        { key: 'depth', label: 'Depth', type: 'range', default: 1, min: 0, max: 2, step: 0.1, group: 'Motion' },
+        { key: 'orbit', label: 'Orbit System', type: 'boolean', default: true, group: 'Layers' },
+        { key: 'accent', label: 'Accent Override', type: 'color', default: '#ff553d', group: 'Color' },
+        { key: 'seed', label: 'Deterministic Seed', type: 'range', default: 9, min: 1, max: 20, step: 1, group: 'Object' },
+        { key: 'showVariantSwitcher', label: 'Variant Switcher', type: 'boolean', default: true, group: 'Preview' },
+        { key: 'showEnergySwitcher', label: 'Energy Switcher', type: 'boolean', default: true, group: 'Preview' },
+      ],
+      productionSafe: true,
+      clickToRun: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./HeroObjectFloat')),
+  },
+'''
+          path.write_text(text[:start] + replacement + text[end:], encoding='utf-8')
+          Path('.github/workflows/finalize-hero-object-float.yml').unlink()
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: finalize hero object float arsenal integration"
+          git push origin HEAD:agent/hero-object-float-overdrive
