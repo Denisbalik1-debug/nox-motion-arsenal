@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - recovery/self-contained-production-build
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
