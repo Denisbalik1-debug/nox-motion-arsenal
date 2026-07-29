@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "1.0.0",
+  "effectId": "scroll-pinned-product-stage",
+  "component": "PinnedProductStage",
+  "importPath": "@/motion-arsenal/effects/scroll/PinnedProductStageVariants",
+  "previewRoute": "/#/effect/scroll-pinned-product-stage",
+  "selectionRule": "Select exactly one stable variant id and pass it through the variant prop. Disable showVariantSwitcher on production customer pages unless visitors should compare products.",
+  "variants": [
+    {
+      "id": "nox-global-sales-os",
+      "label": "NOX Global Sales OS",
+      "reference": "motion:scroll-pinned-product-stage@nox-global-sales-os",
+      "bestFor": ["NOX Labs homepage", "high-ticket sales system", "international sales offer"],
+      "jsx": "<PinnedProductStage variant=\"nox-global-sales-os\" showVariantSwitcher={false} />"
+    },
+    {
+      "id": "project-x-command-center",
+      "label": "Project-X Command Center",
+      "reference": "motion:scroll-pinned-product-stage@project-x-command-center",
+      "bestFor": ["agent command center", "multi-agent product", "operator dashboard"],
+      "jsx": "<PinnedProductStage variant=\"project-x-command-center\" showVariantSwitcher={false} />"
+    },
+    {
+      "id": "ai-growth-engine",
+      "label": "AI Growth Engine",
+      "reference": "motion:scroll-pinned-product-stage@ai-growth-engine",
+      "bestFor": ["AI growth offer", "marketing system", "lead generation product"],
+      "jsx": "<PinnedProductStage variant=\"ai-growth-engine\" showVariantSwitcher={false} />"
+    },
+    {
+      "id": "conversion-website-system",
+      "label": "Conversion Website System",
+      "reference": "motion:scroll-pinned-product-stage@conversion-website-system",
+      "bestFor": ["customer website pitch", "conversion website", "digital sales asset"],
+      "jsx": "<PinnedProductStage variant=\"conversion-website-system\" showVariantSwitcher={false} />"
+    },
+    {
+      "id": "automation-ops-system",
+      "label": "Automation Operating System",
+      "reference": "motion:scroll-pinned-product-stage@automation-ops-system",
+      "bestFor": ["automation consultancy", "n8n system", "operations transformation"],
+      "jsx": "<PinnedProductStage variant=\"automation-ops-system\" showVariantSwitcher={false} />"
+    }
+  ]
+}

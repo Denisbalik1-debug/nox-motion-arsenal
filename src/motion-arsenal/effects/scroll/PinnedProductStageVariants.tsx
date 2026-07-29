@@ -1,0 +1,608 @@
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from 'react';
+import { clamp, damp, lerp, smoothstep, usePrefersReducedMotion, useRafLoop } from '../../lib/animationUtils';
+import { glyphPath } from '../../lib/svgUtils';
+
+// ---------------------------------------------------------------------------
+// PinnedProductStage — a reusable, referenceable product-story system.
+// Each stable variant packages copy, visual modules, proof metrics and an agent
+// reference that can be reused in NOX or customer websites.
+// ---------------------------------------------------------------------------
+
+export type ProductStageVariantId =
+  | 'nox-global-sales-os'
+  | 'project-x-command-center'
+  | 'ai-growth-engine'
+  | 'conversion-website-system'
+  | 'automation-ops-system';
+
+export interface PinnedProductStageProps {
+  variant?: ProductStageVariantId;
+  showVariantSwitcher?: boolean;
+  damping?: number;
+  rotatePerSection?: number;
+  scalePulse?: number;
+  colorShift?: boolean;
+  seed?: number;
+}
+
+type CssVars = CSSProperties & Record<`--${string}`, string | number>;
+
+type StageSection = {
+  kicker: string;
+  title: string;
+  body: string;
+  accent: string;
+  accent2: string;
+  rotX: number;
+  rotY: number;
+  rotZ: number;
+  scale: number;
+  explode: number;
+  scan: number;
+  stat: string;
+  statLabel: string;
+  telemetry: [number, number, number];
+  tags: string[];
+};
+
+type StageFragment = {
+  x: number;
+  y: number;
+  z: number;
+  r: number;
+  label: string;
+};
+
+type ProductStageVariant = {
+  id: ProductStageVariantId;
+  shortLabel: string;
+  productName: string;
+  stageLabel: string;
+  agentReference: string;
+  ctaLabel: string;
+  meterLabels: [string, string, string];
+  fragments: [StageFragment, StageFragment, StageFragment, StageFragment];
+  sections: [StageSection, StageSection, StageSection, StageSection, StageSection];
+};
+
+const motion = (
+  kicker: string,
+  title: string,
+  body: string,
+  accent: string,
+  accent2: string,
+  rotX: number,
+  rotY: number,
+  rotZ: number,
+  scale: number,
+  explode: number,
+  scan: number,
+  stat: string,
+  statLabel: string,
+  telemetry: [number, number, number],
+  tags: string[],
+): StageSection => ({
+  kicker,
+  title,
+  body,
+  accent,
+  accent2,
+  rotX,
+  rotY,
+  rotZ,
+  scale,
+  explode,
+  scan,
+  stat,
+  statLabel,
+  telemetry,
+  tags,
+});
+
+export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageVariant> = {
+  'nox-global-sales-os': {
+    id: 'nox-global-sales-os',
+    shortLabel: 'SALES OS',
+    productName: 'NOX GLOBAL SALES OS',
+    stageLabel: 'NOX PRODUCT STAGE',
+    agentReference: 'motion:scroll-pinned-product-stage@nox-global-sales-os',
+    ctaLabel: 'BUILD THE SALES SYSTEM',
+    meterLabels: ['PIPELINE', 'SIGNAL', 'CLOSE'],
+    fragments: [
+      { x: -1, y: -0.72, z: 46, r: -16, label: 'ICP' },
+      { x: 0.92, y: -0.64, z: 34, r: 13, label: 'OFFER' },
+      { x: -1.04, y: 0.62, z: 24, r: 10, label: 'OUTREACH' },
+      { x: 1.02, y: 0.7, z: 52, r: -12, label: 'CLOSE' },
+    ],
+    sections: [
+      motion('01 / POSITION', 'BUILD THE\nCATEGORY', 'NOX turns a scattered service offer into a high-ticket category with a sharp ICP, a clear mechanism and a market position built to travel globally.', '#c93630', '#f0a15a', -12, -18, -3, 0.92, 0, 0.08, '€25K+', 'TARGET DEAL SIZE', [34, 22, 12], ['ICP', 'POSITIONING', 'VALUE']),
+      motion('02 / OFFER', 'ENGINEER THE\nVALUE LADDER', 'The system opens into entry offers, flagship transformations and enterprise retainers. Every layer has a distinct promise, proof standard and next step.', '#b68b35', '#f4d992', 8, 74, 4, 1.04, 0.84, 0.62, '05', 'OFFER LAYERS', [72, 56, 38], ['ENTRY', 'FLAGSHIP', 'ENTERPRISE']),
+      motion('03 / PIPELINE', 'OPERATE THE\nREVENUE MACHINE', 'Research, qualification, personalization and follow-up are routed through one operating loop instead of disconnected tools and manual handoffs.', '#8f62ff', '#d7c1ff', -7, 164, -5, 1.12, 0.48, 1, '24/7', 'PIPELINE ACTIVE', [96, 84, 72], ['RESEARCH', 'ROUTING', 'FOLLOW-UP']),
+      motion('04 / PROOF', 'MAKE GROWTH\nMEASURABLE', 'The stage shifts from promises to evidence: reply quality, qualified opportunities, sales velocity and closed revenue become visible operating signals.', '#27d6a1', '#a9ffe5', 11, 258, 3, 0.98, 0.18, 0.34, '+38%', 'SALES VELOCITY', [100, 94, 88], ['PIPELINE', 'PROOF', 'REVENUE']),
+      motion('05 / SCALE', 'DEPLOY THE\nGLOBAL SALES OS', 'The layers converge into a repeatable system that can be handed to operators, sales partners and agents without losing the strategic logic.', '#ff4f40', '#ffd2a8', -4, 360, 0, 1.08, 0, 0.12, 'LIVE', 'READY TO SCALE', [100, 100, 100], ['SYSTEM', 'OPERATORS', 'SCALE']),
+    ],
+  },
+  'project-x-command-center': {
+    id: 'project-x-command-center',
+    shortLabel: 'PROJECT X',
+    productName: 'PROJECT-X COMMAND CENTER',
+    stageLabel: 'AGENT COMMAND STAGE',
+    agentReference: 'motion:scroll-pinned-product-stage@project-x-command-center',
+    ctaLabel: 'OPEN THE COMMAND CENTER',
+    meterLabels: ['AGENTS', 'QUESTS', 'SYNC'],
+    fragments: [
+      { x: -1, y: -0.72, z: 46, r: -16, label: 'HERMES' },
+      { x: 0.92, y: -0.64, z: 34, r: 13, label: 'TARTAROS' },
+      { x: -1.04, y: 0.62, z: 24, r: 10, label: 'MEMORY' },
+      { x: 1.02, y: 0.7, z: 52, r: -12, label: 'WORKERS' },
+    ],
+    sections: [
+      motion('01 / COMMAND', 'SEE EVERY\nACTIVE AGENT', 'Project-X gives the operator one visual command layer for agents, workers, tools and live system status.', '#8e45ff', '#d7c1ff', -10, -12, -2, 0.94, 0, 0.12, '12', 'AGENTS REGISTERED', [42, 30, 22], ['STATUS', 'ROLES', 'CAPACITY']),
+      motion('02 / CAPABILITY', 'OPEN THE\nSKILL GRAPH', 'Each agent exposes its skills, tools, permissions and missing prerequisites instead of behaving like an opaque chat window.', '#b68b35', '#ffe08a', 7, 82, 4, 1.05, 0.86, 0.66, '64', 'SKILLS MAPPED', [78, 62, 44], ['SKILLS', 'TOOLS', 'ACCESS']),
+      motion('03 / ORCHESTRATION', 'ROUTE WORK\nBETWEEN MINDS', 'Quests move through research, build, review and operator approval while each agent keeps a visible role in the chain.', '#4f7dff', '#b9d0ff', -8, 170, -5, 1.12, 0.5, 1, '24/7', 'ORCHESTRATION', [96, 86, 74], ['QUESTS', 'HANDOFFS', 'APPROVALS']),
+      motion('04 / MEMORY', 'KEEP THE\nSYSTEM COHERENT', 'Notion, Obsidian, logs and run history become one memory surface so decisions survive across agents, machines and sessions.', '#27d6a1', '#a9ffe5', 10, 260, 3, 0.99, 0.2, 0.32, '99.2%', 'CONTEXT RETAINED', [100, 95, 90], ['MEMORY', 'LOGS', 'CONTEXT']),
+      motion('05 / OPERATOR', 'CONTROL THE\nENTIRE MACHINE', 'The final state is not autonomous chaos. It is an operator-led command center with explicit gates for deploys, sends, secrets and destructive actions.', '#ff4f40', '#ffd2a8', -4, 360, 0, 1.08, 0, 0.1, 'GO', 'OPERATOR CONTROL', [100, 100, 100], ['CONTROL', 'SAFETY', 'DEPLOY']),
+    ],
+  },
+  'ai-growth-engine': {
+    id: 'ai-growth-engine',
+    shortLabel: 'AI GROWTH',
+    productName: 'AI GROWTH ENGINE',
+    stageLabel: 'GROWTH SYSTEM STAGE',
+    agentReference: 'motion:scroll-pinned-product-stage@ai-growth-engine',
+    ctaLabel: 'ACTIVATE THE GROWTH ENGINE',
+    meterLabels: ['REACH', 'INTENT', 'GROWTH'],
+    fragments: [
+      { x: -1, y: -0.72, z: 46, r: -16, label: 'MARKET' },
+      { x: 0.92, y: -0.64, z: 34, r: 13, label: 'CONTENT' },
+      { x: -1.04, y: 0.62, z: 24, r: 10, label: 'LEADS' },
+      { x: 1.02, y: 0.7, z: 52, r: -12, label: 'REVENUE' },
+    ],
+    sections: [
+      motion('01 / MARKET', 'FIND THE\nREAL DEMAND', 'The engine maps audiences, pain, search behavior and buying triggers before campaigns or content are produced.', '#d33a34', '#ff9a5e', -12, -18, -3, 0.92, 0, 0.08, '360°', 'MARKET VIEW', [38, 24, 16], ['AUDIENCE', 'PAIN', 'DEMAND']),
+      motion('02 / SIGNAL', 'TURN DATA\nINTO DIRECTION', 'Research, competitor intelligence and customer signals separate useful opportunities from generic marketing noise.', '#b58b34', '#ffe08a', 8, 74, 4, 1.04, 0.84, 0.62, '10X', 'SIGNAL DENSITY', [76, 58, 40], ['RESEARCH', 'SIGNALS', 'STRATEGY']),
+      motion('03 / CONTENT', 'CREATE THE\nATTENTION LOOP', 'Agents transform strategy into campaigns, landing pages, offers and content systems while preserving one coherent market narrative.', '#8f62ff', '#d7c1ff', -7, 164, -5, 1.12, 0.48, 1, '24/7', 'CONTENT ENGINE', [96, 84, 70], ['CONTENT', 'CAMPAIGNS', 'OFFERS']),
+      motion('04 / CONVERSION', 'CAPTURE AND\nQUALIFY INTENT', 'Traffic is routed into focused journeys that segment intent, collect proof and hand qualified opportunities to sales.', '#27d6a1', '#a9ffe5', 11, 258, 3, 0.98, 0.18, 0.34, '+42%', 'QUALIFIED INTENT', [100, 94, 86], ['FUNNELS', 'QUALIFY', 'HANDOFF']),
+      motion('05 / COMPOUND', 'BUILD A\nCOMPOUNDING SYSTEM', 'Every campaign feeds learning back into the engine so positioning, content and acquisition improve instead of resetting each month.', '#ff4f40', '#ffd2a8', -4, 360, 0, 1.08, 0, 0.12, 'LIVE', 'GROWTH LOOP ACTIVE', [100, 100, 100], ['LEARN', 'OPTIMIZE', 'COMPOUND']),
+    ],
+  },
+  'conversion-website-system': {
+    id: 'conversion-website-system',
+    shortLabel: 'WEB SYSTEM',
+    productName: 'CONVERSION WEBSITE SYSTEM',
+    stageLabel: 'DIGITAL PRODUCT STAGE',
+    agentReference: 'motion:scroll-pinned-product-stage@conversion-website-system',
+    ctaLabel: 'BUILD THE CONVERSION SYSTEM',
+    meterLabels: ['CLARITY', 'TRUST', 'ACTION'],
+    fragments: [
+      { x: -1, y: -0.72, z: 46, r: -16, label: 'MESSAGE' },
+      { x: 0.92, y: -0.64, z: 34, r: 13, label: 'DESIGN' },
+      { x: -1.04, y: 0.62, z: 24, r: 10, label: 'PROOF' },
+      { x: 1.02, y: 0.7, z: 52, r: -12, label: 'CTA' },
+    ],
+    sections: [
+      motion('01 / MESSAGE', 'MAKE THE\nVALUE OBVIOUS', 'The page starts with a sharp promise, a precise audience and a visual hierarchy that removes interpretation work.', '#c93630', '#f0a15a', -12, -18, -3, 0.92, 0, 0.08, '3 SEC', 'VALUE UNDERSTOOD', [42, 28, 18], ['PROMISE', 'AUDIENCE', 'CLARITY']),
+      motion('02 / EXPERIENCE', 'DESIGN THE\nDECISION PATH', 'Navigation, sections and motion guide attention through one intentional sequence instead of presenting a wall of information.', '#b68b35', '#f4d992', 8, 74, 4, 1.04, 0.84, 0.62, '05', 'DECISION STAGES', [76, 58, 40], ['FLOW', 'MOTION', 'FOCUS']),
+      motion('03 / PROOF', 'TURN CLAIMS\nINTO TRUST', 'Case evidence, process transparency and real outcomes are placed at the exact moment skepticism appears.', '#8f62ff', '#d7c1ff', -7, 164, -5, 1.12, 0.48, 1, '92%', 'TRUST SIGNAL', [96, 84, 72], ['CASES', 'PROCESS', 'PROOF']),
+      motion('04 / ACTION', 'REMOVE THE\nFINAL FRICTION', 'Forms, booking and qualification become one low-friction action layer with the right next step for each visitor.', '#27d6a1', '#a9ffe5', 11, 258, 3, 0.98, 0.18, 0.34, '+31%', 'CTA COMPLETION', [100, 94, 88], ['BOOKING', 'FORMS', 'QUALIFY']),
+      motion('05 / SYSTEM', 'SHIP MORE\nTHAN A WEBSITE', 'The final product connects design, analytics, CRM and automation so the website behaves like a measurable sales asset.', '#ff4f40', '#ffd2a8', -4, 360, 0, 1.08, 0, 0.12, 'LIVE', 'SYSTEM DEPLOYED', [100, 100, 100], ['ANALYTICS', 'CRM', 'AUTOMATION']),
+    ],
+  },
+  'automation-ops-system': {
+    id: 'automation-ops-system',
+    shortLabel: 'OPS',
+    productName: 'AUTOMATION OPERATING SYSTEM',
+    stageLabel: 'OPERATIONS SYSTEM STAGE',
+    agentReference: 'motion:scroll-pinned-product-stage@automation-ops-system',
+    ctaLabel: 'AUTOMATE THE OPERATION',
+    meterLabels: ['FLOW', 'CONTROL', 'UPTIME'],
+    fragments: [
+      { x: -1, y: -0.72, z: 46, r: -16, label: 'TRIGGER' },
+      { x: 0.92, y: -0.64, z: 34, r: 13, label: 'LOGIC' },
+      { x: -1.04, y: 0.62, z: 24, r: 10, label: 'REVIEW' },
+      { x: 1.02, y: 0.7, z: 52, r: -12, label: 'ACTION' },
+    ],
+    sections: [
+      motion('01 / MAP', 'SEE THE\nREAL OPERATION', 'Before automation, the workflow is mapped across people, tools, decisions, queues and failure points.', '#c93630', '#f0a15a', -12, -18, -3, 0.92, 0, 0.08, '100%', 'FLOW MAPPED', [36, 24, 16], ['PROCESS', 'OWNERS', 'RISKS']),
+      motion('02 / ORCHESTRATE', 'CONNECT THE\nSYSTEM LAYERS', 'n8n, data stores, agents and business tools become one orchestrated process with explicit inputs and outputs.', '#b68b35', '#f4d992', 8, 74, 4, 1.04, 0.84, 0.62, '18', 'SYSTEM NODES', [78, 60, 42], ['N8N', 'DATA', 'TOOLS']),
+      motion('03 / CONTROL', 'KEEP HUMANS\nON THE GATES', 'High-impact actions remain behind approval, validation and audit controls instead of disappearing into invisible automation.', '#8f62ff', '#d7c1ff', -7, 164, -5, 1.12, 0.48, 1, 'GO', 'APPROVAL REQUIRED', [96, 86, 74], ['APPROVAL', 'VALIDATE', 'AUDIT']),
+      motion('04 / RESILIENCE', 'BUILD FOR\nFAILURE AND RECOVERY', 'Retries, fallback routes, logs and alerts turn fragile workflows into observable operational infrastructure.', '#27d6a1', '#a9ffe5', 11, 258, 3, 0.98, 0.18, 0.34, '99.9%', 'TARGET UPTIME', [100, 95, 90], ['RETRY', 'FALLBACK', 'ALERTS']),
+      motion('05 / SCALE', 'RUN THE\nOPERATION AS CODE', 'The completed system can be reused, versioned and expanded without rebuilding the business process from zero.', '#ff4f40', '#ffd2a8', -4, 360, 0, 1.08, 0, 0.12, 'LIVE', 'OPS SYSTEM READY', [100, 100, 100], ['REUSE', 'VERSION', 'SCALE']),
+    ],
+  },
+};
+
+const VARIANT_IDS = Object.keys(PRODUCT_STAGE_VARIANTS) as ProductStageVariantId[];
+
+function hexToRgb(hex: string): [number, number, number] {
+  const normalized = hex.replace('#', '');
+  return [
+    Number.parseInt(normalized.slice(0, 2), 16),
+    Number.parseInt(normalized.slice(2, 4), 16),
+    Number.parseInt(normalized.slice(4, 6), 16),
+  ];
+}
+
+function mixHex(a: string, b: string, t: number): string {
+  const ca = hexToRgb(a);
+  const cb = hexToRgb(b);
+  return `rgb(${Math.round(lerp(ca[0], cb[0], t))}, ${Math.round(lerp(ca[1], cb[1], t))}, ${Math.round(lerp(ca[2], cb[2], t))})`;
+}
+
+const CSS = String.raw`
+.pps-root { position:absolute; inset:0; overflow:hidden; container-type:size; color:#f4f0e8; background:#050506; font-family:var(--sans,system-ui,sans-serif); }
+.pps-root::before { content:''; position:absolute; inset:0; z-index:0; pointer-events:none; background:radial-gradient(circle at 22% 42%,color-mix(in srgb,var(--pps-accent) 14%,transparent),transparent 28%),radial-gradient(circle at 74% 38%,color-mix(in srgb,var(--pps-accent-2) 8%,transparent),transparent 36%),linear-gradient(115deg,#0d0b0d,#070709 58%,#030304); transition:background .5s ease; }
+.pps-root::after { content:''; position:absolute; inset:-25%; z-index:1; pointer-events:none; opacity:.05; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E"); animation:pps-noise .25s steps(2) infinite; }
+@keyframes pps-noise { 0%{transform:translate3d(-2%,-1%,0)}50%{transform:translate3d(2%,1%,0)}100%{transform:translate3d(-1%,2%,0)} }
+.pps-scroll { position:absolute; inset:0; z-index:2; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.16) transparent; overscroll-behavior:contain; }
+.pps-scroll::-webkit-scrollbar { width:5px; }
+.pps-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.14); border-radius:10px; }
+.pps-stage { position:sticky; top:0; height:100cqh; overflow:hidden; isolation:isolate; }
+.pps-stage-grid { position:absolute; inset:0; z-index:0; opacity:.3; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size:54px 54px; mask-image:radial-gradient(circle at 38% 50%,#000 0 34%,transparent 76%); transform:perspective(700px) rotateX(62deg) translateY(42%) scale(1.6); transform-origin:center bottom; }
+.pps-horizon { position:absolute; left:-10%; right:-10%; top:58%; z-index:0; height:1px; background:linear-gradient(90deg,transparent,var(--pps-accent),transparent); opacity:.22; box-shadow:0 0 32px var(--pps-accent); }
+.pps-progress { position:absolute; left:18px; right:18px; top:15px; z-index:40; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; font-family:var(--mono,monospace); font-size:8px; letter-spacing:.22em; color:rgba(255,255,255,.42); }
+.pps-progress-track { position:relative; height:1px; background:rgba(255,255,255,.1); overflow:hidden; }
+.pps-progress-fill { position:absolute; inset:0 auto 0 0; width:calc(var(--pps-progress) * 100%); background:linear-gradient(90deg,var(--pps-accent),var(--pps-accent-2)); box-shadow:0 0 10px var(--pps-accent); }
+.pps-stage-code { color:var(--pps-accent-2); }
+.pps-variant-switcher { position:absolute; left:18px; right:18px; top:36px; z-index:44; display:flex; gap:5px; overflow-x:auto; scrollbar-width:none; pointer-events:auto; }
+.pps-variant-switcher::-webkit-scrollbar { display:none; }
+.pps-variant-switcher button { flex:0 0 auto; padding:6px 8px; border:1px solid rgba(255,255,255,.09); background:rgba(8,8,10,.66); color:rgba(255,255,255,.38); font:800 6px/1 var(--mono,monospace); letter-spacing:.14em; cursor:pointer; backdrop-filter:blur(8px); transition:.25s ease; }
+.pps-variant-switcher button:hover { color:#fff; border-color:var(--pps-accent); transform:translateY(-1px); }
+.pps-variant-switcher button[aria-pressed='true'] { color:#fff; border-color:var(--pps-accent-2); background:color-mix(in srgb,var(--pps-accent) 18%,rgba(8,8,10,.86)); box-shadow:0 0 13px color-mix(in srgb,var(--pps-accent) 26%,transparent); }
+.pps-reference { position:absolute; left:18px; top:70px; z-index:42; display:flex; align-items:center; gap:8px; max-width:50%; padding:6px 8px; border-left:1px solid var(--pps-accent); background:rgba(7,7,9,.54); backdrop-filter:blur(8px); pointer-events:auto; }
+.pps-reference code { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgba(255,255,255,.4); font:600 6px/1 var(--mono,monospace); letter-spacing:.06em; }
+.pps-reference button { flex:0 0 auto; padding:0; border:0; background:none; color:var(--pps-accent-2); font:800 6px/1 var(--mono,monospace); letter-spacing:.12em; cursor:pointer; }
+.pps-product-zone { position:absolute; left:4%; top:10%; bottom:10%; width:56%; z-index:8; display:grid; place-items:center; perspective:1200px; transform:translate3d(var(--pps-px),var(--pps-py),0); transition:transform .25s ease-out; }
+.pps-aura { position:absolute; width:min(48cqw,58cqh); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle,color-mix(in srgb,var(--pps-accent) 20%,transparent),transparent 58%); filter:blur(22px); opacity:calc(.34 + var(--pps-glow) * .38); transform:scale(calc(.78 + var(--pps-glow) * .3)); }
+.pps-product-wrap { position:relative; width:min(31cqw,42cqh); aspect-ratio:1; transform-style:preserve-3d; }
+.pps-product { position:absolute; inset:0; transform-style:preserve-3d; will-change:transform; }
+.pps-shell { position:absolute; inset:var(--shell-inset); border:1px solid color-mix(in srgb,var(--pps-accent) calc(72% - var(--shell-index) * 9%),rgba(255,255,255,.08)); border-radius:calc(18px + var(--shell-index) * 5px); background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.008)); box-shadow:inset 0 0 26px rgba(255,255,255,.025),0 0 calc(8px + var(--pps-glow) * 24px) color-mix(in srgb,var(--pps-accent) 16%,transparent); transform:translateZ(calc((var(--shell-index) - 2) * 17px)) rotate(calc((var(--shell-index) - 2) * 8deg)) scale(calc(1 + var(--pps-explode) * var(--shell-index) * .045)); opacity:calc(1 - var(--shell-index) * .1); }
+.pps-shell::before,.pps-shell::after { content:''; position:absolute; width:9px; height:9px; border-color:var(--pps-accent-2); opacity:.72; }
+.pps-shell::before { top:8px; left:8px; border-top:1px solid; border-left:1px solid; }
+.pps-shell::after { right:8px; bottom:8px; border-right:1px solid; border-bottom:1px solid; }
+.pps-core { position:absolute; inset:27%; z-index:5; display:grid; place-items:center; border-radius:22%; transform:translateZ(58px); background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.16),transparent 22%),linear-gradient(145deg,color-mix(in srgb,var(--pps-accent) 22%,#0b0a0c),#070708 70%); border:1px solid var(--pps-accent); box-shadow:0 0 calc(20px + var(--pps-glow) * 34px) color-mix(in srgb,var(--pps-accent) 48%,transparent),inset 0 0 24px color-mix(in srgb,var(--pps-accent) 12%,transparent); }
+.pps-core::before { content:''; position:absolute; inset:-11px; border:1px dashed color-mix(in srgb,var(--pps-accent-2) 45%,transparent); border-radius:28%; animation:pps-spin 14s linear infinite; }
+.pps-core::after { content:''; position:absolute; inset:18%; border-radius:50%; background:radial-gradient(circle,#fff 0 3%,var(--pps-accent-2) 5%,transparent 44%); filter:drop-shadow(0 0 8px var(--pps-accent)); animation:pps-pulse 2.2s ease-in-out infinite; }
+.pps-core svg { width:58%; height:58%; overflow:visible; filter:drop-shadow(0 0 8px var(--pps-accent)); }
+.pps-core path { stroke:var(--pps-accent-2); }
+.pps-orbit { position:absolute; left:50%; top:50%; z-index:2; width:calc(112% + var(--orbit-index) * 18%); aspect-ratio:1; border:1px solid color-mix(in srgb,var(--pps-accent) calc(30% - var(--orbit-index) * 5%),transparent); border-radius:50%; transform-style:preserve-3d; transform:translate(-50%,-50%) rotateX(calc(68deg - var(--orbit-index) * 13deg)) rotateZ(calc(var(--pps-orbit) * 1deg + var(--orbit-index) * 34deg)); }
+.pps-orbit::before { content:''; position:absolute; width:7px; height:7px; left:12%; top:16%; border-radius:50%; background:var(--pps-accent-2); box-shadow:0 0 12px var(--pps-accent); }
+.pps-fragment { position:absolute; left:50%; top:50%; z-index:8; width:25%; height:17%; padding:7px; border:1px solid color-mix(in srgb,var(--pps-accent-2) 48%,transparent); border-radius:8px; background:rgba(8,8,10,.82); backdrop-filter:blur(8px); transform-style:preserve-3d; transform:translate(-50%,-50%) translate3d(calc(var(--pps-explode) * var(--frag-x) * 118px),calc(var(--pps-explode) * var(--frag-y) * 118px),var(--frag-z)) rotate(calc(var(--pps-explode) * var(--frag-r))); opacity:calc(.22 + var(--pps-explode) * .78); box-shadow:0 0 18px color-mix(in srgb,var(--pps-accent) 16%,transparent); }
+.pps-fragment strong { display:block; font:700 6px/1 var(--mono,monospace); letter-spacing:.16em; color:var(--pps-accent-2); }
+.pps-fragment span { display:block; margin-top:7px; width:calc(30% + var(--pps-progress) * 55%); height:2px; background:var(--pps-accent); box-shadow:0 0 6px var(--pps-accent); }
+.pps-scan { position:absolute; top:-18%; bottom:-18%; left:50%; z-index:15; width:1px; pointer-events:none; background:linear-gradient(180deg,transparent,var(--pps-accent-2),#fff,var(--pps-accent),transparent); box-shadow:0 0 16px var(--pps-accent),0 0 44px color-mix(in srgb,var(--pps-accent) 44%,transparent); opacity:var(--pps-scan); transform:translateX(calc((var(--pps-scan-phase) - .5) * 210px)); }
+.pps-scan::after { content:''; position:absolute; top:0; bottom:0; left:-50px; width:100px; background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--pps-accent) 10%,transparent),transparent); }
+.pps-ground { position:absolute; left:18%; right:18%; bottom:2%; height:4%; border-radius:50%; background:var(--pps-accent); filter:blur(18px); opacity:calc(.16 + var(--pps-glow) * .16); transform:scaleX(calc(.72 + var(--pps-explode) * .38)); }
+.pps-telemetry { position:absolute; left:18px; bottom:18px; z-index:20; width:132px; padding:11px; border:1px solid rgba(255,255,255,.09); background:rgba(8,8,10,.62); backdrop-filter:blur(10px); }
+.pps-telemetry-head { display:flex; justify-content:space-between; gap:8px; margin-bottom:9px; font:700 7px/1 var(--mono,monospace); letter-spacing:.16em; color:rgba(255,255,255,.38); }
+.pps-telemetry-head b { color:var(--pps-accent-2); }
+.pps-meter { display:grid; grid-template-columns:34px 1fr; align-items:center; gap:7px; margin-top:6px; font:600 6px/1 var(--mono,monospace); letter-spacing:.08em; color:rgba(255,255,255,.32); }
+.pps-meter-track { height:2px; background:rgba(255,255,255,.08); overflow:hidden; }
+.pps-meter-fill { height:100%; width:var(--meter-value); background:linear-gradient(90deg,var(--pps-accent),var(--pps-accent-2)); box-shadow:0 0 7px var(--pps-accent); transition:width .45s ease; }
+.pps-stat { position:absolute; left:calc(56% - 32px); top:21%; z-index:22; min-width:110px; padding:10px 12px; border-left:1px solid var(--pps-accent); background:linear-gradient(90deg,color-mix(in srgb,var(--pps-accent) 10%,rgba(5,5,6,.86)),transparent); backdrop-filter:blur(9px); }
+.pps-stat strong { display:block; font-size:clamp(16px,3.5cqw,29px); line-height:.9; letter-spacing:-.05em; color:var(--pps-accent-2); text-shadow:0 0 18px color-mix(in srgb,var(--pps-accent) 55%,transparent); }
+.pps-stat span { display:block; margin-top:6px; font:700 6px/1 var(--mono,monospace); letter-spacing:.18em; color:rgba(255,255,255,.38); }
+.pps-copy-layer { position:relative; z-index:18; margin-top:-100cqh; }
+.pps-section { height:100cqh; display:flex; align-items:center; justify-content:flex-end; padding:8% clamp(18px,5%,52px) 8% 58%; }
+.pps-copy { width:min(100%,390px); opacity:.18; transform:translate3d(18px,12px,0) scale(.985); filter:blur(1.5px); transition:opacity .5s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1),filter .5s ease; }
+.pps-copy[data-active='true'] { opacity:1; transform:none; filter:none; }
+.pps-product-name { margin-bottom:9px; color:rgba(255,255,255,.3); font:700 6px/1 var(--mono,monospace); letter-spacing:.2em; }
+.pps-kicker { display:flex; align-items:center; gap:9px; margin-bottom:12px; font:800 8px/1 var(--mono,monospace); letter-spacing:.3em; color:var(--pps-accent-2); }
+.pps-kicker::before { content:''; width:27px; height:1px; background:currentColor; box-shadow:0 0 8px currentColor; }
+.pps-title { max-width:390px; font-size:clamp(22px,5.7cqw,52px); font-weight:820; letter-spacing:-.065em; line-height:.86; text-wrap:balance; }
+.pps-title-line:last-child { color:transparent; -webkit-text-stroke:1px color-mix(in srgb,var(--pps-accent-2) 78%,white); text-shadow:0 0 24px color-mix(in srgb,var(--pps-accent) 26%,transparent); }
+.pps-body { max-width:340px; margin-top:16px; font-size:clamp(10px,1.8cqw,14px); line-height:1.55; color:rgba(244,240,232,.56); }
+.pps-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:16px; }
+.pps-tag { padding:6px 8px; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.025); font:700 6px/1 var(--mono,monospace); letter-spacing:.15em; color:rgba(255,255,255,.52); }
+.pps-cta { display:inline-flex; align-items:center; gap:9px; margin-top:16px; padding:9px 11px; border:1px solid var(--pps-accent-2); background:color-mix(in srgb,var(--pps-accent) 14%,rgba(7,7,9,.86)); color:#fff; font:800 7px/1 var(--mono,monospace); letter-spacing:.13em; box-shadow:0 0 16px color-mix(in srgb,var(--pps-accent) 20%,transparent); }
+.pps-cta::after { content:'↗'; color:var(--pps-accent-2); }
+.pps-nav { position:absolute; right:18px; bottom:18px; z-index:42; display:flex; align-items:center; gap:5px; pointer-events:auto; }
+.pps-nav button { position:relative; width:25px; height:25px; padding:0; border:1px solid rgba(255,255,255,.1); border-radius:50%; background:rgba(8,8,10,.7); color:rgba(255,255,255,.36); font:700 6px/1 var(--mono,monospace); cursor:pointer; transition:border-color .25s ease,color .25s ease,transform .25s ease,background .25s ease; }
+.pps-nav button:hover { transform:translateY(-2px); border-color:var(--pps-accent); color:#fff; }
+.pps-nav button[aria-current='step'] { border-color:var(--pps-accent-2); color:#fff; background:color-mix(in srgb,var(--pps-accent) 18%,rgba(8,8,10,.86)); box-shadow:0 0 14px color-mix(in srgb,var(--pps-accent) 32%,transparent); }
+.pps-scroll-hint { position:absolute; right:20px; top:50%; z-index:21; writing-mode:vertical-rl; font:700 6px/1 var(--mono,monospace); letter-spacing:.24em; color:rgba(255,255,255,.26); }
+.pps-scroll-hint::after { content:''; display:inline-block; width:1px; height:40px; margin-top:10px; background:linear-gradient(var(--pps-accent),transparent); animation:pps-hint 1.8s ease-in-out infinite; }
+@keyframes pps-hint { 0%,100%{transform:scaleY(.3);transform-origin:top;opacity:.3}50%{transform:scaleY(1);opacity:1} }
+@keyframes pps-spin { to{transform:rotate(360deg)} }
+@keyframes pps-pulse { 50%{transform:scale(1.18);opacity:.72} }
+@media (prefers-reduced-motion:reduce) { .pps-root::after,.pps-core::before,.pps-core::after,.pps-scroll-hint::after { animation:none!important; } .pps-copy { transition:none; filter:none; } }
+@container (max-width:700px) {
+  .pps-progress { left:12px; right:12px; }
+  .pps-variant-switcher { left:12px; right:12px; top:35px; }
+  .pps-reference { left:12px; top:68px; max-width:72%; }
+  .pps-reference code { max-width:130px; }
+  .pps-product-zone { left:0; top:4%; bottom:auto; width:100%; height:57%; }
+  .pps-product-wrap { width:min(58cqw,34cqh); }
+  .pps-stat { left:auto; right:13px; top:18%; min-width:92px; }
+  .pps-telemetry { left:12px; bottom:auto; top:18%; width:108px; padding:8px; }
+  .pps-section { align-items:flex-end; justify-content:flex-start; padding:57% 17px 52px; }
+  .pps-copy { width:100%; padding:13px; border:1px solid rgba(255,255,255,.08); background:linear-gradient(135deg,rgba(7,7,9,.92),rgba(7,7,9,.7)); backdrop-filter:blur(12px); }
+  .pps-title { font-size:clamp(22px,8cqw,38px); }
+  .pps-body { margin-top:10px; font-size:10px; }
+  .pps-tags,.pps-cta { margin-top:10px; }
+  .pps-nav { right:12px; bottom:12px; }
+  .pps-scroll-hint { display:none; }
+}
+@container (max-height:430px) {
+  .pps-product-zone { top:3%; bottom:3%; }
+  .pps-telemetry,.pps-reference { display:none; }
+  .pps-stat { top:18%; }
+  .pps-body { max-width:310px; font-size:9px; }
+  .pps-tags,.pps-cta { margin-top:8px; }
+}
+`;
+
+export function PinnedProductStage({
+  variant = 'nox-global-sales-os',
+  showVariantSwitcher = true,
+  damping = 8,
+  rotatePerSection = 90,
+  scalePulse = 0.18,
+  colorShift = true,
+  seed = 11,
+}: PinnedProductStageProps) {
+  const reduced = usePrefersReducedMotion();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const productRef = useRef<HTMLDivElement>(null);
+  const smooth = useRef(reduced ? 1 : 0);
+  const [selectedVariant, setSelectedVariant] = useState<ProductStageVariantId>(variant);
+  const [active, setActive] = useState(reduced ? 4 : 0);
+  const [copiedRef, setCopiedRef] = useState(false);
+
+  useEffect(() => {
+    setSelectedVariant(variant);
+  }, [variant]);
+
+  const config = PRODUCT_STAGE_VARIANTS[selectedVariant];
+  const sections = config.sections;
+  const n = sections.length;
+  const variantIndex = VARIANT_IDS.indexOf(selectedVariant);
+  const glyph = useMemo(() => glyphPath((seed + variantIndex * 17) * 13 + 3, 120), [seed, variantIndex]);
+
+  const applyVariant = (nextVariant: ProductStageVariantId) => {
+    setSelectedVariant(nextVariant);
+    setCopiedRef(false);
+    setActive(reduced ? 4 : 0);
+    smooth.current = reduced ? 1 : 0;
+    const scroller = scrollerRef.current;
+    if (scroller) {
+      scroller.scrollTo({ top: reduced ? scroller.scrollHeight : 0, behavior: 'auto' });
+    }
+  };
+
+  useRafLoop(
+    (dt) => {
+      const scroller = scrollerRef.current;
+      const stage = stageRef.current;
+      const product = productRef.current;
+      if (!scroller || !stage || !product) return;
+
+      const raw = scroller.scrollTop / Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+      smooth.current = damp(smooth.current, raw, damping, dt);
+      const progress = clamp(smooth.current, 0, 1);
+      const timeline = progress * (n - 1);
+      const sectionIndex = clamp(Math.floor(timeline), 0, n - 2);
+      const local = smoothstep(0, 1, timeline - sectionIndex);
+      const a = sections[sectionIndex];
+      const b = sections[sectionIndex + 1];
+
+      const rotX = lerp(a.rotX, b.rotX, local);
+      const authoredRotY = lerp(a.rotY, b.rotY, local);
+      const rotY = authoredRotY + timeline * (rotatePerSection - 90) * 0.22;
+      const rotZ = lerp(a.rotZ, b.rotZ, local);
+      const scale = lerp(a.scale, b.scale, local) * (1 + Math.sin(timeline * Math.PI) * scalePulse * 0.22);
+      const explode = lerp(a.explode, b.explode, local);
+      const scan = lerp(a.scan, b.scan, local);
+      const accent = colorShift ? mixHex(a.accent, b.accent, local) : sections[0].accent;
+      const accent2 = colorShift ? mixHex(a.accent2, b.accent2, local) : sections[0].accent2;
+      const scanPhase = (progress * 3.4) % 1;
+
+      product.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+      stage.style.setProperty('--pps-progress', progress.toFixed(4));
+      stage.style.setProperty('--pps-accent', accent);
+      stage.style.setProperty('--pps-accent-2', accent2);
+      stage.style.setProperty('--pps-glow', (0.42 + Math.sin(timeline * Math.PI) * 0.46).toFixed(3));
+      stage.style.setProperty('--pps-explode', explode.toFixed(3));
+      stage.style.setProperty('--pps-scan', scan.toFixed(3));
+      stage.style.setProperty('--pps-scan-phase', scanPhase.toFixed(3));
+      stage.style.setProperty('--pps-orbit', (progress * 390).toFixed(2));
+
+      const nearest = clamp(Math.round(timeline), 0, n - 1);
+      setActive((previous) => (previous === nearest ? previous : nearest));
+    },
+    !reduced,
+  );
+
+  const goToSection = (index: number) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    scroller.scrollTo({ top: (index / (n - 1)) * max, behavior: reduced ? 'auto' : 'smooth' });
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const root = rootRef.current;
+    const stage = stageRef.current;
+    if (!root || !stage || reduced) return;
+    const rect = root.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / Math.max(1, rect.width) - 0.5) * 2;
+    const y = ((event.clientY - rect.top) / Math.max(1, rect.height) - 0.5) * 2;
+    stage.style.setProperty('--pps-px', `${(x * 10).toFixed(2)}px`);
+    stage.style.setProperty('--pps-py', `${(y * 7).toFixed(2)}px`);
+  };
+
+  const copyReference = () => {
+    navigator.clipboard?.writeText(config.agentReference).then(() => {
+      setCopiedRef(true);
+      window.setTimeout(() => setCopiedRef(false), 1400);
+    });
+  };
+
+  const final = sections[n - 1];
+  const initial = sections[0];
+  const stageVars: CssVars = {
+    '--pps-progress': reduced ? 1 : 0,
+    '--pps-accent': reduced ? final.accent : initial.accent,
+    '--pps-accent-2': reduced ? final.accent2 : initial.accent2,
+    '--pps-glow': reduced ? 0.75 : 0.42,
+    '--pps-explode': reduced ? final.explode : initial.explode,
+    '--pps-scan': reduced ? 0 : initial.scan,
+    '--pps-scan-phase': 0.5,
+    '--pps-orbit': reduced ? 360 : 0,
+    '--pps-px': '0px',
+    '--pps-py': '0px',
+  };
+
+  const productTransform = reduced
+    ? `rotateX(${final.rotX}deg) rotateY(${final.rotY}deg) rotateZ(${final.rotZ}deg) scale(${final.scale})`
+    : `rotateX(${initial.rotX}deg) rotateY(${initial.rotY}deg) rotateZ(${initial.rotZ}deg) scale(${initial.scale})`;
+
+  return (
+    <div ref={rootRef} className="pps-root" onPointerMove={handlePointerMove} style={stageVars}>
+      <style>{CSS}</style>
+      <div ref={scrollerRef} className="pps-scroll" aria-label={`${config.productName} product story`}>
+        <div style={{ position: 'relative' }}>
+          <div ref={stageRef} className="pps-stage" style={stageVars}>
+            <div className="pps-stage-grid" />
+            <div className="pps-horizon" />
+
+            <div className="pps-progress" aria-hidden="true">
+              <span>{config.stageLabel}</span>
+              <div className="pps-progress-track"><div className="pps-progress-fill" /></div>
+              <span className="pps-stage-code">{String(active + 1).padStart(2, '0')} / {String(n).padStart(2, '0')}</span>
+            </div>
+
+            {showVariantSwitcher && (
+              <nav className="pps-variant-switcher" aria-label="Product stage variants">
+                {VARIANT_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={selectedVariant === id}
+                    onClick={() => applyVariant(id)}
+                  >
+                    {PRODUCT_STAGE_VARIANTS[id].shortLabel}
+                  </button>
+                ))}
+              </nav>
+            )}
+
+            <div className="pps-reference">
+              <code>{config.agentReference}</code>
+              <button type="button" onClick={copyReference}>{copiedRef ? 'COPIED' : 'COPY REF'}</button>
+            </div>
+
+            <div className="pps-product-zone" aria-hidden="true">
+              <div className="pps-aura" />
+              <div className="pps-product-wrap">
+                <div ref={productRef} className="pps-product" style={{ transform: productTransform }}>
+                  {[0, 1, 2, 3, 4].map((index) => (
+                    <div
+                      key={index}
+                      className="pps-shell"
+                      style={{
+                        '--shell-index': index,
+                        '--shell-inset': `${index * 5}%`,
+                      } as CssVars}
+                    />
+                  ))}
+
+                  {[0, 1, 2].map((index) => (
+                    <div key={index} className="pps-orbit" style={{ '--orbit-index': index } as CssVars} />
+                  ))}
+
+                  {config.fragments.map((fragment) => (
+                    <div
+                      key={fragment.label}
+                      className="pps-fragment"
+                      style={{
+                        '--frag-x': fragment.x,
+                        '--frag-y': fragment.y,
+                        '--frag-z': `${fragment.z}px`,
+                        '--frag-r': `${fragment.r}deg`,
+                      } as CssVars}
+                    >
+                      <strong>{fragment.label}</strong>
+                      <span />
+                    </div>
+                  ))}
+
+                  <div className="pps-core">
+                    <svg viewBox="0 0 120 120">
+                      <path d={glyph} fill="none" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <div className="pps-scan" />
+                </div>
+                <div className="pps-ground" />
+              </div>
+            </div>
+
+            <div className="pps-telemetry" aria-live="polite">
+              <div className="pps-telemetry-head"><span>LIVE TELEMETRY</span><b>●</b></div>
+              {config.meterLabels.map((label, index) => (
+                <div className="pps-meter" key={label}>
+                  <span>{label}</span>
+                  <div className="pps-meter-track">
+                    <div className="pps-meter-fill" style={{ '--meter-value': `${sections[active].telemetry[index]}%` } as CssVars} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pps-stat" aria-live="polite">
+              <strong>{sections[active].stat}</strong>
+              <span>{sections[active].statLabel}</span>
+            </div>
+
+            <div className="pps-scroll-hint">SCROLL TO OPERATE</div>
+
+            <nav className="pps-nav" aria-label="Product story chapters">
+              {sections.map((section, index) => (
+                <button
+                  key={section.kicker}
+                  type="button"
+                  aria-label={`Open chapter ${index + 1}: ${section.title.replace('\n', ' ')}`}
+                  aria-current={active === index ? 'step' : undefined}
+                  onClick={() => goToSection(index)}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="pps-copy-layer">
+            {sections.map((section, index) => (
+              <section key={section.kicker} className="pps-section" aria-label={section.title.replace('\n', ' ')}>
+                <div className="pps-copy" data-active={reduced ? 'true' : String(index === active)}>
+                  <div className="pps-product-name">{config.productName}</div>
+                  <div className="pps-kicker">{section.kicker}</div>
+                  <div className="pps-title">
+                    {section.title.split('\n').map((line) => <div className="pps-title-line" key={line}>{line}</div>)}
+                  </div>
+                  <div className="pps-body">{section.body}</div>
+                  <div className="pps-tags">
+                    {section.tags.map((tag) => <span className="pps-tag" key={tag}>{tag}</span>)}
+                  </div>
+                  {index === n - 1 && <div className="pps-cta">{config.ctaLabel}</div>}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default PinnedProductStage;
