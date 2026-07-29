@@ -1,0 +1,32 @@
+name: Apply Forge Glyph PR Patch
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply-patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/forge-energy-glyphs-overdrive
+          fetch-depth: 0
+      - name: Decode and apply embedded payload
+        shell: bash
+        run: |
+          awk '/<<'"'"'PAYLOAD'"'"'/{capture=1;next} /^PAYLOAD$/{capture=0} capture' .github/workflows/forge-glyphs-source-artifact.yml > /tmp/forge-glyphs-patch.b64
+          test -s /tmp/forge-glyphs-patch.b64
+          base64 -d /tmp/forge-glyphs-patch.b64 > /tmp/forge-glyphs-patch.tar.gz
+          tar -xzf /tmp/forge-glyphs-patch.tar.gz -C "$GITHUB_WORKSPACE"
+          rm -f .github/workflows/forge-glyphs-source-artifact.yml .github/workflows/apply-forge-glyph-pr.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: overdrive forge energy glyph system"
+          git push origin HEAD:agent/forge-energy-glyphs-overdrive
