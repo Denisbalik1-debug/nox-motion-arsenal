@@ -1,9 +1,10 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.0.1",
   "effectId": "bg-forge-energy-glyphs",
   "component": "ForgeEnergyGlyphs",
   "importPath": "@/motion-arsenal/effects/backgrounds/ForgeEnergyGlyphs",
   "previewRoute": "/#/effect/bg-forge-energy-glyphs",
+  "runtimeArtwork": "deterministic-svg",
   "selectionRule": "Select exactly one stable variant and one stateMode. Disable both switchers on production pages unless visitors should compare styles.",
   "states": ["idle", "warming", "charged", "overdrive", "ritual", "stealth"],
   "variants": [
