@@ -5,27 +5,28 @@ export const SCROLL_CATALOG: EffectEntry[] = [
   {
     meta: {
       id: 'scroll-pinned-product-stage',
-      name: 'PinnedProductStage',
+      name: 'PinnedProductStageCoreSystem',
       displayName: 'Product Stage Variant System',
       category: 'scroll',
       sourceWebsite: 'shopify-editions',
       sourceFiles: [
         'Shopify Szenen-Mechanik (Theatre.js: scroll → Timeline-Frame)',
         'PinnedProductStageVariants.tsx (NOX preset registry)',
+        'PinnedProductStageCoreSystem.tsx (five semantic core artifacts)',
         'public/agent-manifests/pinned-product-stage-variants.json',
       ],
       mode: 'nox-adapted',
       complexity: 'high',
       dependencies: [],
       bestFor: ['NOX Produktpräsentationen', 'High-Ticket-Angebote', 'Agenten-Systeme', 'Kunden-Landingpages'],
-      performanceNotes: 'Eine sticky Stage, transform-basierte Produkt-Layer und ein gedämpfter rAF-Loop. Preset-Wechsel lädt keine zusätzlichen Runtime-Abhängigkeiten.',
+      performanceNotes: 'Eine sticky Stage, transform-basierte Produkt-Layer und ein gedämpfter rAF-Loop. Die fünf Core-Artefakte laufen vollständig über CSS/SVG ohne zusätzliche Runtime.',
       mobileNotes: 'Touch-Scroll, horizontale Preset-Auswahl und kompakter Content-Stack sind integriert.',
-      reducedMotionNotes: 'Zeigt den finalen Produktzustand statisch; Presets und Referenzcodes bleiben bedienbar.',
-      description: 'Referenzierbares Produkt-Story-System mit fünf fertigen NOX-Presets. Jede Variante besitzt eigene Kapitel, Module, Kennzahlen, CTA und eine stabile Agenten-Referenz für den späteren Einbau in NOX- oder Kundenwebseiten.',
+      reducedMotionNotes: 'Zeigt den finalen Produktzustand statisch; Presets, Core-Formen und Referenzcodes bleiben bedienbar.',
+      description: 'Referenzierbares Produkt-Story-System mit fünf fertigen NOX-Presets. Jede Variante besitzt eigene Kapitel, Module, Kennzahlen, CTA, stabile Agenten-Referenz und ein sichtbar anderes semantisches Kernobjekt: Revenue Reactor, Agent Nexus, Signal Nucleus, Conversion Prism oder Automation Kernel.',
       currentUsage: ['NOX Labs Produktpräsentation', 'Project-X Agentenzentrale', 'zukünftige Kundenwebseiten'],
-      technicalBasis: 'Sticky scroll timeline + CSS-3D layers + deterministic glyph + exported preset registry + public agent manifest.',
-      importPath: '@/motion-arsenal/effects/scroll/PinnedProductStageVariants',
-      usageJsx: '<PinnedProductStage variant="nox-global-sales-os" showVariantSwitcher />',
+      technicalBasis: 'Sticky scroll timeline + CSS-3D layers + five semantic CSS/SVG core artifacts + exported preset registry + public agent manifest.',
+      importPath: '@/motion-arsenal/effects/scroll/PinnedProductStageCoreSystem',
+      usageJsx: '<PinnedProductStageCoreSystem variant="nox-global-sales-os" showVariantSwitcher />',
       props: [
         {
           key: 'variant',
@@ -50,7 +51,7 @@ export const SCROLL_CATALOG: EffectEntry[] = [
       productionSafe: true,
       status: 'production-safe',
     },
-    Component: lazy(() => import('./PinnedProductStageVariants')),
+    Component: lazy(() => import('./PinnedProductStageCoreSystem')),
   },
   {
     meta: {
