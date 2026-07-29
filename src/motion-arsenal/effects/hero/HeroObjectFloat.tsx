@@ -1,208 +1,285 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { damp, seededRandom, usePointer, usePrefersReducedMotion, useRafLoop } from '../../lib/animationUtils';
-import { NOX_COLORS, PHYSICS } from '../../lib/motionPresets';
-import { glyphPath } from '../../lib/svgUtils';
-
-// ---------------------------------------------------------------------------
-// HeroObjectFloat — schwebendes CSS-3D-Emblem (prozedural, kein Asset).
-// Float-Bewegung nach der Shopify-Butterfly-Wave-Mechanik
-// (Butterflies-CFpdR9tM.js:307-390): wave = sin(t*a+p1)*A1 +
-// sin(t*2.1+p2)*0.2 + sin(t*0.37+p3)*0.3 — drei überlagerte Sinuswellen,
-// nie periodisch wirkend. Pointer-Tilt via usePointer + damp (Lusion-Lambda
-// ~10, KRANK Cursor-Follow), weicher Kontaktschatten koppelt invers an die
-// Flughöhe.
-// ---------------------------------------------------------------------------
+import { PHYSICS } from '../../lib/motionPresets';
+import { HeroObjectVisual } from './heroObjectFloatObjects';
+import {
+  HERO_OBJECT_ENERGIES,
+  HERO_OBJECT_ENERGY_PRESETS,
+  HERO_OBJECT_PRESETS,
+  HERO_OBJECT_VARIANTS,
+  type HeroObjectEnergy,
+  type HeroObjectVariant,
+} from './heroObjectFloatPresets';
+import { HERO_OBJECT_FLOAT_STYLES } from './heroObjectFloatStyles';
 
 export interface HeroObjectFloatProps {
-  amplitude?: number; // px float travel
+  variant?: HeroObjectVariant;
+  energy?: HeroObjectEnergy;
+  amplitude?: number;
   speed?: number;
-  tilt?: number; // 0..2 — pointer tilt strength
+  tilt?: number;
   accent?: string;
   seed?: number;
+  objectScale?: number;
+  depth?: number;
+  orbit?: boolean;
+  showVariantSwitcher?: boolean;
+  showEnergySwitcher?: boolean;
+}
+
+interface MotionState {
+  rx: number;
+  ry: number;
+  rz: number;
+  x: number;
+  y: number;
+  z: number;
+  scale: number;
 }
 
 export function HeroObjectFloat({
-  amplitude = 14,
+  variant = 'forge-obsidian-relic',
+  energy = 'charged',
+  amplitude = 18,
   speed = 1,
   tilt = 1,
-  accent = NOX_COLORS.red,
+  accent,
   seed = 9,
+  objectScale = 1,
+  depth = 1,
+  orbit = true,
+  showVariantSwitcher = true,
+  showEnergySwitcher = true,
 }: HeroObjectFloatProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
-  const glareRef = useRef<HTMLDivElement>(null);
+  const impactRef = useRef<HTMLDivElement>(null);
   const pointer = usePointer(rootRef);
   const reduced = usePrefersReducedMotion();
+  const [activeVariant, setActiveVariant] = useState<HeroObjectVariant>(variant);
+  const [activeEnergy, setActiveEnergy] = useState<HeroObjectEnergy>(energy);
+  const [copied, setCopied] = useState(false);
+  const motion = useRef<MotionState>({ rx: 0, ry: 0, rz: 0, x: 0, y: 0, z: 0, scale: objectScale });
+  const impact = useRef({ startedAt: -20, x: 0.5, y: 0.5 });
 
-  const { emblem, phases } = useMemo(() => {
-    const rnd = seededRandom(seed);
+  useEffect(() => setActiveVariant(variant), [variant]);
+  useEffect(() => setActiveEnergy(energy), [energy]);
+
+  const phases = useMemo(() => {
+    const random = seededRandom(seed);
     return {
-      emblem: glyphPath(seed * 13 + 3, 120),
-      phases: { p1: rnd() * Math.PI * 2, p2: rnd() * Math.PI * 2, p3: rnd() * Math.PI * 2 },
+      p1: random() * Math.PI * 2,
+      p2: random() * Math.PI * 2,
+      p3: random() * Math.PI * 2,
     };
   }, [seed]);
 
-  const tiltState = useRef({ rx: 0, ry: 0 });
+  const fieldDots = useMemo(() => {
+    const random = seededRandom(seed * 37 + 11);
+    return Array.from({ length: 18 }, (_, index) => ({
+      id: index,
+      left: 8 + random() * 84,
+      top: 8 + random() * 78,
+      size: 1 + random() * 2.4,
+      opacity: 0.1 + random() * 0.34,
+      delay: random() * -8,
+    }));
+  }, [seed]);
+
+  const preset = HERO_OBJECT_PRESETS[activeVariant];
+  const energyPreset = HERO_OBJECT_ENERGY_PRESETS[activeEnergy];
+  const resolvedAccent = accent ?? preset.accent;
 
   useRafLoop((dt, elapsed) => {
-    const card = cardRef.current;
+    const shell = shellRef.current;
     const shadow = shadowRef.current;
-    const glare = glareRef.current;
-    if (!card || !shadow) return;
+    const root = rootRef.current;
+    if (!shell || !shadow || !root) return;
 
-    const t = elapsed * speed;
-    // Butterfly-Wave: 3 überlagerte Sinuswellen (Frequenzen 1.0 / 2.1 / 0.37).
+    const t = elapsed * speed * energyPreset.speed;
     const wave =
-      Math.sin(t * 1.0 + phases.p1) * 1.0 +
+      Math.sin(t + phases.p1) +
       Math.sin(t * 2.1 + phases.p2) * 0.2 +
       Math.sin(t * 0.37 + phases.p3) * 0.3;
     const sway =
-      Math.sin(t * 0.8 + phases.p2) * 1.0 +
-      Math.sin(t * 2.3 + phases.p3) * 0.15 +
-      Math.sin(t * 0.31 + phases.p1) * 0.35;
-    const y = (wave / 1.5) * amplitude;
-    const rz = (sway / 1.5) * 2.2;
-
-    // Pointer-Tilt (damped) — außerhalb: sanftes Idle-Schwanken.
+      Math.sin(t * 0.72 + phases.p2) +
+      Math.sin(t * 2.24 + phases.p3) * 0.16 +
+      Math.sin(t * 0.31 + phases.p1) * 0.34;
     const p = pointer.current;
-    const targetRx = p.inside ? (0.5 - p.ty) * 22 * tilt : Math.sin(t * 0.5 + phases.p3) * 4 * tilt;
-    const targetRy = p.inside ? (p.tx - 0.5) * 26 * tilt : Math.sin(t * 0.42 + phases.p1) * 5 * tilt;
-    tiltState.current.rx = damp(tiltState.current.rx, targetRx, PHYSICS.cursorFollow, dt);
-    tiltState.current.ry = damp(tiltState.current.ry, targetRy, PHYSICS.cursorFollow, dt);
+    const pointerX = p.inside ? p.tx : 0.5 + Math.sin(t * 0.24 + phases.p1) * 0.09;
+    const pointerY = p.inside ? p.ty : 0.5 + Math.sin(t * 0.19 + phases.p2) * 0.07;
+    const now = performance.now() / 1000;
+    const impactAge = now - impact.current.startedAt;
+    const impactPulse = impactAge >= 0 && impactAge < 1.25
+      ? Math.sin(Math.min(impactAge / 1.25, 1) * Math.PI) * Math.exp(-impactAge * 1.25)
+      : 0;
+    const directionX = impact.current.x - 0.5;
+    const directionY = impact.current.y - 0.5;
 
-    card.style.transform = `translate3d(0, ${(-y).toFixed(2)}px, 0) rotateX(${tiltState.current.rx.toFixed(2)}deg) rotateY(${tiltState.current.ry.toFixed(2)}deg) rotateZ(${rz.toFixed(2)}deg)`;
+    const targetRx = ((0.5 - pointerY) * 24 * tilt * energyPreset.tilt) + directionY * impactPulse * 16;
+    const targetRy = ((pointerX - 0.5) * 28 * tilt * energyPreset.tilt) + directionX * impactPulse * 18;
+    const targetRz = (sway / 1.5) * 2.8 + impactPulse * 3.5;
+    const targetX = (sway / 1.5) * 4.5 + (pointerX - 0.5) * 8 * depth;
+    const targetY = -(wave / 1.5) * amplitude * energyPreset.amplitude + impactPulse * -8;
+    const targetZ = (wave / 1.5) * 7 * depth + impactPulse * 24 * depth;
+    const targetScale = objectScale * (1 + impactPulse * 0.055);
 
-    // Kontaktschatten: höher schweben → kleiner + weicher + transparenter.
-    const lift = (wave / 1.5 + 1) / 2; // 0..1
-    shadow.style.transform = `translateX(-50%) scaleX(${(1 - lift * 0.28).toFixed(3)})`;
-    shadow.style.opacity = (0.55 - lift * 0.3).toFixed(3);
-    shadow.style.filter = `blur(${(10 + lift * 10).toFixed(1)}px)`;
+    const damping = PHYSICS.cursorFollow;
+    motion.current.rx = damp(motion.current.rx, targetRx, damping, dt);
+    motion.current.ry = damp(motion.current.ry, targetRy, damping, dt);
+    motion.current.rz = damp(motion.current.rz, targetRz, damping * 0.72, dt);
+    motion.current.x = damp(motion.current.x, targetX, damping * 0.7, dt);
+    motion.current.y = damp(motion.current.y, targetY, damping * 0.7, dt);
+    motion.current.z = damp(motion.current.z, targetZ, damping * 0.62, dt);
+    motion.current.scale = damp(motion.current.scale, targetScale, damping * 0.8, dt);
 
-    if (glare) {
-      // Glare wandert gegenläufig zum Tilt (Licht bleibt "oben links").
-      glare.style.transform = `translate(${(-tiltState.current.ry * 1.6).toFixed(1)}px, ${(tiltState.current.rx * 1.6).toFixed(1)}px)`;
-    }
+    const current = motion.current;
+    shell.style.transform = `translate3d(${current.x.toFixed(2)}px, ${current.y.toFixed(2)}px, ${current.z.toFixed(2)}px) rotateX(${current.rx.toFixed(2)}deg) rotateY(${current.ry.toFixed(2)}deg) rotateZ(${current.rz.toFixed(2)}deg) scale(${current.scale.toFixed(4)})`;
+
+    const lift = Math.max(0, Math.min(1, (wave / 1.5 + 1) / 2 + impactPulse * 0.35));
+    shadow.style.transform = `translateX(-50%) scaleX(${(1 - lift * 0.34).toFixed(3)}) scaleY(${(1 - lift * 0.18).toFixed(3)})`;
+    shadow.style.opacity = (0.58 - lift * 0.34).toFixed(3);
+    shadow.style.filter = `blur(${(10 + lift * 15).toFixed(1)}px)`;
+    root.style.setProperty('--hof-pointer-x', pointerX.toFixed(3));
+    root.style.setProperty('--hof-pointer-y', pointerY.toFixed(3));
   }, !reduced);
+
+  const onImpact = (event: PointerEvent<HTMLDivElement>) => {
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    impact.current = {
+      startedAt: performance.now() / 1000,
+      x: (event.clientX - rect.left) / Math.max(rect.width, 1),
+      y: (event.clientY - rect.top) / Math.max(rect.height, 1),
+    };
+    const ring = impactRef.current;
+    if (ring) {
+      ring.style.left = `${impact.current.x * 100}%`;
+      ring.style.top = `${impact.current.y * 100}%`;
+      ring.style.animation = 'none';
+      void ring.offsetWidth;
+      ring.style.animation = 'hof-impact .9s cubic-bezier(.15,.8,.2,1) both';
+    }
+  };
+
+  const copyReference = async () => {
+    try {
+      await navigator.clipboard.writeText(preset.reference);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const rootStyle = {
+    '--hof-accent': resolvedAccent,
+    '--hof-secondary': preset.secondary,
+    '--hof-light': preset.light,
+    '--hof-glow': energyPreset.glow,
+    '--hof-orbit-speed': `${12 / energyPreset.orbit}s`,
+    '--hof-depth': depth,
+    position: 'absolute',
+    inset: 0,
+    overflow: 'hidden',
+    background: preset.background,
+    display: 'grid',
+    placeItems: 'center',
+    userSelect: 'none',
+  } as CSSProperties;
 
   return (
     <div
       ref={rootRef}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        overflow: 'hidden',
-        background: `radial-gradient(115% 90% at 50% 112%, #150b0c 0%, ${NOX_COLORS.bg} 58%)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className="hof-root"
+      data-energy={activeEnergy}
+      data-variant={activeVariant}
+      style={rootStyle}
+      onPointerDown={onImpact}
     >
-      {/* 3D-Bühne */}
-      <div style={{ perspective: 900, position: 'relative', width: 'min(46%, 210px)' }}>
-        <div
-          ref={cardRef}
+      <style>{HERO_OBJECT_FLOAT_STYLES}</style>
+
+      {fieldDots.map((dot) => (
+        <span
+          key={dot.id}
+          className="hof-field-dot"
           style={{
-            position: 'relative',
-            aspectRatio: '3 / 4',
-            borderRadius: 16,
-            transformStyle: 'preserve-3d',
-            background: `linear-gradient(155deg, #1c1a1e 0%, #121014 55%, #17090b 100%)`,
-            border: '1px solid rgba(240, 236, 228, 0.12)',
-            boxShadow: `inset 0 1px 0 rgba(240,236,228,0.08), 0 0 40px ${accent}22`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6%',
-            willChange: 'transform',
-          }}
-        >
-          {/* Emblem-Glyph (prozedural aus svgUtils), leicht vor der Karte */}
-          <svg
-            viewBox="0 0 120 120"
-            style={{ width: '52%', overflow: 'visible', transform: 'translateZ(34px)' }}
-          >
-            <path
-              d={emblem}
-              fill="none"
-              stroke={accent}
-              strokeWidth={3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ filter: `drop-shadow(0 0 8px ${accent}aa)` }}
-            />
-            <path d={emblem} fill="none" stroke="rgba(240,236,228,0.35)" strokeWidth={1} strokeLinecap="round" />
-          </svg>
-          <div style={{ textAlign: 'center', transform: 'translateZ(22px)' }}>
-            <div
-              style={{
-                fontSize: 'clamp(16px, 3.4vw, 30px)',
-                fontWeight: 850,
-                letterSpacing: '0.06em',
-                color: NOX_COLORS.text,
-                lineHeight: 1,
-              }}
-            >
-              NOX
-            </div>
-            <div
-              style={{
-                fontFamily: 'var(--mono, monospace)',
-                fontSize: 8,
-                letterSpacing: '0.4em',
-                color: NOX_COLORS.textDim,
-                marginTop: 6,
-              }}
-            >
-              FORGE // 001
-            </div>
-          </div>
-          {/* Glare-Layer */}
-          <div
-            ref={glareRef}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: 16,
-              background: 'linear-gradient(135deg, rgba(240,236,228,0.14) 0%, transparent 42%)',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-        {/* Kontaktschatten */}
-        <div
-          ref={shadowRef}
-          style={{
-            position: 'absolute',
-            left: '50%',
-            bottom: '-14%',
-            width: '78%',
-            height: 14,
-            borderRadius: '50%',
-            background: 'rgba(0, 0, 0, 0.85)',
-            transform: 'translateX(-50%)',
-            filter: 'blur(14px)',
-            opacity: reduced ? 0.45 : 0.5,
+            left: `${dot.left}%`,
+            top: `${dot.top}%`,
+            width: dot.size,
+            height: dot.size,
+            opacity: dot.opacity,
+            animationDelay: `${dot.delay}s`,
           }}
         />
+      ))}
+
+      <div className="hof-ui">
+        {showVariantSwitcher ? (
+          <div className="hof-controls" aria-label="Hero object variants">
+            {HERO_OBJECT_VARIANTS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className="hof-button"
+                data-active={id === activeVariant}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={() => setActiveVariant(id)}
+              >
+                {HERO_OBJECT_PRESETS[id].shortLabel}
+              </button>
+            ))}
+          </div>
+        ) : <span />}
+        {showEnergySwitcher ? (
+          <div className="hof-controls" aria-label="Hero object energy">
+            {HERO_OBJECT_ENERGIES.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className="hof-button"
+                data-active={id === activeEnergy}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={() => setActiveEnergy(id)}
+              >
+                {HERO_OBJECT_ENERGY_PRESETS[id].label}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '6%',
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          fontFamily: 'var(--mono, monospace)',
-          fontSize: 9,
-          letterSpacing: '0.35em',
-          color: NOX_COLORS.textDim,
-          pointerEvents: 'none',
-        }}
+
+      <div className="hof-stage">
+        <div ref={shellRef} className="hof-object-shell" style={reduced ? { transform: `scale(${objectScale})` } : undefined}>
+          <div className="hof-aura" />
+          <div className="hof-backplate" />
+          {orbit ? (
+            <>
+              <div className="hof-orbit hof-orbit-one"><span className="hof-satellite" /></div>
+              <div className="hof-orbit hof-orbit-two"><span className="hof-satellite" /></div>
+              <div className="hof-orbit hof-orbit-three"><span className="hof-satellite" /></div>
+            </>
+          ) : null}
+          <HeroObjectVisual variant={activeVariant} seed={seed} />
+          <div ref={impactRef} className="hof-impact" />
+        </div>
+        <div ref={shadowRef} className="hof-shadow" />
+        <div className="hof-label">
+          <div className="hof-label-title">{preset.label}</div>
+          <div className="hof-label-kicker">{preset.kicker}</div>
+        </div>
+      </div>
+
+      <div className="hof-hint">HOVER TO TILT // TAP TO IMPULSE</div>
+      <button
+        type="button"
+        className="hof-reference"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={copyReference}
       >
-        ARTIFACT // HOVER TO TILT
-      </div>
+        {copied ? 'COPIED' : 'COPY REF'}
+      </button>
     </div>
   );
 }
