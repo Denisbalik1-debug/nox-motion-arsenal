@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { seededRandom } from '../../lib/animationUtils';
 import type { HeroObjectShellVariant } from './heroObjectFloatPresets';
+import { HERO_OBJECT_GLASS_SHELL_STYLES } from './heroObjectGlassShellStyles';
 
 interface HeroObjectGlassShellProps {
   variant: HeroObjectShellVariant;
@@ -32,33 +33,36 @@ export function HeroObjectGlassShell({ variant, seed, children }: HeroObjectGlas
   }, [seed]);
 
   return (
-    <div className={`hof-glass-shell hof-shell-${variant}`} data-shell={variant}>
-      <div className="hof-shell-depth" />
-      <div className="hof-shell-surface">
-        <div className="hof-shell-tint" />
-        <div className="hof-shell-grid" />
-        <div className="hof-shell-caustic" />
-        <div className="hof-shell-sweep" />
-        <div className="hof-shell-edge-light" />
-        <div className="hof-shell-noise">
-          {specks.map((speck) => (
-            <span
-              key={speck.id}
-              style={{
-                left: `${speck.left}%`,
-                top: `${speck.top}%`,
-                opacity: speck.opacity,
-                width: speck.size,
-                height: speck.size,
-              }}
-            />
-          ))}
+    <>
+      <style>{HERO_OBJECT_GLASS_SHELL_STYLES}</style>
+      <div className={`hof-glass-shell hof-shell-${variant}`} data-shell={variant}>
+        <div className="hof-shell-depth" />
+        <div className="hof-shell-surface">
+          <div className="hof-shell-tint" />
+          <div className="hof-shell-grid" />
+          <div className="hof-shell-caustic" />
+          <div className="hof-shell-sweep" />
+          <div className="hof-shell-edge-light" />
+          <div className="hof-shell-noise">
+            {specks.map((speck) => (
+              <span
+                key={speck.id}
+                style={{
+                  left: `${speck.left}%`,
+                  top: `${speck.top}%`,
+                  opacity: speck.opacity,
+                  width: speck.size,
+                  height: speck.size,
+                }}
+              />
+            ))}
+          </div>
+          <CornerMarks />
+          <div className="hof-shell-serial">NOX // ARTIFACT</div>
+          <div className="hof-shell-core">{children}</div>
         </div>
-        <CornerMarks />
-        <div className="hof-shell-serial">NOX // ARTIFACT</div>
-        <div className="hof-shell-core">{children}</div>
       </div>
-    </div>
+    </>
   );
 }
 
