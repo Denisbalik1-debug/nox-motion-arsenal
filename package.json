@@ -10,7 +10,7 @@
     "test:favorites": "node scripts/test-favorites.mjs",
     "typecheck": "tsc --noEmit",
     "test:previews": "node scripts/audit-previews.mjs",
-    "test:previews:smoke": "node scripts/audit-previews.mjs --ids bg-orbital-light-trails,premium-signal-particles,canvasui-particle-reveal,canvasui-shatter-reveal,cursor-magnetic-cta,img2threejs-nox-orbital-station",
+    "test:previews:smoke": "node scripts/audit-previews.mjs --ids bg-orbital-light-trails,premium-signal-particles,canvasui-particle-reveal,canvasui-shatter-reveal,cursor-magnetic-cta,img2threejs-nox-orbital-station,skilltree-locked-path-shadow",
     "typecheck:server": "tsc -p tsconfig.server.json",
     "lint": "npm run typecheck && npm run typecheck:server",
     "test": "node scripts/test-contribution-contract.mjs && node scripts/test-locked-path-shadow-contract.mjs",
