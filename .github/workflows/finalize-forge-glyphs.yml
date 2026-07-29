@@ -1,0 +1,112 @@
+name: Finalize Forge Glyph Catalog
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/forge-energy-glyphs-overdrive
+          fetch-depth: 0
+      - name: Update catalog and remove temporary workflows
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('src/motion-arsenal/effects/backgrounds/catalog.ts')
+          text = path.read_text()
+          replacement = '''  {
+            meta: {
+              id: 'bg-forge-energy-glyphs',
+              name: 'ForgeEnergyGlyphs',
+              displayName: 'NOX Forge Energy Glyph System',
+              category: 'backgrounds',
+              sourceWebsite: 'nox-original',
+              sourceFiles: [
+                'ForgeEnergyGlyphs.tsx (five semantic glyph families + six operating states)',
+                'public/agent-manifests/forge-energy-glyphs-variants.json',
+                'Generated NOX glyph reference sheets used as visual direction; final runtime artwork is deterministic SVG.',
+              ],
+              mode: 'nox-adapted',
+              complexity: 'high',
+              dependencies: [],
+              bestFor: ['NOX Forge', 'Project-X command center', 'Global Sales OS', 'Automation products', 'AI Growth sections'],
+              performanceNotes: 'Deterministic SVG field with 8–30 glyphs, lightweight connectors and CSS-composited dust. Hero glows are the main paint cost; keep 12–20 glyphs on mobile.',
+              mobileNotes: 'Ambient glyphs are reduced automatically; switchers scroll horizontally and pointer interaction gracefully falls back to ambient/scroll energy.',
+              reducedMotionNotes: 'Float, rotation, pulses, noise and heat shimmer stop; the selected semantic field remains fully visible and readable.',
+              description:
+                'A reusable NOX signature background rather than a random rune field: five semantic symbol families, six operating states, ambient/active/hero depth layers, pointer or scroll ignition, flowing connector pulses, charge rings, heat shimmer and stable agent references.',
+              currentUsage: ['NOX product heroes', 'Agent command surfaces', 'Forge progression scenes', 'Customer system presentations'],
+              technicalBasis: 'React + deterministic SVG path registry + proximity field + CSS compositing. No WebGL, no runtime network requests, no new dependency.',
+              importPath: '@/motion-arsenal/effects/backgrounds/ForgeEnergyGlyphs',
+              usageJsx: '<ForgeEnergyGlyphs variant="forge-ember-runes" stateMode="charged" showVariantSwitcher />',
+              props: [
+                {
+                  key: 'variant',
+                  label: 'Glyph Family',
+                  type: 'select',
+                  default: 'forge-ember-runes',
+                  options: ['forge-ember-runes', 'command-nexus-sigils', 'revenue-ascension-seals', 'automation-circuit-glyphs', 'signal-growth-constellations'],
+                  group: 'Content',
+                },
+                {
+                  key: 'stateMode',
+                  label: 'System State',
+                  type: 'select',
+                  default: 'charged',
+                  options: ['idle', 'warming', 'charged', 'overdrive', 'ritual', 'stealth'],
+                  group: 'Content',
+                },
+                { key: 'glyphCount', label: 'Glyphs', type: 'range', default: 18, min: 8, max: 30, step: 1, group: 'Field' },
+                { key: 'density', label: 'Density', type: 'range', default: 1, min: 0.5, max: 1.5, step: 0.05, group: 'Field' },
+                { key: 'glowStrength', label: 'Glow', type: 'range', default: 1, min: 0.2, max: 1.5, step: 0.05, group: 'Energy' },
+                { key: 'energyLevel', label: 'Energy', type: 'range', default: 1, min: 0.2, max: 1.5, step: 0.05, group: 'Energy' },
+                { key: 'floatSpeed', label: 'Float Speed', type: 'range', default: 1, min: 0.2, max: 2.5, step: 0.1, group: 'Motion' },
+                { key: 'rotationSpeed', label: 'Rotation', type: 'range', default: 1, min: 0.2, max: 2.5, step: 0.1, group: 'Motion' },
+                { key: 'rareGlyphChance', label: 'Hero Glyphs', type: 'range', default: 0.18, min: 0.05, max: 0.45, step: 0.01, group: 'Field' },
+                { key: 'heatDistortion', label: 'Heat Shimmer', type: 'range', default: 0.55, min: 0, max: 1, step: 0.05, group: 'Energy' },
+                {
+                  key: 'interactionMode',
+                  label: 'Interaction',
+                  type: 'select',
+                  default: 'hybrid',
+                  options: ['none', 'pointer', 'scroll', 'hybrid'],
+                  group: 'Interaction',
+                },
+                { key: 'proximityRadius', label: 'Ignite Radius', type: 'range', default: 190, min: 80, max: 360, step: 10, group: 'Interaction' },
+                { key: 'parallax', label: 'Parallax', type: 'range', default: 0.5, min: 0, max: 1, step: 0.05, group: 'Interaction' },
+                { key: 'showVariantSwitcher', label: 'Variant Switcher', type: 'boolean', default: true, group: 'Content' },
+                { key: 'showStateSwitcher', label: 'State Switcher', type: 'boolean', default: true, group: 'Content' },
+              ],
+              productionSafe: true,
+              status: 'production-safe',
+              fullBleed: true,
+            },
+            Component: lazy(() => import('./ForgeEnergyGlyphs')),
+          },
+          '''
+          pattern = re.compile(r"  \{\n    meta: \{\n      id: 'bg-forge-energy-glyphs',.*?    Component: lazy\(\(\) => import\('\./ForgeEnergyGlyphs'\)\),\n  \},\n", re.S)
+          updated, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one forge glyph catalog entry, replaced {count}')
+          path.write_text(updated)
+          PY
+          rm -f .github/workflows/forge-glyphs-source-artifact.yml \
+                .github/workflows/apply-forge-glyph-pr.yml \
+                .github/workflows/finalize-forge-glyphs.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: finalize forge glyph arsenal integration"
+          git push origin HEAD:agent/forge-energy-glyphs-overdrive
