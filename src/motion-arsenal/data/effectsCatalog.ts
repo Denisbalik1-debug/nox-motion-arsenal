@@ -46,6 +46,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Preserved the original public props while exposing production-oriented orbit, depth, trail, and glow controls.',
     ],
   },
+  'premium-glass-distortion-cards': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-30T21:07:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Exposed all five material variants and three energy profiles directly in the Arsenal control panel.',
+      'Added production controls for depth, glass opacity, material scale, and optional in-effect switchers while preserving the original props.',
+      'Documented the single-WebGL-context budget, touch fallback, and reduced-motion behavior for safer customer-site adoption.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
