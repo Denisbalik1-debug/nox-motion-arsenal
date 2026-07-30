@@ -1,5 +1,5 @@
 import React from 'react';
-import type { EffectEntry } from '../types';
+import type { EffectEntry, EffectImprovementStatus } from '../types';
 import { formatEffectUpdatedAt } from '../lib/effectDates';
 import { EffectPreview } from './EffectPreview';
 
@@ -10,14 +10,23 @@ interface Props {
   onToggleFavorite: (id: string) => void;
 }
 
+const IMPROVEMENT_LABELS: Record<EffectImprovementStatus, string> = {
+  pending: 'PENDING',
+  'in-progress': 'IN PROGRESS',
+  improved: 'IMPROVED',
+  'needs-review': 'NEEDS REVIEW',
+};
+
 export function EffectCard({ entry, favorite, onOpen, onToggleFavorite }: Props) {
   const m = entry.meta;
-  const updated = formatEffectUpdatedAt(m.updatedAt);
+  const updated = formatEffectUpdatedAt(m.lastImprovedAt ?? m.updatedAt);
+  const improvementStatus = m.improvementStatus ?? 'pending';
 
   return (
     <article
       className={`fx-card ${favorite ? 'is-favorite' : ''}`}
       data-effect-id={m.id}
+      data-improvement-status={improvementStatus}
       onClick={() => onOpen(m.id)}
       onKeyDown={(event) => {
         if (event.key === 'Enter') onOpen(m.id);
@@ -45,12 +54,20 @@ export function EffectCard({ entry, favorite, onOpen, onToggleFavorite }: Props)
       <div className="fx-card-body">
         <div className="fx-card-heading">
           <div className="fx-card-title">{m.displayName ?? m.name}</div>
-          <time className="fx-updated" dateTime={m.updatedAt} title={`Zuletzt aktualisiert: ${updated.date}`}>
-            UPDATE {updated.date} · {updated.relative}
+          <time
+            className="fx-updated"
+            dateTime={m.lastImprovedAt ?? m.updatedAt}
+            title={`Zuletzt verbessert: ${updated.date}`}
+          >
+            IMPROVED {updated.date} · {updated.relative}
           </time>
         </div>
         <p className="fx-card-desc">{m.description}</p>
         <div className="badges">
+          <span className={`badge improvement-status improvement-${improvementStatus}`}>
+            {IMPROVEMENT_LABELS[improvementStatus]}
+          </span>
+          {m.improvementVersion && <span className="badge">v{m.improvementVersion}</span>}
           <span className="badge adapted">NOX Adapted</span>
           <span className={`badge ${m.complexity === 'heavy' ? 'heavy' : ''}`}>{m.complexity}</span>
           {m.productionSafe && <span className="badge prod">production</span>}
