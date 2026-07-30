@@ -84,20 +84,20 @@ export default function SpinImage({
     imageHeight = 150,
     direction = "anticlockwise",
     path = "curved",
-    xCurve = -68,
-    yCurve = -42,
+    xCurve = -18,
+    yCurve = 12,
     speed = 3,
     rounded = 18,
     orbitUnit = "%",
     orbitWidthPx = 760,
     orbitWidthPct = 72,
-    depth = 180,
-    interactionTilt = 9,
+    depth = 108,
+    interactionTilt = 7,
     hoverBoost = 1.9,
-    focusScale = 1.28,
-    cardTilt = 7,
-    trail = 0.58,
-    glowStrength = 0.9,
+    focusScale = 1.18,
+    cardTilt = 4,
+    trail = 0.2,
+    glowStrength = 0.68,
     glowColor = "#7c3aed",
     showCore = true,
 }: SpinImageProps) {
@@ -135,8 +135,8 @@ export default function SpinImage({
     const safeImageHeight = Math.max(1, imageHeight)
     const safeRounded = clamp(rounded, 0, 100)
     const radius = (safeRounded / 100) * (Math.min(safeImageWidth, safeImageHeight) / 2)
-    const safeDepth = clamp(depth, 0, 480)
-    const safeInteractionTilt = clamp(interactionTilt, 0, 24)
+    const safeDepth = clamp(depth, 0, 220)
+    const safeInteractionTilt = clamp(interactionTilt, 0, 9)
     const safeHoverBoost = clamp(hoverBoost, 1, 4)
     const safeFocusScale = clamp(focusScale, 0.8, 1.8)
     const safeCardTilt = clamp(cardTilt, 0, 24)
@@ -212,17 +212,25 @@ export default function SpinImage({
                 motion.phi = (motion.phi + directionSign * TAU * velocity * dt) % TAU
             }
 
-            const orbitWidth =
+            const requestedOrbitWidth =
                 orbitUnit === "px"
                     ? Math.max(0, orbitWidthPx)
                     : (clamp(orbitWidthPct, 0, 100) / 100) * width
+            const maxOrbitWidth = Math.max(
+                safeImageWidth * 1.4,
+                width - safeImageWidth * 1.2,
+            )
+            const orbitWidth = Math.min(requestedOrbitWidth, maxOrbitWidth)
             const a = Math.max(1, orbitWidth / 2)
-            const b = a * (path === "curved" ? 0.36 : 0.26)
-            const diagonalAngle = Math.atan2(height, width)
+            const b = Math.min(
+                a * (path === "curved" ? 0.28 : 0.22),
+                Math.max(1, height * 0.16),
+            )
+            const diagonalAngle = path === "curved" ? -0.06 : 0
             const cosDiagonal = Math.cos(diagonalAngle)
             const sinDiagonal = Math.sin(diagonalAngle)
-            const pointerYaw = motion.pointerX * safeInteractionTilt
-            const pointerPitch = motion.pointerY * safeInteractionTilt
+            const pointerYaw = clamp(motion.pointerX * safeInteractionTilt, -9, 9)
+            const pointerPitch = clamp(motion.pointerY * safeInteractionTilt, -9, 9)
             const orbitYaw = xCurve + pointerYaw
             const orbitPitch = -yCurve + pointerPitch
 
@@ -441,7 +449,7 @@ export default function SpinImage({
                             position: "absolute",
                             left: "50%",
                             top: "50%",
-                            width: "min(36vw, 360px)",
+                            width: "min(28vw, 260px)",
                             aspectRatio: "1",
                             borderRadius: "50%",
                             border: `1px solid color-mix(in srgb, ${glowColor} 46%, transparent)`,
@@ -459,8 +467,8 @@ export default function SpinImage({
                             position: "absolute",
                             left: "50%",
                             top: "50%",
-                            width: 92,
-                            height: 92,
+                            width: 72,
+                            height: 72,
                             borderRadius: "50%",
                             transform: "translate(-50%, -50%)",
                             background: `radial-gradient(circle at 36% 32%, #fff 0 2%, #67e8f9 7%, ${glowColor} 28%, rgba(10,8,24,.96) 64%, transparent 70%)`,
