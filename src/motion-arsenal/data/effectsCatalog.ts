@@ -57,6 +57,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Documented the single-WebGL-context budget, touch fallback, and reduced-motion behavior for safer customer-site adoption.',
     ],
   },
+  'premium-data-stream-journey': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-30T22:07:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Exposed five production-ready stream geometries and three energy profiles in the Arsenal control panel.',
+      'Added operator controls for trail persistence, branch intensity, and optional in-effect variant and energy switchers while preserving legacy props.',
+      'Documented the single Canvas2D loop, mobile particle budget, tap impulse, and reduced-motion static-frame behavior.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
