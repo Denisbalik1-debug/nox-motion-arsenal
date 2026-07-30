@@ -68,6 +68,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Documented the single Canvas2D loop, mobile particle budget, tap impulse, and reduced-motion static-frame behavior.',
     ],
   },
+  'premium-timeline-orchestrator': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-30T23:07:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Added Revenue OS, Agent Ops, and Launch Sequence story presets with an optional in-effect variant switcher.',
+      'Added calm, charged, and overdrive energy profiles that tune timeline speed, damping, line weight, and glow without adding runtime dependencies.',
+      'Improved production readability with node detail labels, a moving progress pulse, mobile label fallback, and a complete reduced-motion end state while preserving all legacy props.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
