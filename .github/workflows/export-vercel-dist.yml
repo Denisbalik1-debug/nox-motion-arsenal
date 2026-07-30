@@ -22,6 +22,15 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+      - name: Upload production dist ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: nox-motion-arsenal-production-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 9
+
       - name: Create chunked deployment manifest
         env:
           SOURCE_SHA: ${{ github.sha }}
