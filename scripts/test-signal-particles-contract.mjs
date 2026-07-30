@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const source = readFileSync('src/motion-arsenal/effects/premium/NoxSignalParticles.tsx', 'utf8');
+const manifest = JSON.parse(readFileSync('public/agent-manifests/signal-particles-variants.json', 'utf8'));
+for (const token of ['agent-constellation','revenue-funnel','forge-murmuration','signal-vortex','command-formation','SIGNAL_PARTICLE_MODES','linkDistance','nsp-copy','showModeSwitcher','performance.now','COPY CONFIG']) assert.ok(source.includes(token), `signal particle contract missing: ${token}`);
+assert.equal(manifest.effectId, 'premium-signal-particles');
+assert.equal(manifest.variants.length, 5);
+assert.deepEqual(manifest.modes, ['auto','orbit','swarm','settle']);
+assert.ok(!source.includes('Math.random'));
+assert.ok(!source.includes('fetch('));
+console.log('premium signal particles contract: OK');

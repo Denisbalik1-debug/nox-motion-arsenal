@@ -1,152 +1,239 @@
-import React, { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react';
+import { clamp, lerp, seededRandom, usePrefersReducedMotion } from '../../lib/animationUtils';
 import { useCanvas2D } from '../../lib/canvasUtils';
-import { usePrefersReducedMotion, seededRandom } from '../../lib/animationUtils';
-import { NOX_COLORS, EASE } from '../../lib/motionPresets';
 
-// ---------------------------------------------------------------------------
-// SelectionEnergyRipple — Auswahl löst einen Energie-Ripple vom Klickpunkt
-// aus (radialer Ring über die Karte), dann springen Funken-Partikel mit
-// Gravitations-Bogen zum Fortschritts-Zähler, der aufblitzt und hochzählt.
-// Mechanik: Partikel-Ballistik (CoinRain-Integration) + additive Funken.
-// ---------------------------------------------------------------------------
+export const SELECTION_RIPPLE_VARIANTS = [
+  'lock-in-shockwave',
+  'forge-sigil-ripple',
+  'neural-choice-chain',
+  'gold-ascension-vote',
+  'quantum-branch-collapse',
+] as const;
+
+export const SELECTION_RIPPLE_ENERGIES = ['calm', 'charged', 'overdrive'] as const;
+
+export type SelectionRippleVariant = (typeof SELECTION_RIPPLE_VARIANTS)[number];
+export type SelectionRippleEnergy = (typeof SELECTION_RIPPLE_ENERGIES)[number];
+
+type Rgb = readonly [number, number, number];
+type RippleShape = 'circle' | 'sigil' | 'chain' | 'diamond' | 'branch';
+
+interface RipplePreset {
+  id: SelectionRippleVariant;
+  shortLabel: string;
+  label: string;
+  kicker: string;
+  question: string;
+  reference: string;
+  shape: RippleShape;
+  primary: Rgb;
+  secondary: Rgb;
+  success: Rgb;
+  background: string;
+  options: readonly string[];
+}
+
+interface EnergyPreset {
+  id: SelectionRippleEnergy;
+  label: string;
+  speed: number;
+  glow: number;
+  sparks: number;
+  rings: number;
+  lift: number;
+}
+
+export const SELECTION_RIPPLE_PRESETS: Record<SelectionRippleVariant, RipplePreset> = {
+  'lock-in-shockwave': {
+    id: 'lock-in-shockwave', shortLabel: 'LOCK', label: 'Lock-In Shockwave', kicker: 'DECIDE // COMMIT // LOCK', question: 'Hältst du dein Wort dir selbst gegenüber?', reference: 'motion:forms-selection-energy-ripple@lock-in-shockwave', shape: 'circle', primary: [255, 76, 56], secondary: [218, 155, 65], success: [112, 238, 166],
+    background: 'radial-gradient(74% 68% at 50% 54%,rgba(132,27,18,.22),transparent 68%),linear-gradient(180deg,#090607,#020203)', options: ['NIE', 'SELTEN', 'MANCHMAL', 'MEISTENS', 'IMMER'],
+  },
+  'forge-sigil-ripple': {
+    id: 'forge-sigil-ripple', shortLabel: 'SIGIL', label: 'Forge Sigil Activation', kicker: 'INTENT // FIRE // MASTERY', question: 'Welchen Modus aktivierst du jetzt?', reference: 'motion:forms-selection-energy-ripple@forge-sigil-ripple', shape: 'sigil', primary: [255, 92, 48], secondary: [244, 190, 79], success: [255, 239, 210],
+    background: 'radial-gradient(78% 70% at 50% 56%,rgba(151,52,18,.24),transparent 68%),linear-gradient(180deg,#0b0704,#030201)', options: ['RESET', 'FOCUS', 'DISCIPLINE', 'EXECUTION', 'OVERDRIVE'],
+  },
+  'neural-choice-chain': {
+    id: 'neural-choice-chain', shortLabel: 'NEURAL', label: 'Neural Choice Chain', kicker: 'INPUT // WEIGHT // ROUTE', question: 'Welcher Pfad erhält Priorität?', reference: 'motion:forms-selection-energy-ripple@neural-choice-chain', shape: 'chain', primary: [124, 126, 255], secondary: [45, 226, 210], success: [233, 250, 255],
+    background: 'radial-gradient(78% 72% at 50% 50%,rgba(66,63,186,.23),transparent 70%),linear-gradient(180deg,#060711,#020205)', options: ['RESEARCH', 'ENRICH', 'ROUTE', 'REVIEW', 'EXECUTE'],
+  },
+  'gold-ascension-vote': {
+    id: 'gold-ascension-vote', shortLabel: 'ASCEND', label: 'Gold Ascension Vote', kicker: 'VALUE // PROOF // SCALE', question: 'Welcher Hebel bewegt den Umsatz zuerst?', reference: 'motion:forms-selection-energy-ripple@gold-ascension-vote', shape: 'diamond', primary: [242, 183, 75], secondary: [255, 104, 61], success: [255, 248, 222],
+    background: 'radial-gradient(76% 68% at 50% 52%,rgba(158,99,22,.23),transparent 68%),linear-gradient(180deg,#0c0904,#030201)', options: ['POSITION', 'OFFER', 'PROOF', 'PIPELINE', 'CLOSE'],
+  },
+  'quantum-branch-collapse': {
+    id: 'quantum-branch-collapse', shortLabel: 'QUANTUM', label: 'Quantum Branch Collapse', kicker: 'OPTIONS // COLLAPSE // VECTOR', question: 'Welche Realität wird zur Ausführung?', reference: 'motion:forms-selection-energy-ripple@quantum-branch-collapse', shape: 'branch', primary: [72, 171, 255], secondary: [177, 126, 255], success: [232, 249, 255],
+    background: 'radial-gradient(80% 72% at 50% 48%,rgba(48,93,170,.23),transparent 70%),linear-gradient(180deg,#030811,#010204)', options: ['EXPLORE', 'MODEL', 'SELECT', 'COMMIT', 'SCALE'],
+  },
+};
+
+export const SELECTION_RIPPLE_ENERGY_PRESETS: Record<SelectionRippleEnergy, EnergyPreset> = {
+  calm: { id: 'calm', label: 'CALM', speed: 0.72, glow: 0.62, sparks: 0.6, rings: 1, lift: 0.7 },
+  charged: { id: 'charged', label: 'CHARGED', speed: 1, glow: 1, sparks: 1, rings: 2, lift: 1 },
+  overdrive: { id: 'overdrive', label: 'OVERDRIVE', speed: 1.5, glow: 1.52, sparks: 1.65, rings: 3, lift: 1.25 },
+};
 
 export interface SelectionEnergyRippleProps {
   accent?: string;
   sparkCount?: number;
   gravity?: number;
+  variant?: SelectionRippleVariant;
+  energy?: SelectionRippleEnergy;
+  rippleScale?: number;
+  showVariantSwitcher?: boolean;
+  showEnergySwitcher?: boolean;
 }
 
 interface Spark {
-  x: number; y: number; vx: number; vy: number; life: number;
+  x: number; y: number; px: number; py: number; vx: number; vy: number; life: number; total: number; size: number; hue: number;
 }
 
-const OPTIONS = ['NIE', 'SELTEN', 'MANCHMAL', 'MEISTENS', 'IMMER'];
+interface RippleEvent {
+  x: number; y: number; id: number; shape: RippleShape;
+}
 
-export function SelectionEnergyRipple({ accent = NOX_COLORS.red, sparkCount = 11, gravity = 480 }: SelectionEnergyRippleProps) {
+const rgba = (rgb: Rgb, alpha: number) => `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+
+const STYLES = `
+.ser-root{--ser-primary:255,76,56;--ser-secondary:218,155,65;--ser-success:112,238,166;--ser-glow:1;position:absolute;inset:0;overflow:hidden;isolation:isolate;font-family:var(--sans,sans-serif)}.ser-root *{box-sizing:border-box}.ser-grid{position:absolute;inset:0;opacity:.11;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:30px 30px;mask-image:radial-gradient(ellipse at center,#000 18%,transparent 77%)}.ser-aura{position:absolute;inset:-28%;background:conic-gradient(from 140deg at 50% 50%,transparent 0 19%,rgba(var(--ser-primary),.09) 27%,transparent 38% 59%,rgba(var(--ser-secondary),.08) 66%,transparent 77%);filter:blur(46px);animation:ser-aura 22s linear infinite}.ser-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.63) 100%);pointer-events:none}.ser-ui{position:absolute;left:14px;right:14px;top:14px;z-index:8;display:flex;justify-content:space-between;gap:12px;pointer-events:none}.ser-stack{display:flex;flex-direction:column;gap:5px}.ser-controls{display:flex;flex-wrap:wrap;gap:5px;pointer-events:auto}.ser-btn{appearance:none;border:1px solid rgba(255,255,255,.1);background:rgba(4,4,8,.62);color:rgba(255,255,255,.42);border-radius:999px;padding:6px 9px;font:700 7.5px/1 var(--mono,monospace);letter-spacing:.12em;cursor:pointer;backdrop-filter:blur(10px)}.ser-btn[data-active='true']{color:rgb(var(--ser-success));border-color:rgba(var(--ser-primary),.55);box-shadow:0 0 14px rgba(var(--ser-primary),.2)}.ser-counter{position:absolute;right:16px;top:64px;z-index:7;border:1px solid rgba(var(--ser-secondary),.38);border-radius:12px;padding:9px 13px;background:rgba(10,8,5,.68);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 18px 46px -30px rgba(var(--ser-secondary),.85);backdrop-filter:blur(12px);font:750 9px/1 var(--mono,monospace);letter-spacing:.14em;color:rgb(var(--ser-secondary));transform-style:preserve-3d}.ser-counter-value{font-size:15px;color:rgb(var(--ser-success));margin-right:5px}.ser-panel{position:absolute;left:50%;top:52%;width:min(90%,470px);transform:translate(-50%,-50%);padding:clamp(18px,3.5cqw,34px);border-radius:22px;border:1px solid rgba(var(--ser-success),.11);background:linear-gradient(155deg,rgba(255,255,255,.055),rgba(11,11,16,.72));box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 46px rgba(0,0,0,.36),0 42px 100px -58px rgba(var(--ser-primary),.8);backdrop-filter:blur(13px);overflow:hidden}.ser-panel::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 36%,rgba(var(--ser-success),.055) 48%,transparent 60%);transform:translateX(-70%);animation:ser-sweep 8s ease-in-out infinite;pointer-events:none}.ser-kicker{font:700 7.5px/1 var(--mono,monospace);letter-spacing:.31em;color:rgba(var(--ser-secondary),.72);margin-bottom:9px}.ser-question{font-size:clamp(16px,2.8cqw,25px);font-weight:820;line-height:1.07;letter-spacing:-.03em;color:rgb(var(--ser-success));max-width:31ch;margin-bottom:18px}.ser-options{display:flex;flex-direction:column;gap:7px}.ser-option{position:relative;text-align:left;padding:12px 14px;border-radius:11px;border:1px solid rgba(var(--ser-success),.09);background:rgba(8,8,12,.62);color:rgba(var(--ser-success),.48);font:750 10px/1 var(--mono,monospace);letter-spacing:.13em;cursor:pointer;overflow:hidden;transform:translateZ(0);transition:transform .38s cubic-bezier(.16,1,.3,1),border-color .28s ease,background .28s ease,color .28s ease,opacity .28s ease}.ser-option:hover{border-color:rgba(var(--ser-secondary),.38);color:rgba(var(--ser-success),.78);transform:translateX(4px)}.ser-option[data-selected='true']{border-color:rgba(var(--ser-primary),.78);background:linear-gradient(90deg,rgba(var(--ser-primary),.18),rgba(var(--ser-secondary),.055));color:rgb(var(--ser-success));transform:translateX(7px) translateZ(12px);box-shadow:0 0 25px -12px rgba(var(--ser-primary),.9)}.ser-option[data-dim='true']{opacity:.42}.ser-index{display:inline-flex;width:23px;color:rgba(var(--ser-secondary),.8)}.ser-option-line{position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,rgb(var(--ser-primary)),transparent);transform:scaleY(0);transition:transform .38s cubic-bezier(.16,1,.3,1)}.ser-option[data-selected='true'] .ser-option-line{transform:scaleY(1)}.ser-ripple{position:absolute;left:var(--ser-x);top:var(--ser-y);width:86px;height:86px;pointer-events:none;z-index:5;transform:translate(-50%,-50%);color:rgb(var(--ser-primary));filter:drop-shadow(0 0 10px rgba(var(--ser-primary),.75))}.ser-ripple-circle{border:1.5px solid currentColor;border-radius:50%;animation:ser-ring .85s cubic-bezier(.16,1,.3,1) both}.ser-ripple-diamond{border:1.5px solid currentColor;transform:translate(-50%,-50%) rotate(45deg);animation:ser-diamond .9s cubic-bezier(.16,1,.3,1) both}.ser-ripple-sigil,.ser-ripple-chain,.ser-ripple-branch{animation:ser-symbol .95s cubic-bezier(.16,1,.3,1) both}.ser-ripple svg{width:100%;height:100%;overflow:visible}.ser-footer{position:absolute;left:16px;bottom:15px;z-index:7}.ser-title{font-size:10px;font-weight:800;letter-spacing:.16em;color:rgb(var(--ser-success));text-transform:uppercase}.ser-footer-kicker{margin-top:5px;font:700 7px/1 var(--mono,monospace);letter-spacing:.26em;color:rgba(var(--ser-success),.32)}.ser-copy{position:absolute;right:16px;bottom:14px;z-index:7;border:1px solid rgba(255,255,255,.1);background:rgba(4,4,8,.62);color:rgba(255,255,255,.5);padding:7px 10px;border-radius:8px;font:700 8px/1 var(--mono,monospace);letter-spacing:.12em;cursor:pointer}.ser-root[data-energy='overdrive'] .ser-aura{animation-duration:8s}.ser-root[data-energy='calm'] .ser-aura{animation-duration:34s;opacity:.55}@keyframes ser-aura{to{transform:rotate(360deg)}}@keyframes ser-sweep{0%,14%{transform:translateX(-80%);opacity:.2}55%{opacity:1}88%,100%{transform:translateX(110%);opacity:.2}}@keyframes ser-ring{0%{transform:translate(-50%,-50%) scale(.1);opacity:.95}100%{transform:translate(-50%,-50%) scale(5.2);opacity:0}}@keyframes ser-diamond{0%{transform:translate(-50%,-50%) rotate(45deg) scale(.1);opacity:.95}100%{transform:translate(-50%,-50%) rotate(225deg) scale(5.1);opacity:0}}@keyframes ser-symbol{0%{transform:translate(-50%,-50%) scale(.1) rotate(-18deg);opacity:1}100%{transform:translate(-50%,-50%) scale(4.7) rotate(24deg);opacity:0}}@keyframes ser-counter{0%{transform:scale(1)}28%{transform:scale(1.16) translateZ(18px);box-shadow:0 0 28px rgba(var(--ser-secondary),.72)}100%{transform:scale(1)}}@media(max-width:650px){.ser-ui{align-items:flex-start}.ser-controls{max-width:238px}.ser-counter{top:auto;bottom:14px;right:14px}.ser-panel{top:53%;width:94%;padding:17px}.ser-copy,.ser-footer{display:none}}@media(prefers-reduced-motion:reduce){.ser-aura,.ser-panel::before{animation:none!important}.ser-option{transition:none}}
+`;
+
+function RippleSymbol({ event }: { event: RippleEvent }) {
+  const style = { '--ser-x': `${event.x}px`, '--ser-y': `${event.y}px` } as CSSProperties;
+  if (event.shape === 'circle' || event.shape === 'diamond') return <div className={`ser-ripple ser-ripple-${event.shape}`} style={style} />;
+  const path = event.shape === 'sigil'
+    ? 'M43 4 70 18 82 45 67 72 43 82 17 70 4 43 18 17Z M43 18 58 29 63 48 51 65 32 64 20 49 27 28Z M43 29v29 M29 43h28'
+    : event.shape === 'chain'
+      ? 'M8 43h18l10-20 14 40 10-20h18 M17 20 43 8l26 12 9 23-9 24-26 11-26-11-9-24Z'
+      : 'M43 5v24 M43 29 18 45 M43 29 68 45 M18 45 9 73 M18 45 31 76 M68 45 55 76 M68 45 78 73';
+  return <div className={`ser-ripple ser-ripple-${event.shape}`} style={style}><svg viewBox="0 0 86 86" fill="none" stroke="currentColor" strokeWidth="1.4"><path d={path} /></svg></div>;
+}
+
+export function SelectionEnergyRipple({
+  accent,
+  sparkCount = 14,
+  gravity = 480,
+  variant = 'lock-in-shockwave',
+  energy = 'charged',
+  rippleScale = 1,
+  showVariantSwitcher = true,
+  showEnergySwitcher = true,
+}: SelectionEnergyRippleProps) {
+  const reduced = usePrefersReducedMotion();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLDivElement>(null);
+  const sparks = useRef<Spark[]>([]);
+  const random = useRef(seededRandom(3107));
+  const timers = useRef<number[]>([]);
+  const [activeVariant, setActiveVariant] = useState<SelectionRippleVariant>(variant);
+  const [activeEnergy, setActiveEnergy] = useState<SelectionRippleEnergy>(energy);
   const [selected, setSelected] = useState<number | null>(null);
   const [count, setCount] = useState(0);
-  const [ripple, setRipple] = useState<{ x: number; y: number; id: number } | null>(null);
+  const [combo, setCombo] = useState(1);
+  const [ripples, setRipples] = useState<RippleEvent[]>([]);
   const [counterFlash, setCounterFlash] = useState(0);
-  const reduced = usePrefersReducedMotion();
-  const sparks = useRef<Spark[]>([]);
-  const rnd = useRef(seededRandom(31));
+  const [copied, setCopied] = useState(false);
 
-  const select = (i: number, e: React.MouseEvent) => {
-    setSelected(i);
+  useEffect(() => setActiveVariant(variant), [variant]);
+  useEffect(() => setActiveEnergy(energy), [energy]);
+  useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), []);
+
+  const preset = SELECTION_RIPPLE_PRESETS[activeVariant];
+  const energyPreset = SELECTION_RIPPLE_ENERGY_PRESETS[activeEnergy];
+  const resolvedPrimary = useMemo<Rgb>(() => {
+    if (!accent || !/^#[0-9a-f]{6}$/i.test(accent)) return preset.primary;
+    return [Number.parseInt(accent.slice(1, 3), 16), Number.parseInt(accent.slice(3, 5), 16), Number.parseInt(accent.slice(5, 7), 16)];
+  }, [accent, preset.primary]);
+
+  useCanvas2D(canvasRef, (ctx, size, dt) => {
+    ctx.clearRect(0, 0, size.w, size.h);
+    ctx.globalCompositeOperation = 'lighter';
+    sparks.current = sparks.current.filter((spark) => spark.life > 0);
+    for (const spark of sparks.current) {
+      spark.life -= dt;
+      spark.px = spark.x; spark.py = spark.y;
+      spark.vy += gravity * dt;
+      spark.x += spark.vx * dt; spark.y += spark.vy * dt;
+      const progress = clamp(1 - spark.life / spark.total, 0, 1);
+      const alpha = Math.sin(progress * Math.PI) * energyPreset.glow;
+      const color = spark.hue > 0.5 ? preset.secondary : resolvedPrimary;
+      ctx.strokeStyle = rgba(color, alpha * 0.52);
+      ctx.lineWidth = Math.max(0.65, spark.size * 0.62);
+      ctx.beginPath(); ctx.moveTo(spark.x, spark.y); ctx.lineTo(spark.px - spark.vx * 0.025, spark.py - spark.vy * 0.025); ctx.stroke();
+      ctx.fillStyle = rgba(color, alpha);
+      ctx.beginPath(); ctx.arc(spark.x, spark.y, spark.size * (0.8 + progress * 0.7), 0, Math.PI * 2); ctx.fill();
+      if (activeEnergy === 'overdrive') {
+        ctx.strokeStyle = rgba(preset.success, alpha * 0.35); ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(spark.x - spark.size * 3, spark.y); ctx.lineTo(spark.x + spark.size * 3, spark.y); ctx.stroke();
+      }
+    }
+  }, !reduced);
+
+  const select = (index: number, event: MouseEvent<HTMLButtonElement>) => {
     const root = rootRef.current?.getBoundingClientRect();
     if (!root) return;
-    const x = e.clientX - root.left;
-    const y = e.clientY - root.top;
-    setRipple({ x, y, id: Date.now() });
+    const x = event.clientX - root.left;
+    const y = event.clientY - root.top;
+    const id = Date.now();
+    setSelected(index);
+    setCombo((value) => Math.min(9, selected === null || selected === index ? value : value + 1));
+    setRipples((current) => [...current.slice(-4), { x, y, id, shape: preset.shape }]);
+    const cleanup = window.setTimeout(() => setRipples((current) => current.filter((ripple) => ripple.id !== id)), 1300);
+    timers.current.push(cleanup);
+
     if (reduced) {
-      setCount((c) => c + 1);
-      return;
+      setCount((value) => value + 1); setCounterFlash(Date.now()); return;
     }
-    // Funken ballistisch Richtung Zähler starten
+
     const target = counterRef.current?.getBoundingClientRect();
-    const tx = target ? target.left - root.left + target.width / 2 : root.width - 40;
-    const ty = target ? target.top - root.top + target.height / 2 : 30;
-    const n = Math.max(4, Math.min(24, Math.round(sparkCount)));
-    for (let i2 = 0; i2 < n; i2++) {
-      // Wurf-Physik: Flugzeit ~0.55-0.8s, vy so dass Bogen beim Ziel landet
-      const T = 0.55 + rnd.current() * 0.25;
-      const vx = (tx - x) / T + (rnd.current() - 0.5) * 60;
-      const vy = (ty - y) / T - 0.5 * gravity * T + (rnd.current() - 0.5) * 50;
-      sparks.current.push({ x, y, vx, vy, life: T });
+    const tx = target ? target.left - root.left + target.width / 2 : root.width - 45;
+    const ty = target ? target.top - root.top + target.height / 2 : 42;
+    const totalSparks = Math.max(4, Math.min(48, Math.round(sparkCount * energyPreset.sparks)));
+    for (let i = 0; i < totalSparks; i++) {
+      const flight = (0.48 + random.current() * 0.32) / energyPreset.speed;
+      const spread = (random.current() - 0.5) * 100 * energyPreset.glow;
+      const vx = (tx - x) / flight + spread;
+      const vy = (ty - y) / flight - 0.5 * gravity * flight + (random.current() - 0.5) * 75;
+      sparks.current.push({ x, y, px: x, py: y, vx, vy, life: flight, total: flight, size: 1.1 + random.current() * 1.8, hue: random.current() });
     }
-    // Zähler zündet, wenn die Funken ankommen
-    setTimeout(() => {
-      setCount((c) => c + 1);
-      setCounterFlash(Date.now());
-    }, 620);
+    const arrival = window.setTimeout(() => {
+      setCount((value) => value + 1); setCounterFlash(Date.now());
+    }, Math.round(620 / energyPreset.speed));
+    timers.current.push(arrival);
   };
 
-  useCanvas2D(
-    canvasRef,
-    (ctx, size, dt) => {
-      ctx.clearRect(0, 0, size.w, size.h);
-      ctx.globalCompositeOperation = 'lighter';
-      sparks.current = sparks.current.filter((s) => s.life > 0);
-      for (const s of sparks.current) {
-        s.life -= dt;
-        s.vy += gravity * dt; // CoinRain: vel.y += gravity*dt (hier nach unten +)
-        s.x += s.vx * dt;
-        s.y += s.vy * dt;
-        const a = Math.min(1, s.life * 2.4);
-        ctx.fillStyle = `rgba(255, 200, 120, ${a.toFixed(2)})`;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-        // kleiner Schweif
-        ctx.strokeStyle = `rgba(201, 48, 48, ${(a * 0.5).toFixed(2)})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(s.x, s.y);
-        ctx.lineTo(s.x - s.vx * 0.03, s.y - s.vy * 0.03);
-        ctx.stroke();
-      }
-    },
-    !reduced,
-  );
+  const onPanelPulse = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || reduced) return;
+    const root = rootRef.current?.getBoundingClientRect(); if (!root) return;
+    const id = Date.now();
+    setRipples((current) => [...current.slice(-4), { x: event.clientX - root.left, y: event.clientY - root.top, id, shape: preset.shape }]);
+    timers.current.push(window.setTimeout(() => setRipples((current) => current.filter((ripple) => ripple.id !== id)), 1300));
+  };
+
+  const copyReference = async () => {
+    try { await navigator.clipboard.writeText(`${preset.reference} + energy:${activeEnergy}`); setCopied(true); window.setTimeout(() => setCopied(false), 1200); } catch { setCopied(false); }
+  };
+
+  const style = {
+    '--ser-primary': resolvedPrimary.join(','), '--ser-secondary': preset.secondary.join(','), '--ser-success': preset.success.join(','), '--ser-glow': energyPreset.glow,
+    background: preset.background,
+  } as CSSProperties;
 
   return (
-    <div ref={rootRef} style={{ position: 'absolute', inset: 0, background: '#0b0b0d', fontFamily: 'var(--sans, sans-serif)', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes ser-ripple { 0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0.85; } 100% { transform: translate(-50%, -50%) scale(3.4); opacity: 0; } }
-        @keyframes ser-counterflash { 0% { transform: scale(1); box-shadow: 0 0 0 rgba(212,162,74,0); } 30% { transform: scale(1.14); box-shadow: 0 0 22px rgba(212,162,74,0.6); } 100% { transform: scale(1); box-shadow: 0 0 0 rgba(212,162,74,0); } }
-        @media (prefers-reduced-motion: reduce) { .ser-a { animation: none !important; } }
-      `}</style>
-      {/* Zähler oben rechts */}
-      <div
-        ref={counterRef}
-        key={counterFlash}
-        className="ser-a"
-        style={{ position: 'absolute', top: 14, right: 16, zIndex: 2, fontFamily: 'var(--mono, monospace)', fontSize: 12, letterSpacing: '0.12em', color: NOX_COLORS.gold, border: `1px solid ${NOX_COLORS.gold}66`, borderRadius: 8, padding: '7px 13px', background: '#12100a', animation: counterFlash && !reduced ? `ser-counterflash 0.55s ${EASE.krankOvershoot} both` : undefined }}
-      >
-        ⚡ {count} LOCKED
+    <div ref={rootRef} className="ser-root" data-variant={activeVariant} data-energy={activeEnergy} style={style}>
+      <style>{STYLES}</style><div className="ser-grid" /><div className="ser-aura" /><div className="ser-vignette" />
+      <div className="ser-ui">
+        <div className="ser-stack">{showVariantSwitcher ? <div className="ser-controls" aria-label="Selection ripple variants">{SELECTION_RIPPLE_VARIANTS.map((id) => <button key={id} type="button" className="ser-btn" data-active={id === activeVariant} onClick={() => { setActiveVariant(id); setSelected(null); }}>{SELECTION_RIPPLE_PRESETS[id].shortLabel}</button>)}</div> : null}</div>
+        {showEnergySwitcher ? <div className="ser-controls" aria-label="Selection energy">{SELECTION_RIPPLE_ENERGIES.map((id) => <button key={id} type="button" className="ser-btn" data-active={id === activeEnergy} onClick={() => setActiveEnergy(id)}>{SELECTION_RIPPLE_ENERGY_PRESETS[id].label}</button>)}</div> : null}
       </div>
-
-      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', padding: '0 18px' }}>
-        <div style={{ width: '100%', maxWidth: 380 }}>
-          <div style={{ fontSize: 15, fontWeight: 650, color: NOX_COLORS.text, marginBottom: 4 }}>Hältst du dein Wort dir selbst gegenüber?</div>
-          <div style={{ fontFamily: 'var(--mono, monospace)', fontSize: 9.5, letterSpacing: '0.22em', color: NOX_COLORS.textDim, marginBottom: 14 }}>SELECT TO LOCK IN</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {OPTIONS.map((o, i) => (
-              <button
-                key={o}
-                onClick={(e) => select(i, e)}
-                style={{
-                  position: 'relative',
-                  textAlign: 'left',
-                  padding: '11px 14px',
-                  borderRadius: 9,
-                  border: `1px solid ${selected === i ? accent : '#26262d'}`,
-                  background: selected === i ? `${accent}1c` : '#121215',
-                  color: selected === i ? NOX_COLORS.text : NOX_COLORS.textDim,
-                  fontFamily: 'var(--mono, monospace)',
-                  fontSize: 11.5,
-                  letterSpacing: '0.12em',
-                  cursor: 'pointer',
-                  transition: `border-color 0.25s ease, background 0.25s ease, color 0.25s ease`,
-                  overflow: 'visible',
-                }}
-              >
-                <span style={{ color: selected === i ? accent : '#3a3a40', marginRight: 10 }}>{i}</span>
-                {o}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div ref={counterRef} key={counterFlash} className="ser-counter" style={{ animation: counterFlash && !reduced ? `ser-counter ${0.6 / energyPreset.speed}s cubic-bezier(.34,1.56,.64,1) both` : undefined }}><span className="ser-counter-value">{count}</span> LOCKED <span style={{ color: rgba(preset.primary, .48), marginLeft: 7 }}>×{combo}</span></div>
+      <div className="ser-panel" onPointerDown={onPanelPulse}>
+        <div className="ser-kicker">{preset.kicker}</div><div className="ser-question">{preset.question}</div>
+        <div className="ser-options">{preset.options.map((option, index) => <button key={option} type="button" className="ser-option" data-selected={selected === index} data-dim={selected !== null && selected !== index} onClick={(event: MouseEvent<HTMLButtonElement>) => select(index, event)} style={{ transform: selected === index ? `translateX(${7 * energyPreset.lift}px) translateZ(${12 * energyPreset.lift}px)` : undefined }}><span className="ser-option-line" /><span className="ser-index">0{index + 1}</span>{option}</button>)}</div>
       </div>
-
-      {/* Ripple-Ring vom Klickpunkt */}
-      {ripple && !reduced && (
-        <div key={ripple.id} className="ser-a" style={{ position: 'absolute', left: ripple.x, top: ripple.y, width: 90, height: 90, borderRadius: '50%', border: `1.5px solid ${accent}`, animation: `ser-ripple 0.75s ${EASE.outExpo} both`, pointerEvents: 'none' }} />
-      )}
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }} />
+      {ripples.map((ripple) => <div key={ripple.id} style={{ position: 'absolute', inset: 0, transform: `scale(${rippleScale})`, transformOrigin: `${ripple.x}px ${ripple.y}px`, pointerEvents: 'none' }}><RippleSymbol event={ripple} /></div>)}
+      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 6 }} />
+      <div className="ser-footer"><div className="ser-title">{preset.label}</div><div className="ser-footer-kicker">TAP A CHOICE TO COLLAPSE THE FIELD</div></div><button type="button" className="ser-copy" onClick={copyReference}>{copied ? 'COPIED' : 'COPY CONFIG'}</button>
     </div>
   );
 }
