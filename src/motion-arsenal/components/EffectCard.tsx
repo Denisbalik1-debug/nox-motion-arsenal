@@ -19,8 +19,12 @@ const IMPROVEMENT_LABELS: Record<EffectImprovementStatus, string> = {
 
 export function EffectCard({ entry, favorite, onOpen, onToggleFavorite }: Props) {
   const m = entry.meta;
-  const updated = formatEffectUpdatedAt(m.lastImprovedAt ?? m.updatedAt);
   const improvementStatus = m.improvementStatus ?? 'pending';
+  const isImproved = improvementStatus === 'improved' && Boolean(m.lastImprovedAt);
+  const timestamp = isImproved ? m.lastImprovedAt : m.updatedAt;
+  const updated = formatEffectUpdatedAt(timestamp);
+  const timestampLabel = isImproved ? 'IMPROVED' : 'UPDATED';
+  const timestampTitle = isImproved ? 'Zuletzt verbessert' : 'Letzte Code-Aktualisierung';
 
   return (
     <article
@@ -56,10 +60,10 @@ export function EffectCard({ entry, favorite, onOpen, onToggleFavorite }: Props)
           <div className="fx-card-title">{m.displayName ?? m.name}</div>
           <time
             className="fx-updated"
-            dateTime={m.lastImprovedAt ?? m.updatedAt}
-            title={`Zuletzt verbessert: ${updated.date}`}
+            dateTime={timestamp}
+            title={`${timestampTitle}: ${updated.date}`}
           >
-            IMPROVED {updated.date} · {updated.relative}
+            {timestampLabel} {updated.date} · {updated.relative}
           </time>
         </div>
         <p className="fx-card-desc">{m.description}</p>
