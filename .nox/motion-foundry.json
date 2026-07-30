@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0.0",
+  "repository": "Finitolombardo/nox-motion-arsenal",
+  "productionBranch": "main",
+  "batchBranchPrefix": "foundry/",
+  "skipPreviewByDefault": true,
+  "verificationCommands": [
+    "npm ci",
+    "npm run lint",
+    "npm test",
+    "npm run build"
+  ],
+  "vercel": {
+    "teamId": "team_TXrN6nY8qaVpd26aRnX741rV",
+    "projectId": "prj_4xAbkEUC6U59MjVJS66ErLe9U2U7",
+    "projectName": "nox-motion-arsenal",
+    "productionDomain": "https://nox-motion-arsenal.vercel.app",
+    "deployCommand": "npx vercel deploy --prod --yes"
+  },
+  "publishGuard": {
+    "requiredEnv": "NOX_MOTION_FOUNDRY_PROD_GO",
+    "requiredValue": "GO",
+    "requireCleanGit": true,
+    "requireProductionBranch": true,
+    "requireLinkedProject": true
+  }
+}
