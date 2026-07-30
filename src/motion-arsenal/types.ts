@@ -18,6 +18,7 @@ export type EffectCategory =
 
 export type EffectMode = 'reference-lab' | 'nox-adapted';
 export type EffectComplexity = 'low' | 'medium' | 'high' | 'heavy';
+export type EffectImprovementStatus = 'pending' | 'in-progress' | 'improved' | 'needs-review';
 
 export type PropControlType = 'range' | 'select' | 'color' | 'boolean' | 'text';
 
@@ -67,6 +68,12 @@ export interface EffectMeta {
   // Injected from the component's latest Git commit, with filesystem mtime as
   // a fallback while this Arsenal remains untracked in its parent checkout.
   updatedAt?: string;
+  // Machine-readable autonomous improvement tracking.
+  improvementStatus?: EffectImprovementStatus;
+  lastImprovedAt?: string;
+  lastImprovedBy?: string;
+  improvementVersion?: string;
+  improvementChangelog?: string[];
   productionSafe: boolean;
   // Reifegrad für Design-Entscheidungen: experimental → candidate → production-safe.
   status?: 'experimental' | 'candidate' | 'production-safe';
