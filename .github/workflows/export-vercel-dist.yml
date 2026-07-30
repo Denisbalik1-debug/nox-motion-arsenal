@@ -23,6 +23,7 @@ jobs:
       - run: npm run build
 
       - name: Upload production dist ZIP
+        id: dist_artifact
         uses: actions/upload-artifact@v4
         with:
           name: nox-motion-arsenal-production-dist
@@ -34,6 +35,10 @@ jobs:
       - name: Create chunked deployment manifest
         env:
           SOURCE_SHA: ${{ github.sha }}
+          ARTIFACT_ID: ${{ steps.dist_artifact.outputs.artifact-id }}
+          ARTIFACT_URL: ${{ steps.dist_artifact.outputs.artifact-url }}
+          ARTIFACT_DIGEST: ${{ steps.dist_artifact.outputs.artifact-digest }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
         run: |
           node <<'NODE'
           const fs = require('fs');
@@ -98,6 +103,10 @@ jobs:
             JSON.stringify({
               sourceSha: process.env.SOURCE_SHA,
               generatedAt: new Date().toISOString(),
+              workflowRunId: Number(process.env.WORKFLOW_RUN_ID),
+              artifactId: Number(process.env.ARTIFACT_ID),
+              artifactUrl: process.env.ARTIFACT_URL,
+              artifactDigest: process.env.ARTIFACT_DIGEST,
               fileCount: records.length,
               totalBytes: records.reduce((sum, record) => sum + record.bytes, 0),
               binaryFiles: records.filter((record) => record.encoding === 'base64').map((record) => record.file),
