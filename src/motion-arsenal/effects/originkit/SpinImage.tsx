@@ -4,16 +4,37 @@
 import { useEffect, useMemo, useRef } from "react"
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react"
 
+const makeFallbackImage = (primary: string, secondary: string, index: number) =>
+    `data:image/svg+xml,${encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+            <defs>
+                <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                    <stop stop-color="${primary}"/>
+                    <stop offset="1" stop-color="#060611"/>
+                </linearGradient>
+                <radialGradient id="orb" cx="35%" cy="28%" r="72%">
+                    <stop stop-color="#ffffff" stop-opacity=".88"/>
+                    <stop offset=".2" stop-color="${secondary}" stop-opacity=".96"/>
+                    <stop offset="1" stop-color="${secondary}" stop-opacity="0"/>
+                </radialGradient>
+            </defs>
+            <rect width="600" height="600" fill="url(#bg)"/>
+            <circle cx="${150 + index * 42}" cy="${170 + (index % 3) * 86}" r="230" fill="url(#orb)"/>
+            <path d="M-40 ${460 - index * 18}L640 ${168 + index * 24}" stroke="#ffffff" stroke-opacity=".3" stroke-width="3"/>
+            <path d="M${80 + index * 24} 650L${440 - index * 18} -40" stroke="${secondary}" stroke-opacity=".6" stroke-width="18"/>
+        </svg>
+    `)}`
+
 const FALLBACK_IMAGES = [
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/ed7b1c40-3332-43d8-a9eb-4615ef341b00/w=800",
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/bd541261-75be-469c-7dc0-dae0ce81c400/w=800",
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/7d4d2641-d6a8-4fef-e85c-b12ed100d500/w=800",
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/933a7615-f4b6-4eae-8ed1-705fa0e24400/w=800",
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/31afae9c-5ba3-4ec3-2534-ed8198ed1100/w=800",
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/859c75ea-953e-489e-be61-91a03a35d700/w=800",
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/e60dd7f7-a44f-40a7-df62-095b19cd8700/w=800",
-    "https://imagedelivery.net/IEUjvl3YUlxY-MrTpOAWDQ/eec164e9-23f8-4f87-b48a-a208fa806100/w=800",
-]
+    ["#4f46e5", "#67e8f9"],
+    ["#db2777", "#fbbf24"],
+    ["#0f766e", "#2dd4bf"],
+    ["#7c3aed", "#c4b5fd"],
+    ["#be123c", "#fb7185"],
+    ["#1d4ed8", "#93c5fd"],
+    ["#a16207", "#fde047"],
+    ["#4338ca", "#e879f9"],
+].map(([primary, secondary], index) => makeFallbackImage(primary, secondary, index))
 
 type ImageLike =
     | string
@@ -498,7 +519,7 @@ export default function SpinImage({
                         aria-hidden="true"
                         style={{
                             ...cardBaseStyle,
-                            backgroundImage: `linear-gradient(color-mix(in srgb, ${glowColor} 72%, transparent), rgba(34,211,238,.34)), url(${src})`,
+                            backgroundImage: `linear-gradient(color-mix(in srgb, ${glowColor} 72%, transparent), rgba(34,211,238,.34)), url(${JSON.stringify(src)})`,
                             backgroundBlendMode: "screen",
                             filter: "blur(14px) saturate(1.8)",
                             mixBlendMode: "screen",
@@ -516,7 +537,7 @@ export default function SpinImage({
                         aria-hidden="true"
                         style={{
                             ...cardBaseStyle,
-                            backgroundImage: `url(${src})`,
+                            backgroundImage: `url(${JSON.stringify(src)})`,
                             border: "1px solid rgba(255,255,255,.14)",
                         }}
                     >
