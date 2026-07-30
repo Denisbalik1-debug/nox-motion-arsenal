@@ -19,12 +19,13 @@ const CATEGORY_LABELS: Record<EffectCategory, string> = {
   system: 'Data / System',
   forms: 'Form / Quiz',
   overlays: 'Modal / Overlay',
+  originkit: 'Originkit Components',
   'canvas-ui': 'Canvas UI Import',
   img2threejs: 'Image → 3D Rebuilds',
 };
 
 const CATEGORY_ORDER: EffectCategory[] = [
-  'premium', 'forge-skilltree', 'backgrounds', 'hero', 'transitions', 'scroll', 'cursor', 'cards', 'system', 'forms', 'overlays', 'canvas-ui', 'img2threejs',
+  'premium', 'forge-skilltree', 'backgrounds', 'hero', 'transitions', 'scroll', 'cursor', 'cards', 'system', 'forms', 'overlays', 'originkit', 'canvas-ui', 'img2threejs',
 ];
 
 type ModeFilter = 'all' | 'nox-adapted' | 'production' | 'heavy' | 'lightweight';
