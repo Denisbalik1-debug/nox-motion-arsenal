@@ -34,34 +34,43 @@ const RAW_EFFECTS_CATALOG: EffectEntry[] = [
   ...ORIGINKIT_CATALOG,
 ];
 
-function deriveImprovementStatus(entry: EffectEntry, lastImprovedAt?: string): EffectImprovementStatus {
+const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
+  'nox-spinimage': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-30T20:08:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.0.0',
+    improvementChangelog: [
+      'Upgraded to a responsive 3D orbital image array with pointer-driven tilt and velocity impulse.',
+      'Added depth sorting, glow trails, configurable core visuals, viewport pausing, and reduced-motion support.',
+      'Preserved the original public props while exposing production-oriented orbit, depth, trail, and glow controls.',
+    ],
+  },
+};
+
+function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
   if (entry.meta.improvementStatus) return entry.meta.improvementStatus;
   if (entry.meta.mode === 'reference-lab') return 'needs-review';
-  if (entry.meta.productionSafe && lastImprovedAt) return 'improved';
   return 'pending';
 }
 
 export const EFFECTS_CATALOG: EffectEntry[] = RAW_EFFECTS_CATALOG.map((entry) => {
   const updatedAt = effectUpdates[entry.meta.importPath];
-  const lastImprovedAt = entry.meta.lastImprovedAt ?? updatedAt;
-  const improvementStatus = deriveImprovementStatus(entry, lastImprovedAt);
+  const override = IMPROVEMENT_OVERRIDES[entry.meta.id] ?? {};
+  const mergedMeta = { ...entry.meta, ...override };
+  const improvementStatus = deriveImprovementStatus({ ...entry, meta: mergedMeta });
 
   return {
     ...entry,
     meta: {
-      ...entry.meta,
+      ...mergedMeta,
       updatedAt,
       improvementStatus,
-      lastImprovedAt,
-      lastImprovedBy: entry.meta.lastImprovedBy ?? (lastImprovedAt ? 'git-history' : 'unassigned'),
+      lastImprovedBy: mergedMeta.lastImprovedBy ?? 'unassigned',
       improvementVersion:
-        entry.meta.improvementVersion ??
-        (improvementStatus === 'improved' ? '1.0.0' : improvementStatus === 'needs-review' ? '0.5.0' : '0.1.0'),
-      improvementChangelog:
-        entry.meta.improvementChangelog ??
-        (improvementStatus === 'improved'
-          ? ['Production-safe catalog version tracked from the latest component commit.']
-          : []),
+        mergedMeta.improvementVersion ??
+        (improvementStatus === 'needs-review' ? '0.5.0' : '0.1.0'),
+      improvementChangelog: mergedMeta.improvementChangelog ?? [],
     },
   };
 });
