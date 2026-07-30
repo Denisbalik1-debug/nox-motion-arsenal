@@ -1,0 +1,152 @@
+import { lazy } from 'react';
+import type { EffectEntry } from '../../types';
+
+// Reference Lab — 1:1-nahe technische Reproduktionen der lokalen Referenzen.
+// Alle mode='reference-lab', productionSafe=false. Für echte Nutzung immer
+// die NOX-Adapted-Variante aus den Kategorie-Ordnern nehmen.
+
+export const LAB_CATALOG: EffectEntry[] = [
+  {
+    meta: {
+      id: 'lab-oryzo-scribble-field',
+      name: 'Reference: ORYZO Scribble Field',
+      category: 'backgrounds',
+      sourceWebsite: 'oryzo-screenshot',
+      sourceFiles: ['ORYZO-Referenz-Screenshot (rot/grün/orange Scribbles)', 'Layering-Prinzip: KRANK/src/hoisted.js (eine Physik-Quelle → alle Layer)'],
+      mode: 'reference-lab',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Studie: leuchtende Symbol-Layer hinter Typografie'],
+      performanceNotes: 'SVG-Filter-Blur auf bis zu 16 Layern — auf schwachen GPUs Density senken. Compositing-lastig, kein JS-Hotpath.',
+      mobileNotes: 'Density ≤ 7 auf Mobile empfohlen; Parallax wirkt ohne Pointer nicht (statisch ok).',
+      reducedMotionNotes: 'Drift/Draw-Animationen aus; statisches Scribble-Feld bleibt sichtbar.',
+      description:
+        'Reference Study der ORYZO-Klasse: rot/grün/orange leuchtende, prozedural generierte Scribbles mit Blur-Glow-Kopien, mix-blend-screen, organischem Drift, stroke-dash Draw-on und Pointer-Parallax in Tiefenstaffelung. Nicht ausliefern — NOX-Variante: NoxAdaptedScribbleField.',
+      importPath: '@/motion-arsenal/effects/lab/reference/ReferenceOryzoScribbleField',
+      usageJsx: '<ReferenceOryzoScribbleField intensity={0.9} density={9} parallax={0.6} />',
+      props: [
+        { key: 'intensity', label: 'Intensity', type: 'range', default: 0.9, min: 0.2, max: 1, step: 0.05 },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.2, max: 3, step: 0.1 },
+        { key: 'density', label: 'Density', type: 'range', default: 9, min: 4, max: 16, step: 1 },
+        { key: 'parallax', label: 'Parallax', type: 'range', default: 0.6, min: 0, max: 1, step: 0.05 },
+      ],
+      productionSafe: false,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./reference/ReferenceOryzoScribbleField')),
+  },
+  {
+    meta: {
+      id: 'lab-shopify-butterflies',
+      name: 'Reference: Shopify Butterflies',
+      category: 'backgrounds',
+      sourceWebsite: 'shopify-editions',
+      sourceFiles: ['shopify-assets/Butterflies-CFpdR9tM.js:307-390 (Vertex: instanceRandom-Flap, Fragment: Fresnel-Glow)'],
+      mode: 'reference-lab',
+      complexity: 'heavy',
+      dependencies: ['three'],
+      bestFor: ['Studie: InstancedMesh + per-Instance-Variation'],
+      performanceNotes: '1 Drawcall für alle Instanzen (Instancing). WebGL-Context pro Preview — nicht viele gleichzeitig mounten.',
+      mobileNotes: 'Count ≤ 32 auf Mobile; DPR ist auf 1.5 gekappt.',
+      reducedMotionNotes: 'Statischer Frame (Zeit eingefroren), kein rAF-Loop.',
+      description:
+        'Reproduktion der Shopify-Editions-Butterflies: InstancedMesh mit instanceRandom-Vec4 pro Falter (Flap-Speed 4–8Hz, Amplitude, Phase, Flügel-Asymmetrie aus 3 überlagerten Sinuswellen) plus Fresnel-Edge-Glow mit Puls im Fragment-Shader. Flügel prozedural, kein Original-Asset.',
+      importPath: '@/motion-arsenal/effects/lab/reference/ReferenceShopifyButterflies',
+      usageJsx: '<ReferenceShopifyButterflies count={48} glowIntensity={1.4} />',
+      props: [
+        { key: 'count', label: 'Count', type: 'range', default: 48, min: 8, max: 96, step: 4 },
+        { key: 'glowIntensity', label: 'Glow', type: 'range', default: 1.4, min: 0, max: 3, step: 0.1 },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.2, max: 3, step: 0.1 },
+      ],
+      productionSafe: false,
+      clickToRun: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./reference/ReferenceShopifyButterflies')),
+  },
+  {
+    meta: {
+      id: 'lab-shopify-coin-rain',
+      name: 'Reference: Shopify Coin Rain',
+      category: 'backgrounds',
+      sourceWebsite: 'shopify-editions',
+      sourceFiles: ['shopify-assets/CoinRain-BMBoDYha.js (150 Instanzen, vel.y -= gravity*dt, rotSpeed-Integration, Respawn-Stagger)'],
+      mode: 'reference-lab',
+      complexity: 'heavy',
+      dependencies: ['three'],
+      bestFor: ['Studie: Instanced Physics (Gravitation + Rotation)'],
+      performanceNotes: '1 Drawcall; Physik ist O(n) auf der CPU — bis 300 Instanzen unkritisch.',
+      mobileNotes: 'Count ≤ 80 auf Mobile empfohlen.',
+      reducedMotionNotes: 'Statischer Frame, Loop pausiert.',
+      description:
+        'Reproduktion des Shopify-CoinRain: InstancedMesh-Münzen mit Velocity-Integration (Gravitation), randomisierter Rotationsgeschwindigkeit pro Coin und gestaffeltem Respawn — die exakte Mechanik aus dem Editions-Chunk, Coins als prozedurale Metall-Zylinder.',
+      importPath: '@/motion-arsenal/effects/lab/reference/ReferenceShopifyCoinRain',
+      usageJsx: '<ReferenceShopifyCoinRain count={150} gravity={4} />',
+      props: [
+        { key: 'count', label: 'Count', type: 'range', default: 150, min: 20, max: 300, step: 10 },
+        { key: 'gravity', label: 'Gravity', type: 'range', default: 4, min: 0.5, max: 12, step: 0.5 },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.2, max: 3, step: 0.1 },
+      ],
+      productionSafe: false,
+      clickToRun: true,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./reference/ReferenceShopifyCoinRain')),
+  },
+  {
+    meta: {
+      id: 'lab-krank-curl-particles',
+      name: 'Reference: KRANK Curl-Noise Particles',
+      category: 'backgrounds',
+      sourceWebsite: 'krank-lusion',
+      sourceFiles: ['KRANK/src/hoisted.js — curl() (~15 Refs), Particles-Klasse, Bloom-Pass (Threshold 0.8, additive)'],
+      mode: 'reference-lab',
+      complexity: 'high',
+      dependencies: [],
+      bestFor: ['Studie: Curl-Noise-Vektorfeld + additive Glow-Trails'],
+      performanceNotes: 'Canvas2D, O(n) Noise-Auswertung pro Frame — bis ~800 Partikel ok. Trail-Fade via halbtransparentem Fill (kein Clear).',
+      mobileNotes: 'Count ≤ 250 auf Mobile.',
+      reducedMotionNotes: 'Loop pausiert; letzter Frame bleibt stehen.',
+      description:
+        'Reproduktion der KRANK/Lusion-Partikel-Mechanik: Partikel advektieren durch ein Curl-Noise-Feld (numerische eps-Differenzen des Noise — exakt wie im extrahierten Shader-Snippet), Farbe/Größe folgen der Feldstärke, additive Komposition ersetzt den Bloom-Pass.',
+      importPath: '@/motion-arsenal/effects/lab/reference/ReferenceKrankCurlParticles',
+      usageJsx: '<ReferenceKrankCurlParticles count={320} fieldScale={2.4} />',
+      props: [
+        { key: 'count', label: 'Count', type: 'range', default: 320, min: 50, max: 800, step: 10 },
+        { key: 'fieldScale', label: 'Field Scale', type: 'range', default: 2.4, min: 0.5, max: 6, step: 0.1 },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.2, max: 3, step: 0.1 },
+      ],
+      productionSafe: false,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./reference/ReferenceKrankCurlParticles')),
+  },
+  {
+    meta: {
+      id: 'lab-active-theory-trails',
+      name: 'Reference: Active Theory Light Trails',
+      category: 'backgrounds',
+      sourceWebsite: 'active-theory',
+      sourceFiles: ['public/activetheory-bundle.js — Trail-Rendering (967 Refs), framerateNormalizeLerpAlpha, blendFunc(ONE, ONE)'],
+      mode: 'reference-lab',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['Studie: Positions-History-Trails mit Decay/Taper'],
+      performanceNotes: 'Canvas2D Line-Strips, sehr günstig. History ≤ 90 Punkte pro Trail.',
+      mobileNotes: 'Ohne Pointer läuft ein Auto-Orbit — Touch-tauglich.',
+      reducedMotionNotes: 'Loop pausiert, statisches Bild.',
+      description:
+        'Reproduktion der Active-Theory-Trails: mehrere Follower mit unterschiedlich gedämpftem, framerate-normalisiertem Lerp (α 0.01–0.3) schreiben Positions-History-Buffer, gerendert als Line-Strip mit Alpha-Decay und Breiten-Taper in additiver Komposition.',
+      importPath: '@/motion-arsenal/effects/lab/reference/ReferenceActiveTheoryTrails',
+      usageJsx: '<ReferenceActiveTheoryTrails trailCount={5} historyLength={42} />',
+      props: [
+        { key: 'trailCount', label: 'Trails', type: 'range', default: 5, min: 2, max: 10, step: 1 },
+        { key: 'historyLength', label: 'History', type: 'range', default: 42, min: 8, max: 90, step: 2 },
+        { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.2, max: 3, step: 0.1 },
+      ],
+      productionSafe: false,
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./reference/ReferenceActiveTheoryTrails')),
+  },
+];

@@ -13,6 +13,8 @@ import { PREMIUM_CATALOG } from '../effects/premium/catalog';
 import { FORGE_SKILLTREE_CATALOG } from '../effects/forge-skilltree/catalog';
 import { CANVAS_UI_CATALOG } from '../effects/canvas-ui/catalog';
 import { IMG2THREEJS_CATALOG } from '../effects/img2threejs/catalog';
+import { LAB_CATALOG } from '../effects/lab/catalog';
+import { ORIGINKIT_CATALOG } from '../effects/originkit/catalog';
 
 const RAW_EFFECTS_CATALOG: EffectEntry[] = [
   ...PREMIUM_CATALOG,
@@ -28,6 +30,8 @@ const RAW_EFFECTS_CATALOG: EffectEntry[] = [
   ...OVERLAYS_CATALOG,
   ...CANVAS_UI_CATALOG,
   ...IMG2THREEJS_CATALOG,
+  ...LAB_CATALOG,
+  ...ORIGINKIT_CATALOG,
 ];
 
 export const EFFECTS_CATALOG: EffectEntry[] = RAW_EFFECTS_CATALOG.map((entry) => ({

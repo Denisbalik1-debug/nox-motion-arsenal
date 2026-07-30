@@ -35,7 +35,7 @@ try {
   const cardCount = await page.locator('[data-effect-id]').count();
   const updateCount = await page.locator('.fx-updated').count();
   const updateLabels = await page.locator('.fx-updated').allTextContents();
-  assert(cardCount === 76, `expected 76 effect cards, found ${cardCount}`);
+  assert(cardCount === 148, `expected 148 effect cards, found ${cardCount}`);
   assert(updateCount === cardCount, `only ${updateCount}/${cardCount} cards expose update metadata`);
   assert(!updateLabels.some((label) => label.includes('UNBEKANNT')), 'at least one update date is unknown');
 

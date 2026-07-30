@@ -13,7 +13,7 @@
     "test:previews:smoke": "node scripts/audit-previews.mjs --ids bg-orbital-light-trails,forms-selection-energy-ripple,premium-glass-distortion-cards,premium-signal-particles,premium-data-stream-journey,bg-depth-glow-stack,skilltree-glass-metal-panel,canvasui-particle-reveal,canvasui-shatter-reveal,cursor-magnetic-cta,img2threejs-nox-orbital-station,skilltree-locked-path-shadow,skilltree-svg-energy-lines,scroll-pinned-product-stage,bg-forge-energy-glyphs,hero-object-float",
     "typecheck:server": "tsc -p tsconfig.server.json",
     "lint": "npm run typecheck && npm run typecheck:server",
-    "test": "node scripts/test-contribution-contract.mjs && node scripts/test-locked-path-shadow-contract.mjs && node scripts/test-pinned-product-stage-contract.mjs && node scripts/test-svg-energy-lines-contract.mjs && node scripts/test-forge-energy-glyphs-contract.mjs && node scripts/test-particle-reveal-contract.mjs && node scripts/test-hero-object-float-contract.mjs && node scripts/test-data-stream-journey-contract.mjs && node scripts/test-depth-glow-stack-contract.mjs && node scripts/test-glass-metal-panel-contract.mjs && node scripts/test-glass-distortion-cards-contract.mjs && node scripts/test-signal-particles-contract.mjs && node scripts/test-selection-energy-ripple-contract.mjs",
+    "test": "node scripts/test-full-catalog-contract.mjs && node scripts/test-contribution-contract.mjs && node scripts/test-locked-path-shadow-contract.mjs && node scripts/test-pinned-product-stage-contract.mjs && node scripts/test-svg-energy-lines-contract.mjs && node scripts/test-forge-energy-glyphs-contract.mjs && node scripts/test-particle-reveal-contract.mjs && node scripts/test-hero-object-float-contract.mjs && node scripts/test-data-stream-journey-contract.mjs && node scripts/test-depth-glow-stack-contract.mjs && node scripts/test-glass-metal-panel-contract.mjs && node scripts/test-glass-distortion-cards-contract.mjs && node scripts/test-signal-particles-contract.mjs && node scripts/test-selection-energy-ripple-contract.mjs",
     "test:contribution:e2e": "node scripts/test-contribution-e2e.mjs",
     "test:future:community": "npm run test:community && npm run test:community:security",
     "test:community": "node scripts/test-community.mjs",
@@ -21,12 +21,18 @@
     "test:community:e2e": "node scripts/test-community-e2e.mjs"
   },
   "dependencies": {
+    "d3-geo": "^3.1.1",
+    "framer-motion": "^12.42.2",
+    "gsap": "^3.15.0",
+    "matter-js": "^0.20.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "three": "^0.178.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "@types/matter-js": "^0.20.2",
     "@types/node": "^22.14.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
