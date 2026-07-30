@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const source = readFileSync('src/motion-arsenal/effects/premium/NoxGlassCards.tsx', 'utf8');
+const manifest = JSON.parse(readFileSync('public/agent-manifests/glass-distortion-cards-variants.json', 'utf8'));
+for (const token of ['prism-command-grid','liquid-chrome-vault','obsidian-caustic-deck','signal-crystal-array','revenue-amber-monoliths','GLASS_CARD_ENERGIES','u_variant','u_refraction','ngc-impact','showVariantSwitcher','showEnergySwitcher','COPY CONFIG']) assert.ok(source.includes(token), `glass card contract missing: ${token}`);
+assert.equal(manifest.effectId, 'premium-glass-distortion-cards');
+assert.equal(manifest.variants.length, 5);
+assert.equal(new Set(manifest.variants.map((entry) => entry.reference)).size, 5);
+assert.ok(!source.includes('Math.random'));
+assert.ok(!source.includes('fetch('));
+console.log('premium glass distortion cards contract: OK');

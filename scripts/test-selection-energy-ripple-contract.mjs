@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const source = readFileSync('src/motion-arsenal/effects/forms/SelectionEnergyRipple.tsx', 'utf8');
+const manifest = JSON.parse(readFileSync('public/agent-manifests/selection-energy-ripple-variants.json', 'utf8'));
+for (const token of ['lock-in-shockwave','forge-sigil-ripple','neural-choice-chain','gold-ascension-vote','quantum-branch-collapse','RippleSymbol','ser-ripple-sigil','gravity','sparkCount','showVariantSwitcher','COPY CONFIG']) assert.ok(source.includes(token), `selection ripple contract missing: ${token}`);
+assert.equal(manifest.effectId, 'forms-selection-energy-ripple');
+assert.equal(manifest.variants.length, 5);
+assert.equal(new Set(manifest.variants.map((entry) => entry.reference)).size, 5);
+assert.ok(!source.includes('Math.random'));
+assert.ok(!source.includes('fetch('));
+console.log('selection energy ripple contract: OK');
