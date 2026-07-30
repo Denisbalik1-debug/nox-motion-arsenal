@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "id": "section-transitions",
+  "effects": [
+    {
+      "url": "https://nox-motion-arsenal.vercel.app/#/effect/forms-answer-lock-in",
+      "variants": ["assessment", "command-deck", "brand-lock"],
+      "brandKits": ["nox-labs"],
+      "constraints": ["Keep existing public props", "Production-safe CSS and SVG only"]
+    },
+    {
+      "url": "https://nox-motion-arsenal.vercel.app/#/effect/forms-validation-pulse",
+      "variants": ["field", "command", "checkout"],
+      "brandKits": ["nox-labs"],
+      "constraints": ["Keep existing public props", "No per-frame React state"]
+    },
+    {
+      "url": "https://nox-motion-arsenal.vercel.app/#/effect/bg-nox-starfield-drift",
+      "variants": ["deep-drift", "section-warp", "brand-gateway"],
+      "brandKits": ["nox-labs"],
+      "constraints": ["Horizontal and reversible", "Scroll-reactive section transition", "Canvas2D production safe"]
+    }
+  ],
+  "publish": {
+    "mode": "production",
+    "skipPreview": true
+  }
+}
