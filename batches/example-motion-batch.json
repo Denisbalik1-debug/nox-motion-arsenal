@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0",
+  "id": "example-motion-batch",
+  "publish": {
+    "mode": "production",
+    "skipPreview": true
+  },
+  "effects": [
+    {
+      "url": "https://nox-motion-arsenal.vercel.app/#/effect/nox-spinimage",
+      "intent": "Create premium, cinematic and overdrive variants while preserving the existing public API and responsive behavior.",
+      "variants": [
+        "premium",
+        "cinematic",
+        "overdrive"
+      ],
+      "brandKits": [
+        "nox-labs"
+      ],
+      "constraints": [
+        "Do not create a separate Vercel project",
+        "Do not change unrelated effects",
+        "Keep reduced-motion support",
+        "Keep the existing catalog controls compatible"
+      ],
+      "dependencies": []
+    }
+  ]
+}
