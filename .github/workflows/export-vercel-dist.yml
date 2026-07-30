@@ -1,0 +1,110 @@
+name: Export Vercel Dist
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Create chunked deployment manifest
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const root = path.resolve('dist');
+          const out = path.resolve('.deploy-export');
+          fs.rmSync(out, { recursive: true, force: true });
+          fs.mkdirSync(path.join(out, 'chunks'), { recursive: true });
+
+          const files = [];
+          const walk = (dir) => {
+            for (const name of fs.readdirSync(dir)) {
+              const abs = path.join(dir, name);
+              const stat = fs.statSync(abs);
+              if (stat.isDirectory()) walk(abs);
+              else files.push(abs);
+            }
+          };
+          walk(root);
+
+          const textExtensions = new Set([
+            '.html', '.css', '.js', '.mjs', '.json', '.txt', '.svg', '.xml', '.map', '.webmanifest'
+          ]);
+
+          const records = files.map((abs) => {
+            const file = path.relative(root, abs).split(path.sep).join('/');
+            const ext = path.extname(file).toLowerCase();
+            const buffer = fs.readFileSync(abs);
+            return {
+              file,
+              encoding: textExtensions.has(ext) ? 'utf8' : 'base64',
+              data: textExtensions.has(ext) ? buffer.toString('utf8') : buffer.toString('base64'),
+              bytes: buffer.length,
+            };
+          });
+
+          const maxChunkBytes = 700000;
+          const chunks = [];
+          let current = [];
+          let currentBytes = 2;
+          for (const record of records) {
+            const encoded = JSON.stringify(record);
+            if (current.length && currentBytes + encoded.length + 1 > maxChunkBytes) {
+              chunks.push(current);
+              current = [];
+              currentBytes = 2;
+            }
+            current.push(record);
+            currentBytes += encoded.length + 1;
+          }
+          if (current.length) chunks.push(current);
+
+          const chunkFiles = chunks.map((chunk, index) => {
+            const filename = `chunks/chunk-${String(index).padStart(3, '0')}.json`;
+            fs.writeFileSync(path.join(out, filename), JSON.stringify(chunk));
+            return filename;
+          });
+
+          fs.writeFileSync(
+            path.join(out, 'index.json'),
+            JSON.stringify({
+              sourceSha: process.env.SOURCE_SHA,
+              generatedAt: new Date().toISOString(),
+              fileCount: records.length,
+              totalBytes: records.reduce((sum, record) => sum + record.bytes, 0),
+              binaryFiles: records.filter((record) => record.encoding === 'base64').map((record) => record.file),
+              chunks: chunkFiles,
+            }, null, 2),
+          );
+          NODE
+
+      - name: Publish deployment artifact branch
+        run: |
+          rm -rf /tmp/nox-dist-export
+          mkdir -p /tmp/nox-dist-export
+          cp -R .deploy-export/. /tmp/nox-dist-export/
+          git checkout --orphan deploy-artifact
+          git rm -rf .
+          cp -R /tmp/nox-dist-export/. .
+          git add .
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "build: export dist for $GITHUB_SHA"
+          git push --force origin deploy-artifact
