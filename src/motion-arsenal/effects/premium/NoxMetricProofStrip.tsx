@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export type MetricProofVariant = 'growth' | 'local-business' | 'hospitality';
 
@@ -39,14 +39,11 @@ const PRESETS: Record<MetricProofVariant, MetricProofItem[]> = {
   ],
 };
 
-const formatValue = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(1);
+const formatTarget = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(1);
+const formatAnimated = (value: number, target: number) => Number.isInteger(target) ? String(Math.round(value)) : value.toFixed(1);
 
 export function NoxMetricProofStrip({
-  variant = 'growth',
-  items,
-  duration = 1200,
-  showDetails = true,
-  compact = false,
+  variant = 'growth', items, duration = 1200, showDetails = true, compact = false,
 }: NoxMetricProofStripProps) {
   const metrics = useMemo(() => (items?.length ? items : PRESETS[variant]), [items, variant]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -55,15 +52,9 @@ export function NoxMetricProofStrip({
 
   useEffect(() => {
     const node = rootRef.current;
-    if (!node || typeof IntersectionObserver === 'undefined') {
-      setVisible(true);
-      return;
-    }
+    if (!node || typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setVisible(true);
-        observer.disconnect();
-      }
+      if (entry.isIntersecting) { setVisible(true); observer.disconnect(); }
     }, { threshold: 0.25 });
     observer.observe(node);
     return () => observer.disconnect();
@@ -71,10 +62,8 @@ export function NoxMetricProofStrip({
 
   useEffect(() => {
     if (!visible) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setProgress(1);
-      return;
-    }
+    setProgress(0);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setProgress(1); return; }
     const started = performance.now();
     let frame = 0;
     const tick = (now: number) => {
@@ -90,17 +79,14 @@ export function NoxMetricProofStrip({
     <section ref={rootRef} className={`nmps-stage ${compact ? 'is-compact' : ''}`} aria-label="Performance metrics">
       <style>{CSS}</style>
       <div className="nmps-shell">
-        <div className="nmps-heading">
-          <span>MEASURABLE PROOF</span>
-          <strong>Results, not decoration.</strong>
-        </div>
+        <div className="nmps-heading"><span>MEASURABLE PROOF</span><strong>Results, not decoration.</strong></div>
         <div className="nmps-grid">
           {metrics.map((metric, index) => {
             const rendered = metric.value * progress;
             return (
               <article key={`${metric.label}-${index}`} className="nmps-card">
-                <div className="nmps-value" aria-label={`${metric.prefix ?? ''}${formatValue(metric.value)}${metric.suffix ?? ''}`}>
-                  <span>{metric.prefix}</span>{formatValue(rendered)}<span>{metric.suffix}</span>
+                <div className="nmps-value" aria-label={`${metric.prefix ?? ''}${formatTarget(metric.value)}${metric.suffix ?? ''}`}>
+                  <span>{metric.prefix}</span><span aria-hidden="true">{formatAnimated(rendered, metric.value)}</span><span>{metric.suffix}</span>
                 </div>
                 <strong>{metric.label}</strong>
                 {showDetails && metric.detail && <p>{metric.detail}</p>}
@@ -114,7 +100,7 @@ export function NoxMetricProofStrip({
 }
 
 const CSS = String.raw`
-.nmps-stage{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;padding:clamp(18px,4vw,54px);background:radial-gradient(circle at 18% 18%,rgba(201,48,48,.12),transparent 34%),linear-gradient(145deg,#08090c,#030405 74%);color:#f5f2eb;font-family:var(--sans,system-ui,sans-serif)}.nmps-shell{width:min(1180px,100%);display:grid;gap:clamp(24px,5vw,58px)}.nmps-heading{display:grid;gap:8px}.nmps-heading span{font:700 10px/1 var(--mono,monospace);letter-spacing:.22em;color:#e85b68}.nmps-heading strong{font-size:clamp(28px,5vw,62px);line-height:.95;letter-spacing:-.055em}.nmps-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;background:rgba(255,255,255,.02)}.nmps-card{min-height:250px;padding:clamp(20px,3vw,34px);display:flex;flex-direction:column;justify-content:flex-end;border-right:1px solid rgba(255,255,255,.08)}.nmps-card:last-child{border-right:0}.nmps-value{margin-bottom:auto;font-size:clamp(42px,7vw,86px);line-height:.9;font-weight:800;letter-spacing:-.07em;color:#fff}.nmps-value span{font-size:.42em;color:#ff7b88;letter-spacing:-.02em}.nmps-card>strong{font-size:15px;letter-spacing:-.01em}.nmps-card p{margin:8px 0 0;color:rgba(255,255,255,.5);font-size:12px;line-height:1.5}.nmps-stage.is-compact .nmps-heading{display:none}.nmps-stage.is-compact .nmps-card{min-height:180px}@media(max-width:860px){.nmps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nmps-card:nth-child(2){border-right:0}.nmps-card:nth-child(-n+2){border-bottom:1px solid rgba(255,255,255,.08)}}@media(max-width:520px){.nmps-stage{padding:14px}.nmps-shell{gap:22px}.nmps-card{min-height:175px;padding:18px}.nmps-value{font-size:44px}.nmps-card p{display:none}}
+.nmps-stage{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;padding:clamp(18px,4vw,54px);background:radial-gradient(circle at 18% 18%,rgba(201,48,48,.12),transparent 34%),linear-gradient(145deg,#08090c,#030405 74%);color:#f5f2eb;font-family:var(--sans,system-ui,sans-serif)}.nmps-shell{width:min(1180px,100%);display:grid;gap:clamp(24px,5vw,58px)}.nmps-heading{display:grid;gap:8px}.nmps-heading span{font:700 10px/1 var(--mono,monospace);letter-spacing:.22em;color:#e85b68}.nmps-heading strong{font-size:clamp(28px,5vw,62px);line-height:.95;letter-spacing:-.055em}.nmps-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;background:rgba(255,255,255,.02)}.nmps-card{min-height:250px;padding:clamp(20px,3vw,34px);display:flex;flex-direction:column;justify-content:flex-end;border-right:1px solid rgba(255,255,255,.08)}.nmps-card:last-child{border-right:0}.nmps-value{margin-bottom:auto;font-size:clamp(42px,7vw,86px);line-height:.9;font-weight:800;letter-spacing:-.07em;color:#fff}.nmps-value span{font-size:.42em;color:#ff7b88;letter-spacing:-.02em}.nmps-value span[aria-hidden=true]{font-size:1em;color:#fff}.nmps-card>strong{font-size:15px;letter-spacing:-.01em}.nmps-card p{margin:8px 0 0;color:rgba(255,255,255,.5);font-size:12px;line-height:1.5}.nmps-stage.is-compact .nmps-heading{display:none}.nmps-stage.is-compact .nmps-card{min-height:180px}@media(max-width:860px){.nmps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nmps-card:nth-child(2){border-right:0}.nmps-card:nth-child(-n+2){border-bottom:1px solid rgba(255,255,255,.08)}}@media(max-width:520px){.nmps-stage{padding:14px}.nmps-shell{gap:22px}.nmps-card{min-height:175px;padding:18px}.nmps-value{font-size:44px}.nmps-card p{display:none}}
 `;
 
 export default NoxMetricProofStrip;
