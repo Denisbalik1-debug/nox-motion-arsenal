@@ -16,11 +16,27 @@ import { glyphPath } from '../../lib/svgUtils';
 // ---------------------------------------------------------------------------
 
 export type ProductStageVariantId =
+  | 'nox-revenue-os'
   | 'nox-global-sales-os'
   | 'project-x-command-center'
   | 'ai-growth-engine'
   | 'conversion-website-system'
   | 'automation-ops-system';
+
+/**
+ * `internal` — the stage owns a scroll container (Arsenal preview default).
+ * `page`     — the stage sits in the document flow and is driven by the page
+ *              scroll. Required for product websites, where trapping the wheel
+ *              inside a box is a UX regression.
+ */
+export type StageScrollDriver = 'internal' | 'page';
+
+/**
+ * `shells`      — concentric shells + orbits (original look).
+ * `signal-flow` — modules re-arrange per chapter, so the object visibly mutates
+ *                 instead of only shifting colour.
+ */
+export type StageVisualMode = 'shells' | 'signal-flow';
 
 export interface PinnedProductStageProps {
   variant?: ProductStageVariantId;
@@ -30,6 +46,14 @@ export interface PinnedProductStageProps {
   scalePulse?: number;
   colorShift?: boolean;
   seed?: number;
+  /** Scroll source. Defaults to the historical internal scroller. */
+  scrollDriver?: StageScrollDriver;
+  /** Page mode only: chapter height in viewport heights (0.6 = fast story). */
+  compactScroll?: number;
+  /** Object language. Defaults to the historical shell stack. */
+  visualMode?: StageVisualMode;
+  /** `demo` keeps the Arsenal chrome (agent ref, scroll hint). `minimal` drops it. */
+  chrome?: 'demo' | 'minimal';
 }
 
 type CssVars = CSSProperties & Record<`--${string}`, string | number>;
@@ -50,6 +74,8 @@ type StageSection = {
   statLabel: string;
   telemetry: [number, number, number];
   tags: string[];
+  /** Optional per-chapter module set — the object mutates instead of recolouring. */
+  frags?: [StageFragment, StageFragment, StageFragment, StageFragment];
 };
 
 type StageFragment = {
@@ -88,6 +114,7 @@ const motion = (
   statLabel: string,
   telemetry: [number, number, number],
   tags: string[],
+  frags?: [StageFragment, StageFragment, StageFragment, StageFragment],
 ): StageSection => ({
   kicker,
   title,
@@ -104,9 +131,91 @@ const motion = (
   statLabel,
   telemetry,
   tags,
+  frags,
 });
 
 export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageVariant> = {
+  // NOX Revenue OS — the chapter set used on noxlabs.net. Deliberately free of
+  // result claims: every stat line names a system state, never an outcome.
+  // Each chapter carries its own module set, so the object re-assembles per
+  // step instead of only shifting hue.
+  'nox-revenue-os': {
+    id: 'nox-revenue-os',
+    shortLabel: 'REVENUE OS',
+    productName: 'NOX REVENUE OPERATING SYSTEM',
+    stageLabel: 'NOX REVENUE STAGE',
+    agentReference: 'motion:scroll-pinned-product-stage@nox-revenue-os',
+    ctaLabel: 'SYSTEM BESPRECHEN',
+    meterLabels: ['SIGNAL', 'STRUKTUR', 'FREIGABE'],
+    fragments: [
+      { x: -1, y: -0.72, z: 46, r: -16, label: 'WEBSITE' },
+      { x: 0.92, y: -0.64, z: 34, r: 13, label: 'GOOGLE' },
+      { x: -1.04, y: 0.62, z: 24, r: 10, label: 'CONTENT' },
+      { x: 1.02, y: 0.7, z: 52, r: -12, label: 'FORMULAR' },
+    ],
+    sections: [
+      motion(
+        '01 / SIGNAL CAPTURE', 'SIGNALE\nERFASSEN',
+        'Website, Google, Content und Formulare erzeugen verwertbare Nachfrage-Signale. Statt in Postfächern und Tabellen zu versickern, laufen sie an einer Stelle zusammen.',
+        '#c93630', '#f0a15a', -12, -16, -3, 0.94, 0.9, 0.1, 'EINGANG', 'SIGNALE LAUFEN AUF', [30, 14, 8],
+        ['WEBSITE', 'GOOGLE', 'FORMULARE'],
+        [
+          { x: -1.06, y: -0.82, z: 54, r: -18, label: 'WEBSITE' },
+          { x: 1.02, y: -0.74, z: 40, r: 15, label: 'GOOGLE' },
+          { x: -0.98, y: 0.78, z: 30, r: 12, label: 'CONTENT' },
+          { x: 1.08, y: 0.68, z: 58, r: -14, label: 'FORMULAR' },
+        ],
+      ),
+      motion(
+        '02 / QUALIFICATION', 'QUALI-\nFIZIEREN',
+        'Fit, Bedarf, Kaufkraft und Dringlichkeit werden strukturiert bewertet und priorisiert. Du siehst nicht mehr Anfragen — du siehst zuerst die richtigen.',
+        '#b68b35', '#f4d992', 6, 70, 4, 1.03, 0.42, 0.7, 'FILTER', 'PRIORISIERUNG AKTIV', [72, 48, 22],
+        ['FIT', 'DRINGLICHKEIT', 'POTENZIAL'],
+        [
+          { x: -0.52, y: -0.9, z: 62, r: -8, label: 'FIT' },
+          { x: 0.5, y: -0.62, z: 44, r: 8, label: 'BEDARF' },
+          { x: -0.46, y: 0.5, z: 26, r: 6, label: 'KAUFKRAFT' },
+          { x: 0.44, y: 0.9, z: 14, r: -6, label: 'URGENZ' },
+        ],
+      ),
+      motion(
+        '03 / PITCH MUTATION', 'ANGEBOT\nANPASSEN',
+        'Angebot, Proof und Messaging passen sich Zielkunde, Branche und Entscheidungslage an. Kein Standardpitch für alle, sondern die passende Version.',
+        '#8f62ff', '#d7c1ff', -6, 158, -5, 1.1, 0.96, 1, 'MUTATION', 'ANGEBOT IM KONTEXT', [88, 74, 40],
+        ['MESSAGING', 'PROOF', 'OFFER'],
+        [
+          { x: -1.12, y: -0.28, z: 66, r: -22, label: 'MESSAGING' },
+          { x: 1.14, y: -0.34, z: 20, r: 20, label: 'PROOF' },
+          { x: -0.34, y: 0.94, z: 48, r: 16, label: 'OFFER' },
+          { x: 0.62, y: 0.44, z: 72, r: -18, label: 'KONTEXT' },
+        ],
+      ),
+      motion(
+        '04 / AGENT FOLLOW-UP', 'FOLLOW-UP\nVORBEREITEN',
+        'Agenten bereiten Follow-ups, Anreicherung und nächste Pipeline-Aktionen vor. Nichts bleibt liegen, weil gerade niemand Zeit hatte — versendet wird erst nach Freigabe.',
+        '#27d6a1', '#a9ffe5', 10, 250, 3, 1.0, 0.3, 0.4, 'VORBEREITET', 'WARTET AUF FREIGABE', [96, 88, 62],
+        ['TIMELINE', 'ENRICHMENT', 'TASKS'],
+        [
+          { x: -1.18, y: 0.06, z: 30, r: -10, label: 'TIMELINE' },
+          { x: -0.4, y: 0.06, z: 46, r: 0, label: 'AGENT' },
+          { x: 0.44, y: 0.06, z: 46, r: 0, label: 'ENTWURF' },
+          { x: 1.2, y: 0.06, z: 30, r: 10, label: 'REMINDER' },
+        ],
+      ),
+      motion(
+        '05 / OPERATOR COMMAND', 'FREIGABE\nBLEIBT BEI DIR',
+        'Der Operator behält Kontrolle über Freigaben, Outreach, Pipeline und nächste Aktionen. Das System bereitet vor und schlägt vor — raus geht nur, was du freigibst.',
+        '#ff4f40', '#ffd2a8', -3, 348, 0, 1.07, 0, 0.14, 'FREIGABE', 'MENSCH ENTSCHEIDET', [100, 100, 100],
+        ['CONTROL', 'FREIGABE', 'PIPELINE'],
+        [
+          { x: -0.86, y: -0.74, z: 26, r: -12, label: 'DASHBOARD' },
+          { x: 0.88, y: -0.7, z: 26, r: 12, label: 'PIPELINE' },
+          { x: -0.86, y: 0.74, z: 26, r: 10, label: 'OPERATOR' },
+          { x: 0.88, y: 0.72, z: 26, r: -10, label: 'FREIGABE' },
+        ],
+      ),
+    ],
+  },
   'nox-global-sales-os': {
     id: 'nox-global-sales-os',
     shortLabel: 'SALES OS',
@@ -337,6 +446,35 @@ const CSS = String.raw`
   .pps-body { max-width:310px; font-size:9px; }
   .pps-tags,.pps-cta { margin-top:8px; }
 }
+
+/* ── page mode ────────────────────────────────────────────────────────────
+   The stage keeps its own 100svh box (so every container query and cq unit
+   below stays valid) but that box is pinned inside a tall track in the page
+   flow. The page scroll drives the story; nothing traps the wheel. The copy
+   becomes an overlay of the active chapter instead of a tall section stack. */
+.pps-track { position:relative; width:100%; }
+.pps-sticky { position:sticky; top:0; height:100svh; }
+.pps-page { background:transparent; }
+.pps-page::before { background:radial-gradient(circle at 22% 42%,color-mix(in srgb,var(--pps-accent) 15%,transparent),transparent 34%),radial-gradient(circle at 74% 38%,color-mix(in srgb,var(--pps-accent-2) 9%,transparent),transparent 42%); }
+.pps-page::after { display:none; }
+.pps-page .pps-scroll { position:absolute; inset:0; overflow:hidden; overscroll-behavior:auto; }
+.pps-page .pps-stage { position:absolute; inset:0; height:100%; }
+.pps-copy-overlay { position:absolute; inset:0; z-index:18; pointer-events:none; }
+.pps-copy-overlay .pps-section { position:absolute; inset:0; height:100%; }
+.pps-copy-overlay .pps-copy[data-active='false'] { pointer-events:none; }
+
+/* ── minimal chrome: no Arsenal affordances on a product website ── */
+.pps-minimal .pps-reference,
+.pps-minimal .pps-scroll-hint,
+.pps-minimal .pps-telemetry,
+.pps-minimal .pps-stat { display:none; }
+
+/* ── signal-flow visual mode: the module set re-assembles per chapter ── */
+.pps-flow .pps-fragment { transition:transform .7s cubic-bezier(.16,1,.3,1),opacity .5s ease,border-color .5s ease; }
+.pps-flow .pps-fragment strong { transition:color .5s ease; }
+.pps-flow .pps-shell { opacity:calc(.72 - var(--shell-index) * .12); }
+.pps-flow .pps-orbit { opacity:.5; }
+@media (prefers-reduced-motion:reduce) { .pps-flow .pps-fragment { transition:none; } }
 `;
 
 export function PinnedProductStage({
@@ -347,9 +485,15 @@ export function PinnedProductStage({
   scalePulse = 0.18,
   colorShift = true,
   seed = 11,
+  scrollDriver = 'internal',
+  compactScroll = 0.78,
+  visualMode = 'shells',
+  chrome = 'demo',
 }: PinnedProductStageProps) {
   const reduced = usePrefersReducedMotion();
+  const pageDriven = scrollDriver === 'page';
   const rootRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(!pageDriven);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const productRef = useRef<HTMLDivElement>(null);
@@ -361,6 +505,19 @@ export function PinnedProductStage({
   useEffect(() => {
     setSelectedVariant(variant);
   }, [variant]);
+
+  // Page mode only: never burn frames while the stage is off screen.
+  useEffect(() => {
+    if (!pageDriven) return;
+    const root = rootRef.current;
+    if (!root || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin: '10% 0px' },
+    );
+    io.observe(root);
+    return () => io.disconnect();
+  }, [pageDriven]);
 
   const config = PRODUCT_STAGE_VARIANTS[selectedVariant];
   const sections = config.sections;
@@ -386,7 +543,15 @@ export function PinnedProductStage({
       const product = productRef.current;
       if (!scroller || !stage || !product) return;
 
-      const raw = scroller.scrollTop / Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+      // Page mode reads the document scroll against the stage's own travel,
+      // so the section behaves like any other pinned block on the page.
+      const raw = pageDriven
+        ? (() => {
+            const rect = scroller.getBoundingClientRect();
+            const travel = rect.height - window.innerHeight;
+            return travel <= 0 ? 0 : clamp(-rect.top / travel, 0, 1);
+          })()
+        : scroller.scrollTop / Math.max(1, scroller.scrollHeight - scroller.clientHeight);
       smooth.current = damp(smooth.current, raw, damping, dt);
       const progress = clamp(smooth.current, 0, 1);
       const timeline = progress * (n - 1);
@@ -419,12 +584,20 @@ export function PinnedProductStage({
       const nearest = clamp(Math.round(timeline), 0, n - 1);
       setActive((previous) => (previous === nearest ? previous : nearest));
     },
-    !reduced,
+    !reduced && inView,
   );
 
   const goToSection = (index: number) => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
+    if (pageDriven) {
+      const rect = scroller.getBoundingClientRect();
+      const travel = Math.max(0, rect.height - window.innerHeight);
+      const top = window.scrollY + rect.top + (index / (n - 1)) * travel;
+      window.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
+      if (reduced) setActive(index);
+      return;
+    }
     const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
     scroller.scrollTo({ top: (index / (n - 1)) * max, behavior: reduced ? 'auto' : 'smooth' });
   };
@@ -466,10 +639,19 @@ export function PinnedProductStage({
     ? `rotateX(${final.rotX}deg) rotateY(${final.rotY}deg) rotateZ(${final.rotZ}deg) scale(${final.scale})`
     : `rotateX(${initial.rotX}deg) rotateY(${initial.rotY}deg) rotateZ(${initial.rotZ}deg) scale(${initial.scale})`;
 
-  return (
-    <div ref={rootRef} className="pps-root" onPointerMove={handlePointerMove} style={stageVars}>
+  const stageBody = (
+    <div
+      ref={rootRef}
+      className={`pps-root${pageDriven ? ' pps-page' : ''}${visualMode === 'signal-flow' ? ' pps-flow' : ''}${chrome === 'minimal' ? ' pps-minimal' : ''}`}
+      onPointerMove={handlePointerMove}
+      style={stageVars}
+    >
       <style>{CSS}</style>
-      <div ref={scrollerRef} className="pps-scroll" aria-label={`${config.productName} product story`}>
+      <div
+        ref={pageDriven ? undefined : scrollerRef}
+        className="pps-scroll"
+        aria-label={`${config.productName} product story`}
+      >
         <div style={{ position: 'relative' }}>
           <div ref={stageRef} className="pps-stage" style={stageVars}>
             <div className="pps-stage-grid" />
@@ -520,9 +702,9 @@ export function PinnedProductStage({
                     <div key={index} className="pps-orbit" style={{ '--orbit-index': index } as CssVars} />
                   ))}
 
-                  {config.fragments.map((fragment) => (
+                  {(sections[active].frags ?? config.fragments).map((fragment, fragIndex) => (
                     <div
-                      key={fragment.label}
+                      key={fragIndex}
                       className="pps-fragment"
                       style={{
                         '--frag-x': fragment.x,
@@ -581,7 +763,7 @@ export function PinnedProductStage({
             </nav>
           </div>
 
-          <div className="pps-copy-layer">
+          <div className={pageDriven ? 'pps-copy-overlay' : 'pps-copy-layer'}>
             {sections.map((section, index) => (
               <section key={section.kicker} className="pps-section" aria-label={section.title.replace('\n', ' ')}>
                 <div className="pps-copy" data-active={reduced ? 'true' : String(index === active)}>
@@ -601,6 +783,20 @@ export function PinnedProductStage({
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  if (!pageDriven) return stageBody;
+
+  // Page mode: a tall track in the document flow with the stage pinned inside.
+  // Total height stays at `chapters × compactScroll` viewport heights.
+  return (
+    <div
+      ref={scrollerRef}
+      className="pps-track"
+      style={{ height: `calc(${(n * compactScroll).toFixed(3)} * 100svh)` }}
+    >
+      <div className="pps-sticky">{stageBody}</div>
     </div>
   );
 }

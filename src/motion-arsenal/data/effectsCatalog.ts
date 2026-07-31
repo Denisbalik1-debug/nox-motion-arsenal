@@ -39,6 +39,17 @@ const RAW_EFFECTS_CATALOG: EffectEntry[] = [
 ];
 
 const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
+  'scroll-pinned-product-stage': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T09:00:00.000Z',
+    lastImprovedBy: 'claude-code',
+    improvementVersion: '2.0.0',
+    improvementChangelog: [
+      'Added a page-scroll driver so the stage can be pinned inside a real website instead of trapping the wheel in its own scrollport.',
+      'Added the nox-revenue-os variant with per-chapter module sets, so the object re-assembles between chapters instead of only shifting colour.',
+      'Added compactScroll, visualMode and chrome props plus off-screen frame pausing; all previously public props keep their defaults and behaviour.',
+    ],
+  },
   'nox-spinimage': {
     improvementStatus: 'improved',
     lastImprovedAt: '2026-07-30T20:08:00.000Z',

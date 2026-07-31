@@ -59,6 +59,17 @@ const CORE_SYSTEM_CSS = String.raw`
 .pcsys-root[data-product-variant='automation-ops-system'] .pps-shell { border-radius:0; clip-path:polygon(18% 0,82% 0,100% 18%,100% 82%,82% 100%,18% 100%,0 82%,0 18%); }
 .pcsys-root[data-product-variant='automation-ops-system'] .pps-orbit { border-style:dotted; }
 
+/* Page mode: the core system wrapper must not be an absolute overlay. */
+.pcsys-page { position:relative; inset:auto; overflow:visible; overflow:clip; }
+.pcsys-page > .pps-track { position:relative; }
+
+/* NOX Revenue OS — Command Core: a squared operator console rather than a
+   reactor. Signals enter, the frame holds, the release stays human. */
+.pcsys-root[data-product-variant='nox-revenue-os'] .pps-core { border-radius:12px; clip-path:polygon(14% 0,86% 0,100% 14%,100% 86%,86% 100%,14% 100%,0 86%,0 14%); background:linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(150deg,#1a0d0d,#07070a 70%); background-size:11px 11px,11px 11px,auto; box-shadow:0 0 30px color-mix(in srgb,var(--pps-accent) 40%,transparent),inset 0 0 24px color-mix(in srgb,var(--pps-accent-2) 9%,transparent); }
+.pcsys-root[data-product-variant='nox-revenue-os'] .pps-core::before { inset:-14px; border-radius:14px; clip-path:inherit; border:1px solid color-mix(in srgb,var(--pps-accent-2) 58%,transparent); background:conic-gradient(from 0deg,transparent 0 24%,color-mix(in srgb,var(--pps-accent-2) 42%,transparent) 25% 27%,transparent 28% 74%,color-mix(in srgb,var(--pps-accent) 50%,transparent) 75% 77%,transparent 78%); animation:pcsys-spin 19s linear infinite; }
+.pcsys-root[data-product-variant='nox-revenue-os'] .pps-core::after { content:'NOX'; inset:24%; display:flex; align-items:flex-end; justify-content:center; padding-bottom:7px; border-radius:8px; border:1px solid color-mix(in srgb,var(--pps-accent-2) 55%,transparent); background:linear-gradient(90deg,transparent 47%,var(--pps-accent-2) 49% 51%,transparent 53%),linear-gradient(transparent 47%,var(--pps-accent) 49% 51%,transparent 53%),radial-gradient(circle,#fff 0 3%,var(--pps-accent-2) 5%,transparent 16%); color:#ffe4d4; font:800 5px/1 var(--mono,monospace); letter-spacing:.24em; filter:drop-shadow(0 0 8px var(--pps-accent)); animation:pcsys-breathe 3.6s ease-in-out infinite; }
+.pcsys-root[data-product-variant='nox-revenue-os'] .pps-shell { border-radius:10px; clip-path:polygon(10% 0,90% 0,100% 10%,100% 90%,90% 100%,10% 100%,0 90%,0 10%); }
+
 @container (max-width:700px) { .pcsys-switcher { left:12px; right:12px; top:35px; } }
 @media (prefers-reduced-motion:reduce) { .pcsys-root .pps-core::before,.pcsys-root .pps-core::after { animation:none!important; } }
 `;
@@ -69,11 +80,15 @@ export function PinnedProductStageCoreSystem({
   ...motionProps
 }: PinnedProductStageProps) {
   const [selectedVariant, setSelectedVariant] = useState<ProductStageVariantId>(variant);
+  const pageDriven = motionProps.scrollDriver === 'page';
 
   useEffect(() => setSelectedVariant(variant), [variant]);
 
   return (
-    <div className="pcsys-root" data-product-variant={selectedVariant}>
+    <div
+      className={`pcsys-root${pageDriven ? ' pcsys-page' : ''}`}
+      data-product-variant={selectedVariant}
+    >
       <BasePinnedProductStage
         {...motionProps}
         variant={selectedVariant}
