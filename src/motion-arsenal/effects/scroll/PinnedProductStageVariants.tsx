@@ -157,7 +157,7 @@ export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageV
       motion(
         '01 / SIGNAL CAPTURE', 'SIGNALE\nERFASSEN',
         'Website, Google, Content und Formulare erzeugen verwertbare Nachfrage-Signale. Statt in Postfächern und Tabellen zu versickern, laufen sie an einer Stelle zusammen.',
-        '#c93630', '#f0a15a', -12, -16, -3, 0.94, 0.9, 0.1, 'EINGANG', 'SIGNALE LAUFEN AUF', [30, 14, 8],
+        '#c93630', '#f0a15a', -11, -22, -3, 0.94, 0.92, 0.1, 'EINGANG', 'SIGNALE LAUFEN AUF', [30, 14, 8],
         ['WEBSITE', 'GOOGLE', 'FORMULARE'],
         [
           { x: -1.06, y: -0.82, z: 54, r: -18, label: 'WEBSITE' },
@@ -169,7 +169,7 @@ export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageV
       motion(
         '02 / QUALIFICATION', 'QUALI-\nFIZIEREN',
         'Fit, Bedarf, Kaufkraft und Dringlichkeit werden strukturiert bewertet und priorisiert. Du siehst nicht mehr Anfragen — du siehst zuerst die richtigen.',
-        '#b68b35', '#f4d992', 6, 70, 4, 1.03, 0.42, 0.7, 'FILTER', 'PRIORISIERUNG AKTIV', [72, 48, 22],
+        '#b68b35', '#f4d992', 6, -8, 4, 1.03, 0.76, 0.7, 'FILTER', 'PRIORISIERUNG AKTIV', [72, 48, 22],
         ['FIT', 'DRINGLICHKEIT', 'POTENZIAL'],
         [
           { x: -0.52, y: -0.9, z: 62, r: -8, label: 'FIT' },
@@ -181,7 +181,7 @@ export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageV
       motion(
         '03 / PITCH MUTATION', 'ANGEBOT\nANPASSEN',
         'Angebot, Proof und Messaging passen sich Zielkunde, Branche und Entscheidungslage an. Kein Standardpitch für alle, sondern die passende Version.',
-        '#8f62ff', '#d7c1ff', -6, 158, -5, 1.1, 0.96, 1, 'MUTATION', 'ANGEBOT IM KONTEXT', [88, 74, 40],
+        '#8f62ff', '#d7c1ff', -6, 9, -5, 1.1, 1, 1, 'MUTATION', 'ANGEBOT IM KONTEXT', [88, 74, 40],
         ['MESSAGING', 'PROOF', 'OFFER'],
         [
           { x: -1.12, y: -0.28, z: 66, r: -22, label: 'MESSAGING' },
@@ -193,7 +193,7 @@ export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageV
       motion(
         '04 / AGENT FOLLOW-UP', 'FOLLOW-UP\nVORBEREITEN',
         'Agenten bereiten Follow-ups, Anreicherung und nächste Pipeline-Aktionen vor. Nichts bleibt liegen, weil gerade niemand Zeit hatte — versendet wird erst nach Freigabe.',
-        '#27d6a1', '#a9ffe5', 10, 250, 3, 1.0, 0.3, 0.4, 'VORBEREITET', 'WARTET AUF FREIGABE', [96, 88, 62],
+        '#27d6a1', '#a9ffe5', 10, 24, 3, 1.0, 0.86, 0.4, 'VORBEREITET', 'WARTET AUF FREIGABE', [96, 88, 62],
         ['TIMELINE', 'ENRICHMENT', 'TASKS'],
         [
           { x: -1.18, y: 0.06, z: 30, r: -10, label: 'TIMELINE' },
@@ -205,7 +205,7 @@ export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageV
       motion(
         '05 / OPERATOR COMMAND', 'FREIGABE\nBLEIBT BEI DIR',
         'Der Operator behält Kontrolle über Freigaben, Outreach, Pipeline und nächste Aktionen. Das System bereitet vor und schlägt vor — raus geht nur, was du freigibst.',
-        '#ff4f40', '#ffd2a8', -3, 348, 0, 1.07, 0, 0.14, 'FREIGABE', 'MENSCH ENTSCHEIDET', [100, 100, 100],
+        '#ff4f40', '#ffd2a8', -3, 38, 0, 1.07, 0.9, 0.14, 'FREIGABE', 'MENSCH ENTSCHEIDET', [100, 100, 100],
         ['CONTROL', 'FREIGABE', 'PIPELINE'],
         [
           { x: -0.86, y: -0.74, z: 26, r: -12, label: 'DASHBOARD' },
@@ -461,13 +461,20 @@ const CSS = String.raw`
 .pps-page .pps-stage { position:absolute; inset:0; height:100%; }
 .pps-copy-overlay { position:absolute; inset:0; z-index:18; pointer-events:none; }
 .pps-copy-overlay .pps-section { position:absolute; inset:0; height:100%; }
-.pps-copy-overlay .pps-copy[data-active='false'] { pointer-events:none; }
+.pps-copy-overlay .pps-copy[data-active='false'] { opacity:0; pointer-events:none; }
+/* Der innere Schacht trägt im internen Modus die lange Kapitelspalte; im
+   Page-Modus muss er die gepinnte Bühne ausfüllen, sonst kollabiert er auf 0. */
+.pps-shaft { position:relative; }
+.pps-page .pps-shaft { position:absolute; inset:0; }
 
 /* ── minimal chrome: no Arsenal affordances on a product website ── */
 .pps-minimal .pps-reference,
 .pps-minimal .pps-scroll-hint,
 .pps-minimal .pps-telemetry,
 .pps-minimal .pps-stat { display:none; }
+/* Ohne Arsenal-Chrome sitzt die Fortschrittszeile unten — oben kollidiert sie
+   auf echten Seiten mit dem Website-Header. */
+.pps-minimal .pps-progress { top:auto; bottom:20px; left:5%; right:20%; }
 
 /* ── signal-flow visual mode: the module set re-assembles per chapter ── */
 .pps-flow .pps-fragment { transition:transform .7s cubic-bezier(.16,1,.3,1),opacity .5s ease,border-color .5s ease; }
@@ -652,7 +659,7 @@ export function PinnedProductStage({
         className="pps-scroll"
         aria-label={`${config.productName} product story`}
       >
-        <div style={{ position: 'relative' }}>
+        <div className="pps-shaft">
           <div ref={stageRef} className="pps-stage" style={stageVars}>
             <div className="pps-stage-grid" />
             <div className="pps-horizon" />
