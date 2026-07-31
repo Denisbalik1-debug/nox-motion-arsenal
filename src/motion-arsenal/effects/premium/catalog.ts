@@ -1,15 +1,6 @@
 import { lazy } from 'react';
 import type { EffectEntry } from '../../types';
 
-// ---------------------------------------------------------------------------
-// Studio-Level NOX — Premium Rebuilds (2026-07-04).
-// Eigene NOX-Implementierungen der Mechaniken aus den Referenz-Forensiken
-// (KRANK/Lusion, Active Theory, Shopify Editions) plus eigener NOX-Forge-
-// Mechanik. Kein fremder Code, keine fremden Assets — nur Prinzipien.
-// Erstintegration: noxlabs.net Landingpage (siehe
-// docs/noxlabs-effect-usage-map.md im noxlabs.net-Repo).
-// ---------------------------------------------------------------------------
-
 export const PREMIUM_CATALOG: EffectEntry[] = [
   {
     meta: {
@@ -17,19 +8,15 @@ export const PREMIUM_CATALOG: EffectEntry[] = [
       name: 'NoxGlassCards',
       category: 'premium',
       sourceWebsite: 'active-theory',
-      sourceFiles: [
-        'docs/PROVENANCE.md (public provenance and rights classification)',
-      ],
+      sourceFiles: ['docs/PROVENANCE.md (public provenance and rights classification)'],
       mode: 'nox-adapted',
       complexity: 'high',
       dependencies: [],
       bestFor: ['Service-/Modul-Karten', 'Case-Study-Grids', 'Rank-/Progression-Cards', 'Premium Angebots- und Pricing-Sektionen'],
-      performanceNotes:
-        'Kontext-Budget 1: EIN WebGL-Canvas wandert zur aktiven Karte (dpr-Cap 1.5). Ruhende Karten sind reines CSS (Tilt + Gloss). Fünf Materialvarianten und drei Energieprofile teilen denselben Renderer; nie mehr als 1 aktiver Kontext.',
+      performanceNotes: 'Kontext-Budget 1: EIN WebGL-Canvas wandert zur aktiven Karte (dpr-Cap 1.5). Ruhende Karten sind reines CSS (Tilt + Gloss). Fünf Materialvarianten und drei Energieprofile teilen denselben Renderer; nie mehr als 1 aktiver Kontext.',
       mobileNotes: 'Touch bleibt WebGL-sparsam: keine dauerhafte Hover-Animation, vertikales Kartenlayout und statischer Gloss-Fallback. Variant-/Energy-Switcher bleiben bedienbar.',
       reducedMotionNotes: 'Kein Tilt, kein laufender Shader und keine Ambient-Rotation — statische Karten mit vollständig lesbarem Materialzustand.',
-      description:
-        'Produktionsreife 3D-Glaskarten mit einem wandernden WebGL-Kontext, Pointer-Tilt, Fresnel-Rim, Linsen-Refraktion und fünf klar unterscheidbaren Materialsystemen: Prism Command Grid, Liquid Chrome Vault, Obsidian Caustic Deck, Signal Crystal Array und Revenue Amber Monoliths. Drei Energieprofile skalieren Bewegung, Glow und Tiefe, ohne zusätzliche Renderer zu erzeugen.',
+      description: 'Produktionsreife 3D-Glaskarten mit einem wandernden WebGL-Kontext, Pointer-Tilt, Fresnel-Rim, Linsen-Refraktion und fünf klar unterscheidbaren Materialsystemen.',
       importPath: '@/motion-arsenal/effects/premium/NoxGlassCards',
       usageJsx: '<NoxGlassCards variant="obsidian-caustic-deck" energy="charged" tilt={9} refraction={0.065} depth={1} />',
       props: [
@@ -55,19 +42,15 @@ export const PREMIUM_CATALOG: EffectEntry[] = [
       name: 'NoxDataStreamJourney',
       category: 'premium',
       sourceWebsite: 'krank-lusion',
-      sourceFiles: [
-        'docs/PROVENANCE.md (public provenance and rights classification)',
-      ],
+      sourceFiles: ['docs/PROVENANCE.md (public provenance and rights classification)'],
       mode: 'nox-adapted',
       complexity: 'medium',
       dependencies: [],
       bestFor: ['„Vom Signal zum System“-Story-Sektionen', 'Pipeline-/Prozess-Visualisierung', 'Leadflow-Erklärung', 'Agenten-Orchestrierung', 'Conversion- und Revenue-Storytelling'],
-      performanceNotes:
-        'Ein Canvas2D-Loop für alle Partikel, Rails und Impulsringe; Trail über Decay-Smear ohne History-Buffer. Fünf Geometrien und drei Energieprofile teilen denselben Canvas. Default 70 Partikel, dpr-Cap 2; für Mobile 36–56 Partikel empfohlen.',
-      mobileNotes: 'Pointer-Störung bleibt optional; Tap erzeugt einen kurzen Impulsring. Labels verschwinden unter 460px, interne Switcher bleiben touch-bedienbar. Für Customer-Heroes Partikelzahl und Overdrive sparsam einsetzen.',
-      reducedMotionNotes: 'Ein statischer, vollständig lesbarer Frame mit Pfad, Stationen und Conversion-Front; keine Partikelbewegung, Scan-Animation oder pulsierenden Ringe.',
-      description:
-        'Produktionsreife Canvas2D-Datenstrom-Sektion mit fünf klar unterscheidbaren Geometrien: Revenue River, Agent Swarm Routing, Conversion Helix, Signal Storm und Quantum Decision Tunnel. Drei Energieprofile skalieren Geschwindigkeit, Glow, Turbulenz, Rails und Sparks. Pointer-Repulsion, Tap-Impulse, Trail-Persistenz und Branch-Intensität lassen sich konfigurieren, ohne zusätzliche Canvas-Kontexte zu erzeugen.',
+      performanceNotes: 'Ein Canvas2D-Loop für alle Partikel, Rails und Impulsringe; Trail über Decay-Smear ohne History-Buffer. Fünf Geometrien und drei Energieprofile teilen denselben Canvas.',
+      mobileNotes: 'Pointer-Störung bleibt optional; Tap erzeugt einen kurzen Impulsring. Labels verschwinden unter 460px, interne Switcher bleiben touch-bedienbar.',
+      reducedMotionNotes: 'Ein statischer, vollständig lesbarer Frame mit Pfad, Stationen und Conversion-Front.',
+      description: 'Produktionsreife Canvas2D-Datenstrom-Sektion mit fünf klar unterscheidbaren Geometrien und drei Energieprofilen.',
       importPath: '@/motion-arsenal/effects/premium/NoxDataStreamJourney',
       usageJsx: '<NoxDataStreamJourney variant="agent-swarm-routing" energy="charged" particleCount={70} trailLength={0.62} branchIntensity={1} />',
       props: [
@@ -94,25 +77,25 @@ export const PREMIUM_CATALOG: EffectEntry[] = [
       name: 'NoxTimelineOrchestrator',
       category: 'premium',
       sourceWebsite: 'shopify-editions',
-      sourceFiles: [
-        'docs/PROVENANCE.md (public provenance and rights classification)',
-      ],
+      sourceFiles: ['docs/PROVENANCE.md (public provenance and rights classification)'],
       mode: 'nox-adapted',
       complexity: 'medium',
       dependencies: [],
       bestFor: ['Process-/How-it-works-Sektionen', 'Operating-System-Story', 'Methoden-Timelines'],
-      performanceNotes:
-        'Reines DOM+SVG, ein rAF-Loop, Transform/Opacity only. Light. Keine Canvas/WebGL-Kosten.',
-      mobileNotes: 'Funktioniert unverändert; Nodes skalieren über cqw. Bei sehr schmalen Viewports Keyframe-Positionen prüfen.',
-      reducedMotionNotes: 'Sofort der fertige Endzustand (alle Module + Linien sichtbar), kein Auto-Loop.',
-      description:
-        'Das Theatre.js-Prinzip ohne Theatre: ein ~40-Zeilen-Keyframe-Controller (KEYFRAMES[] mit [start,end]-Fenstern, stateAt(progress) interpoliert mit outExpo/outBack) choreografiert Systemmodule, die nacheinander einfahren, sich per stroke-dashoffset verbinden und in einem CTA-Zustand enden. progress-Prop koppelt an Scroll.',
+      performanceNotes: 'Reines DOM+SVG, ein rAF-Loop, Transform/Opacity only. Light. Keine Canvas/WebGL-Kosten.',
+      mobileNotes: 'Funktioniert unverändert; Nodes skalieren über cqw.',
+      reducedMotionNotes: 'Sofort der fertige Endzustand, kein Auto-Loop.',
+      description: 'Ein kompakter Timeline-Controller choreografiert Module, Verbindungen und CTA-Zustand über drei Story-Presets und drei Energieprofile.',
       importPath: '@/motion-arsenal/effects/premium/NoxTimelineOrchestrator',
       usageJsx: '<NoxTimelineOrchestrator progress={-1} playSpeed={0.16} overshoot />',
       props: [
         { key: 'progress', label: 'Progress (-1=Auto)', type: 'range', default: -1, min: -1, max: 1, step: 0.05 },
         { key: 'playSpeed', label: 'Auto Speed', type: 'range', default: 0.16, min: 0.05, max: 0.5, step: 0.01 },
         { key: 'overshoot', label: 'Overshoot Ease', type: 'boolean', default: true },
+        { key: 'variant', label: 'Story Preset', type: 'select', default: 'revenue-os', options: ['revenue-os', 'agent-ops', 'launch-sequence'] },
+        { key: 'energy', label: 'Energy', type: 'select', default: 'charged', options: ['calm', 'charged', 'overdrive'] },
+        { key: 'showVariantSwitcher', label: 'Variant Switcher', type: 'boolean', default: true },
+        { key: 'showLegend', label: 'Legend', type: 'boolean', default: true },
       ],
       productionSafe: true,
       fullBleed: true,
@@ -125,18 +108,15 @@ export const PREMIUM_CATALOG: EffectEntry[] = [
       name: 'NoxSignalParticles',
       category: 'premium',
       sourceWebsite: 'shopify-editions',
-      sourceFiles: [
-        'docs/PROVENANCE.md (public provenance and rights classification)',
-      ],
+      sourceFiles: ['docs/PROVENANCE.md (public provenance and rights classification)'],
       mode: 'nox-adapted',
       complexity: 'low',
       dependencies: [],
       bestFor: ['Hero-Akzente', 'CTA-Momente', 'Sektions-Übergänge'],
-      performanceNotes: 'Ein Canvas2D-Loop für alle Sparks (Instancing-Ökonomie in 2D). 42 Sparks Default — light.',
-      mobileNotes: 'Ohne Pointer schwärmt der Swarm-Modus um einen Auto-Drift-Punkt. Count auf Mobile reduzierbar.',
-      reducedMotionNotes: 'Sparks stehen statisch an ihren Zielpositionen, kein Flackern.',
-      description:
-        'Die Shopify-Butterflies als NOX-Signal-Sparks: kleine agentische Partikel (eigene Kreuz-Glint-Form, keine fremden Assets) mit drei choreografierten Verhaltenszuständen — orbit (Atmosphäre), swarm (Pointer-Folge), settle (Andocken auf der CTA-Linie) — und weichen damp-Übergängen dazwischen.',
+      performanceNotes: 'Ein begrenzter Canvas2D-Loop für alle Sparks.',
+      mobileNotes: 'Ohne Pointer nutzt der Effekt Auto-Drift; Count bleibt skalierbar.',
+      reducedMotionNotes: 'Sparks stehen statisch an ihren Zielpositionen.',
+      description: 'Agentische Signalpartikel mit fünf Narrativen, drei Energieprofilen und vier Choreografie-Modi.',
       importPath: '@/motion-arsenal/effects/premium/NoxSignalParticles',
       usageJsx: '<NoxSignalParticles count={42} mode="auto" intensity={1} />',
       props: [
@@ -144,6 +124,13 @@ export const PREMIUM_CATALOG: EffectEntry[] = [
         { key: 'mode', label: 'Mode', type: 'select', default: 'auto', options: ['auto', 'orbit', 'swarm', 'settle'] },
         { key: 'intensity', label: 'Intensity', type: 'range', default: 1, min: 0.2, max: 1.5, step: 0.05 },
         { key: 'sparkSize', label: 'Spark Size', type: 'range', default: 1.2, min: 0.6, max: 2.4, step: 0.1 },
+        { key: 'variant', label: 'Narrative', type: 'select', default: 'agent-constellation', options: ['agent-constellation', 'revenue-funnel-flight', 'forge-ember-murmuration', 'signal-resonance-vortex', 'command-formation'] },
+        { key: 'energy', label: 'Energy', type: 'select', default: 'charged', options: ['calm', 'charged', 'overdrive'] },
+        { key: 'trailPersistence', label: 'Trail Persistence', type: 'range', default: 0.7, min: 0, max: 1, step: 0.05 },
+        { key: 'linkDistance', label: 'Link Distance', type: 'range', default: 90, min: 0, max: 180, step: 5 },
+        { key: 'showVariantSwitcher', label: 'Variant Switcher', type: 'boolean', default: true },
+        { key: 'showEnergySwitcher', label: 'Energy Switcher', type: 'boolean', default: true },
+        { key: 'showModeSwitcher', label: 'Mode Switcher', type: 'boolean', default: true },
       ],
       productionSafe: true,
       fullBleed: true,
@@ -156,25 +143,26 @@ export const PREMIUM_CATALOG: EffectEntry[] = [
       name: 'NoxTerminalScanReveal',
       category: 'premium',
       sourceWebsite: 'nox-original',
-      sourceFiles: [
-        'effects/hero (TerminalBootStream — eigene NOX-Forge-Mechanik)',
-        'effects/system (RankRevealSequence — eigene NOX-Forge-Mechanik)',
-      ],
+      sourceFiles: ['effects/hero (TerminalBootStream)', 'effects/system (RankRevealSequence)'],
       mode: 'nox-adapted',
       complexity: 'low',
       dependencies: [],
-      bestFor: ['CTA-Sektionen', 'Assessment-/Audit-Funnel', 'Process-Reveals', 'Loading-/Transition-Momente'],
-      performanceNotes: 'DOM/CSS + ein rAF-Loop nur während der Sequenz (Boot+Scan ≈ 4s), danach 0 Laufzeitkosten. Light.',
-      mobileNotes: 'Voll responsiv (auto-fit Grid); Sequenz identisch auf Touch.',
-      reducedMotionNotes: 'Sofort der fertige Endzustand: Protokoll komplett, Module sichtbar, CTA aktiv.',
-      description:
-        'Premium-CTA-Sequenz aus eigener NOX-Forge-Mechanik: Boot-Protokoll tippt sich zeilenweise, ein Scan-Balken legt die Audit-Module per clip-path frei, der CTA erscheint mit outBack — spielt genau einmal (useInView) und endet in einem ruhigen statischen Zustand statt Dauerloop.',
+      bestFor: ['CTA-Sektionen', 'Assessment-/Audit-Funnel', 'Lead-Recovery', 'Agenten-Onboarding', 'Loading-/Transition-Momente'],
+      performanceNotes: 'DOM/CSS + ein einzelner rAF-Loop nur während Boot und Scan; danach 0 Laufzeitkosten. Varianten und Energieprofile teilen dieselbe Sequenz-Engine.',
+      mobileNotes: 'Responsives Auto-fit-Grid, kompakte touch-fähige Switcher und keine Pointer-Abhängigkeit.',
+      reducedMotionNotes: 'Sofort der vollständige Endzustand mit lesbarem Protokoll, Modulen und CTA; keine Caret-, Scan- oder Reveal-Bewegung.',
+      description: 'Produktionsreife Terminal-CTA-Sequenz mit System Audit, Lead Recovery und Agent Readiness Narrativen. Drei Energieprofile steuern Tempo, Scanbreite und Glow, ohne zusätzliche Runtime-Abhängigkeiten.',
       importPath: '@/motion-arsenal/effects/premium/NoxTerminalScanReveal',
-      usageJsx: '<NoxTerminalScanReveal speed={1} scanDuration={1.6} autoStart />',
+      usageJsx: '<NoxTerminalScanReveal variant="lead-recovery" energy="charged" speed={1} scanDuration={1.6} autoStart />',
       props: [
         { key: 'speed', label: 'Speed', type: 'range', default: 1, min: 0.5, max: 2, step: 0.1 },
         { key: 'scanDuration', label: 'Scan Duration (s)', type: 'range', default: 1.6, min: 0.8, max: 3, step: 0.1 },
         { key: 'autoStart', label: 'Auto Start', type: 'boolean', default: true },
+        { key: 'variant', label: 'Narrative', type: 'select', default: 'system-audit', options: ['system-audit', 'lead-recovery', 'agent-readiness'] },
+        { key: 'energy', label: 'Energy', type: 'select', default: 'charged', options: ['calm', 'charged', 'overdrive'] },
+        { key: 'showVariantSwitcher', label: 'Variant Switcher', type: 'boolean', default: true },
+        { key: 'showEnergySwitcher', label: 'Energy Switcher', type: 'boolean', default: true },
+        { key: 'showReplay', label: 'Replay', type: 'boolean', default: true },
       ],
       productionSafe: true,
     },
