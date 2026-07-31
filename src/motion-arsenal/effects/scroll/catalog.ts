@@ -24,9 +24,9 @@ export const SCROLL_CATALOG: EffectEntry[] = [
       reducedMotionNotes: 'Kein rAF-Loop. reducedMotionRotation bestimmt den Standbildzustand: off = reine Basisrotation, stage-only = Basisrotation plus die Rotation der letzten Stufe, static = vollständiger Endzustand. Presets, Core-Formen und Referenzcodes bleiben bedienbar.',
       description: 'Referenzierbares Produkt-Story-System mit sechs fertigen NOX-Presets (inkl. nox-revenue-os für noxlabs.net) und zwei Scroll-Treibern: interner Scrollport für die Arsenal-Vorschau, `scrollDriver="page"` für echte Webseiten, wo die Stage im Dokumentfluss gepinnt wird statt das Mausrad einzufangen. Jede Variante besitzt eigene Kapitel, Module, Kennzahlen, CTA, stabile Agenten-Referenz und ein sichtbar anderes semantisches Kernobjekt: Revenue Reactor, Agent Nexus, Signal Nucleus, Conversion Prism oder Automation Kernel.',
       currentUsage: ['NOX Labs Produktpräsentation', 'Project-X Agentenzentrale', 'zukünftige Kundenwebseiten'],
-      technicalBasis: 'Sticky scroll timeline + CSS-3D layers + five semantic CSS/SVG core artifacts + exported preset registry + public agent manifest.',
+      technicalBasis: 'Sticky scroll timeline + CSS-3D layers + five semantic CSS/SVG core artifacts + exported preset registry + public agent manifest. Zwei Rotationsmodi: `free-spin` (progress x turns x 360, für abstrakte Kernobjekte) und `depth-flip` (pro Kapitel 0 → readableAngle → 0 plus stackDrift über die Sektion, für lesbare Tafeln — der Winkel bleibt unter der 90°-Kante, deshalb wird die Fläche nie zur Linie und die Rückseite nie sichtbar).',
       importPath: '@/motion-arsenal/effects/scroll/PinnedProductStageCoreSystem',
-      usageJsx: '<PinnedProductStageCoreSystem variant="nox-revenue-os" scrollRotationEnabled rotationAxis="y" rotationTurns={0.85} stageRotationInfluence={0.35} rotationSmoothing={0.12} perspective={1100} objectTilt={6} glow={0.6} bloom={0.35} />',
+      usageJsx: '<PinnedProductStageCoreSystem variant="nox-revenue-os" scrollRotationEnabled rotationMode="depth-flip" readableAngle={55} stackDrift={16} rotationAxis="y" stageRotationInfluence={0.35} rotationSmoothing={0.12} perspective={1100} objectTilt={6} glow={0.6} bloom={0.35} />',
       props: [
         {
           key: 'variant',
@@ -61,8 +61,11 @@ export const SCROLL_CATALOG: EffectEntry[] = [
         { key: 'stageTransitionDuration', label: 'Stage Transition Duration (s)', type: 'range', default: 0.5, min: 0.1, max: 1.6, step: 0.05, group: 'Scroll' },
 
         { key: 'scrollRotationEnabled', label: 'Scroll Rotation', type: 'boolean', default: true, group: 'Object Rotation' },
+        { key: 'rotationMode', label: 'Rotation Mode', type: 'select', default: 'free-spin', options: ['free-spin', 'depth-flip'], group: 'Object Rotation' },
+        { key: 'readableAngle', label: 'Readable Angle (°, depth-flip)', type: 'range', default: 55, min: 15, max: 80, step: 1, group: 'Object Rotation' },
+        { key: 'stackDrift', label: 'Stack Drift (°, depth-flip)', type: 'range', default: 16, min: 0, max: 60, step: 1, group: 'Object Rotation' },
         { key: 'rotationAxis', label: 'Rotation Axis', type: 'select', default: 'y', options: ['x', 'y', 'z', 'xy', 'xyz'], group: 'Object Rotation' },
-        { key: 'rotationTurns', label: 'Rotation Turns', type: 'range', default: 0.85, min: 0, max: 4, step: 0.05, group: 'Object Rotation' },
+        { key: 'rotationTurns', label: 'Rotation Turns (free-spin)', type: 'range', default: 0.85, min: 0, max: 4, step: 0.05, group: 'Object Rotation' },
         { key: 'rotationDirection', label: 'Rotation Direction', type: 'select', default: 'clockwise', options: ['clockwise', 'counter-clockwise'], group: 'Object Rotation' },
         { key: 'baseRotationX', label: 'Base Rotation X (°)', type: 'range', default: 0, min: -180, max: 180, step: 1, group: 'Object Rotation' },
         { key: 'baseRotationY', label: 'Base Rotation Y (°)', type: 'range', default: 0, min: -180, max: 180, step: 1, group: 'Object Rotation' },

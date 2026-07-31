@@ -44,6 +44,18 @@ export type StageVisualMode = 'shells' | 'signal-flow';
 export type StageRotationAxis = 'x' | 'y' | 'z' | 'xy' | 'xyz';
 export type StageRotationDirection = 'clockwise' | 'counter-clockwise';
 /**
+ * `free-spin` — historisches Verhalten: der Winkel wächst monoton mit dem
+ * Fortschritt (`progress * turns * 360`). Für abstrakte Kernobjekte richtig,
+ * für lesbare Tafeln falsch: bei mehr als einer Vierteldrehung läuft die
+ * Fläche durch 90° (Kante, dünne Linie) und 180° (Rückseite).
+ *
+ * `depth-flip` — beschränkte Choreografie für lesbare Flächen: pro Kapitel
+ * dreht das Objekt bis `readableAngle` weg, weicht in die Tiefe zurück und
+ * kommt frontal zurück. Der Winkel bleibt damit immer deutlich unter 90°,
+ * zusätzlich driftet die Bühne nur `stackDrift` über die ganze Sektion.
+ */
+export type StageRotationMode = 'free-spin' | 'depth-flip';
+/**
  * `off`         — keine Drehung, das Objekt steht in seiner Basisrotation.
  * `stage-only`  — keine Scroll-Drehung, aber die stufen-eigene Rotation bleibt.
  * `static`      — Endzustand der letzten Stufe, komplett unbewegt.
@@ -95,8 +107,14 @@ export interface PinnedProductStageProps {
 
   // --- Object rotation ----------------------------------------------------
   scrollRotationEnabled?: boolean;
+  /** `free-spin` (Default, wie bisher) oder `depth-flip` für lesbare Tafeln. */
+  rotationMode?: StageRotationMode;
+  /** depth-flip: maximaler Wegdrehwinkel pro Kapitel. Immer deutlich < 90°. */
+  readableAngle?: number;
+  /** depth-flip: Gesamtdrift der Bühne über die ganze Sektion (in Grad). */
+  stackDrift?: number;
   rotationAxis?: StageRotationAxis;
-  /** Volle Umdrehungen über die gesamte Bühne. */
+  /** Volle Umdrehungen über die gesamte Bühne. Nur im Modus `free-spin`. */
   rotationTurns?: number;
   rotationDirection?: StageRotationDirection;
   baseRotationX?: number;
@@ -695,6 +713,11 @@ export function PinnedProductStage({
   stageSnapStrength = 0,
   stageTransitionDuration = 0.5,
   scrollRotationEnabled = true,
+  rotationMode = 'free-spin',
+  // 55° + stage-eigene Rotation (max ~10° bei influence 0.35) + halber
+  // stackDrift (8°) = ~73° Worst Case. Bleibt sicher unter der 90°-Kante.
+  readableAngle = 55,
+  stackDrift = 16,
   rotationAxis = 'y',
   rotationTurns = 0.85,
   rotationDirection = 'clockwise',
@@ -869,13 +892,28 @@ export function PinnedProductStage({
         ? (disableRotationOnMobile ? 0 : mobileRotationTurns)
         : resolvedTurns;
       const sign = rotationDirection === 'counter-clockwise' ? -1 : 1;
-      const spin = scrollRotationEnabled ? progress * turns * 360 * sign : 0;
+      // `depth-flip` ersetzt den monoton wachsenden Winkel durch eine pro
+      // Kapitel beschränkte Wegdrehung: 0 → readableAngle → 0. Damit läuft eine
+      // lesbare Fläche nie durch 90° (Kante) oder 180° (Rückseite). Der Term
+      // bleibt eine reine Funktion von `progress`, Rückwärtsscrollen nimmt die
+      // Drehung also weiterhin exakt zurück.
+      const flipPhase = timeline - sectionIndex;
+      const flip = flipPhase <= 0.5
+        ? smoothstep(0, 1, clamp(flipPhase / 0.5, 0, 1))
+        : 1 - smoothstep(0, 1, clamp((flipPhase - 0.5) / 0.3, 0, 1));
+      const flipMuted = isNarrow && disableRotationOnMobile;
+      const spin = !scrollRotationEnabled
+        ? 0
+        : rotationMode === 'depth-flip'
+          ? (flipMuted ? 0 : (flip * readableAngle + (progress - 0.5) * stackDrift) * sign)
+          : progress * turns * 360 * sign;
       const axisX = rotationAxis === 'x' ? 1 : rotationAxis === 'xy' ? 0.45 : rotationAxis === 'xyz' ? 0.35 : 0;
       const axisY = rotationAxis === 'y' || rotationAxis === 'xy' || rotationAxis === 'xyz' ? 1 : 0;
       const axisZ = rotationAxis === 'z' ? 1 : rotationAxis === 'xyz' ? 0.22 : 0;
       const influence = clamp(stageRotationInfluence, 0, 1);
-      // Legacy: `rotatePerSection` bleibt als zusätzlicher Y-Drift wirksam.
-      const legacyDrift = timeline * (rotatePerSection - 90) * 0.22;
+      // Legacy: `rotatePerSection` bleibt als zusätzlicher Y-Drift wirksam —
+      // aber nicht in `depth-flip`, sonst wäre die Winkelgrenze wieder offen.
+      const legacyDrift = rotationMode === 'depth-flip' ? 0 : timeline * (rotatePerSection - 90) * 0.22;
 
       const targetX = baseRotationX + spin * axisX + authoredRotX * influence;
       const targetY = baseRotationY + spin * axisY + authoredRotY * influence + legacyDrift;
