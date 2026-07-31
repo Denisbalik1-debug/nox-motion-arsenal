@@ -18,18 +18,9 @@ export interface NoxLogoMarqueeProps {
 }
 
 const PRESETS: Record<LogoMarqueeVariant, LogoMarqueeItem[]> = {
-  clients: [
-    { name: 'NOX Labs', mark: 'NOX' }, { name: 'Ulmer Gusto', mark: 'UG' }, { name: 'Regalprüfung Süd', mark: 'RS' },
-    { name: 'Sailer Systems', mark: 'SS' }, { name: 'Local Growth', mark: 'LG' }, { name: 'Agent Stack', mark: 'AS' },
-  ],
-  partners: [
-    { name: 'Automation', mark: 'AUT' }, { name: 'AI Systems', mark: 'AI' }, { name: 'Revenue Ops', mark: 'REV' },
-    { name: 'Creative Tech', mark: 'CT' }, { name: 'Data Layer', mark: 'DATA' }, { name: 'Growth Engine', mark: 'GE' },
-  ],
-  press: [
-    { name: 'Featured Work', mark: 'FW' }, { name: 'Digital Craft', mark: 'DC' }, { name: 'Future Commerce', mark: 'FC' },
-    { name: 'Local Leaders', mark: 'LL' }, { name: 'AI Builders', mark: 'AIB' }, { name: 'Modern Business', mark: 'MB' },
-  ],
+  clients: [{ name: 'NOX Labs', mark: 'NOX' }, { name: 'Ulmer Gusto', mark: 'UG' }, { name: 'Regalprüfung Süd', mark: 'RS' }, { name: 'Sailer Systems', mark: 'SS' }, { name: 'Local Growth', mark: 'LG' }, { name: 'Agent Stack', mark: 'AS' }],
+  partners: [{ name: 'Automation', mark: 'AUT' }, { name: 'AI Systems', mark: 'AI' }, { name: 'Revenue Ops', mark: 'REV' }, { name: 'Creative Tech', mark: 'CT' }, { name: 'Data Layer', mark: 'DATA' }, { name: 'Growth Engine', mark: 'GE' }],
+  press: [{ name: 'Featured Work', mark: 'FW' }, { name: 'Digital Craft', mark: 'DC' }, { name: 'Future Commerce', mark: 'FC' }, { name: 'Local Leaders', mark: 'LL' }, { name: 'AI Builders', mark: 'AIB' }, { name: 'Modern Business', mark: 'MB' }],
 };
 
 export function NoxLogoMarquee({ variant = 'clients', speed = 28, direction = 'left', pauseOnHover = true, fadeEdges = true, items }: NoxLogoMarqueeProps) {
@@ -55,11 +46,7 @@ export function NoxLogoMarquee({ variant = 'clients', speed = 28, direction = 'l
           {repeated.map((item, index) => {
             const duplicate = index >= source.length;
             const content = <><span className="nlm-mark" aria-hidden="true">{item.mark ?? item.name.slice(0, 3).toUpperCase()}</span><span className="nlm-name">{item.name}</span></>;
-            return item.href ? (
-              <a key={`${item.name}-${index}`} className="nlm-item" href={item.href} target="_blank" rel="noreferrer" aria-hidden={duplicate || undefined} tabIndex={duplicate ? -1 : undefined}>{content}</a>
-            ) : (
-              <div key={`${item.name}-${index}`} className="nlm-item" aria-hidden={duplicate || undefined}>{content}</div>
-            );
+            return item.href ? <a key={`${item.name}-${index}`} className="nlm-item" href={item.href} target="_blank" rel="noreferrer" aria-hidden={duplicate || undefined} tabIndex={duplicate ? -1 : undefined}>{content}</a> : <div key={`${item.name}-${index}`} className="nlm-item" aria-hidden={duplicate || undefined}>{content}</div>;
           })}
         </div>
       </div>
