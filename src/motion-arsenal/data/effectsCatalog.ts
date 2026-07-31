@@ -39,15 +39,28 @@ const RAW_EFFECTS_CATALOG: EffectEntry[] = [
 ];
 
 const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
+  'scroll-cosmic-depth-field': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T18:00:00.000Z',
+    lastImprovedBy: 'claude-code',
+    improvementVersion: '1.0.0',
+    improvementChangelog: [
+      'New calm depth-field starfield: layered depth, a real focus plane, sprite-based depth blur and bokeh, subtle bloom.',
+      'Motion is scroll-coupled only — no time-based screensaver drift; foregroundStarRatio and foregroundMaxSize cap the large bright foreground dots the brief rules out.',
+      'Full dashboard surface: density, size, depth, scroll, glow, blur/bokeh, trails, visual and mobile groups (45 controls, all shareable).',
+    ],
+  },
   'scroll-pinned-product-stage': {
     improvementStatus: 'improved',
-    lastImprovedAt: '2026-07-31T09:00:00.000Z',
+    lastImprovedAt: '2026-07-31T18:00:00.000Z',
     lastImprovedBy: 'claude-code',
-    improvementVersion: '2.0.0',
+    improvementVersion: '2.2.0',
     improvementChangelog: [
       'Added a page-scroll driver so the stage can be pinned inside a real website instead of trapping the wheel in its own scrollport.',
       'Added the nox-revenue-os variant with per-chapter module sets, so the object re-assembles between chapters instead of only shifting colour.',
-      'Added compactScroll, visualMode and chrome props plus off-screen frame pausing; all previously public props keep their defaults and behaviour.',
+      'Added scroll-coupled object rotation: rotationY = baseRotationY + progress x rotationTurns x 360 x direction + stage rotation x influence. Pure function of scroll progress, so scrolling back unwinds the rotation exactly — no time-based endless spin.',
+      'Exposed the full presentation surface in the dashboard: content, scroll, rotation, object presentation, lighting, background, stage visuals, mobile and reduced-motion groups (49 controls, all shareable).',
+      'All previously public props keep their defaults and behaviour; damping, rotatePerSection, scalePulse and colorShift remain wired under a Legacy group.',
     ],
   },
   'nox-spinimage': {
