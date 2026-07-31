@@ -90,6 +90,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Added configurable trail persistence, link distance, variant, energy, and mode switchers with a static reduced-motion presentation and a bounded single-Canvas2D particle budget.',
     ],
   },
+  'premium-terminal-scan-reveal': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T01:08:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Added System Audit, Lead Recovery, and Agent Readiness narratives with scenario-specific terminal copy, modules, and conversion CTAs.',
+      'Added calm, charged, and overdrive energy profiles controlling sequence tempo, scan width, caret cadence, and glow while preserving speed, scanDuration, and autoStart.',
+      'Added touch-friendly variant and energy switchers, optional replay control, aria-live terminal output, responsive mobile layout, and a complete reduced-motion end state without runtime dependencies.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
@@ -119,8 +130,6 @@ export const EFFECTS_CATALOG: EffectEntry[] = RAW_EFFECTS_CATALOG.map((entry) =>
   };
 });
 
-// Guard against duplicate ids across category catalogs (agents build these in
-// parallel — a duplicate would silently break hash-routing).
 const seen = new Set<string>();
 for (const e of EFFECTS_CATALOG) {
   if (seen.has(e.meta.id)) console.error(`[motion-arsenal] duplicate effect id: ${e.meta.id}`);
