@@ -3,6 +3,11 @@ declare module 'virtual:effect-updates' {
   export default effectUpdates;
 }
 
+declare module 'virtual:build-info' {
+  const buildInfo: { commit: string; buildTime: string };
+  export default buildInfo;
+}
+
 declare module 'virtual:effect-sources' {
   const effectSources: Record<string, string>;
   export default effectSources;

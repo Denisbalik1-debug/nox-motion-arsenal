@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { EffectCategory, EffectEntry } from '../types';
 import { effectUpdatedAtTimestamp } from '../lib/effectDates';
 import { EFFECT_COLLECTIONS } from '../data/collections';
+import { decodeConfigParam, SHARE_PARAM, type EffectConfigValues } from '../lib/effectConfig';
 import { EffectCard } from './EffectCard';
 
 const EffectDetail = React.lazy(() => import('./EffectDetail').then((module) => ({ default: module.EffectDetail })));
@@ -73,8 +74,18 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
     ? EFFECT_COLLECTIONS.find((c) => c.id === collectionId) ?? null
     : null;
 
-  const openId = route.startsWith('/effect/') ? route.slice('/effect/'.length) : null;
+  // Share-Links tragen die Konfiguration als Query im Hash:
+  // #/effect/<id>?config=<base64url>
+  const [routePath, routeQuery] = (() => {
+    const index = route.indexOf('?');
+    return index === -1 ? [route, ''] : [route.slice(0, index), route.slice(index + 1)];
+  })();
+
+  const openId = routePath.startsWith('/effect/') ? routePath.slice('/effect/'.length) : null;
   const openEntry = openId ? catalog.find((e) => e.meta.id === openId) : null;
+  const sharedConfig: EffectConfigValues | null = openEntry
+    ? decodeConfigParam(openEntry.meta, new URLSearchParams(routeQuery).get(SHARE_PARAM))
+    : null;
 
   const counts = useMemo(() => {
     const c = new Map<EffectCategory, number>();
@@ -142,8 +153,11 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
         <main className="main">
           <React.Suspense fallback={<div className="fallback-note" style={{ position: 'static', minHeight: 320 }}>EFFEKT LÄDT…</div>}>
             <EffectDetail
-              key={openEntry.meta.id}
+              // Ein Share-Link auf denselben Effekt muss den State neu setzen,
+              // deshalb geht die serialisierte Config in den Key ein.
+              key={`${openEntry.meta.id}:${routeQuery}`}
               entry={openEntry}
+              initialConfig={sharedConfig}
               onBack={() => navigate('/')}
             />
           </React.Suspense>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { EffectPropControl } from '../types';
+import { stepDecimals } from '../lib/effectConfig';
 
 interface Props {
   controls: EffectPropControl[];
@@ -12,7 +13,12 @@ function ControlRow({ c, v, onChange }: { c: EffectPropControl; v: unknown; onCh
     <div className="prop-row" key={c.key}>
       <label>
         <span>{c.label}</span>
-        <span>{c.type === 'range' ? Number(v).toFixed(c.step && c.step < 1 ? 2 : 0) : String(v)}</span>
+        {/* Auf die Step-Auflösung formatieren: mit festen 2 Nachkommastellen
+            zeigte ein Regler mit step 0.005 „0.07“, während JSON und JSX den
+            echten Wert 0.065 ausgaben. */}
+        <span data-control-value={c.key}>
+          {c.type === 'range' ? Number(v).toFixed(stepDecimals(c)) : String(v)}
+        </span>
       </label>
       {c.type === 'range' && (
         <input

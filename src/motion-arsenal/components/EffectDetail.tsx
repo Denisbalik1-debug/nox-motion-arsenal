@@ -1,6 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { EffectEntry } from '../types';
 import { formatEffectUpdatedAt } from '../lib/effectDates';
+import {
+  buildConfigJson,
+  buildEffectConfigDocument,
+  buildImplementationBrief,
+  buildImportLine,
+  buildShareLink,
+  buildUsageJsx,
+  defaultConfigValues,
+  normalizeConfigValues,
+  normalizeControlValue,
+  readPresetStore,
+  writePresetStore,
+  type EffectConfigValues,
+} from '../lib/effectConfig';
 import { EffectPreview } from './EffectPreview';
 import { PropsPanel } from './PropsPanel';
 import { FullscreenPreview } from './FullscreenPreview';
@@ -9,18 +23,36 @@ import { GitHubContributionPanel } from './GitHubContributionPanel';
 interface Props {
   entry: EffectEntry;
   onBack: () => void;
+  /** Aus dem Share-Link deserialisierte Konfiguration. */
+  initialConfig?: EffectConfigValues | null;
+  onConfigChange?: (values: EffectConfigValues) => void;
 }
 
-function CopyButton({ text, label }: { text: string; label: string }) {
+function CopyButton({
+  text,
+  label,
+  testId,
+}: {
+  text: string | (() => string);
+  label: string;
+  testId?: string;
+}) {
   const [copied, setCopied] = useState(false);
+  const resolve = () => (typeof text === 'function' ? text() : text);
   return (
     <button
       className="copy-btn"
+      data-testid={testId}
       onClick={() => {
-        navigator.clipboard?.writeText(text).then(() => {
+        const done = () => {
           setCopied(true);
           setTimeout(() => setCopied(false), 1400);
-        });
+        };
+        // Ohne Clipboard-Permission (headless Tests, unsichere Origins) darf
+        // der Handoff nicht stumm scheitern.
+        const write = navigator.clipboard?.writeText(resolve());
+        if (write) write.then(done, done);
+        else done();
       }}
     >
       {copied ? '✓ COPIED' : label}
@@ -28,18 +60,64 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   );
 }
 
-export function EffectDetail({ entry, onBack }: Props) {
+export function EffectDetail({ entry, onBack, initialConfig, onConfigChange }: Props) {
   const m = entry.meta;
   const updated = formatEffectUpdatedAt(m.updatedAt);
   const [fullscreen, setFullscreen] = useState(false);
-  const [propValues, setPropValues] = useState<Record<string, unknown>>(() =>
-    Object.fromEntries(m.props.map((p) => [p.key, p.default])),
-  );
 
-  const importLine = useMemo(
-    () => `import { ${m.name.replace(/[^A-Za-z0-9]/g, '')} } from '${m.importPath}';`,
-    [m],
+  // Der eine kanonische Config-State. Preview, Controls, JSON, JSX, Brief und
+  // Share-Link lesen ausschließlich hieraus. Vorher kam der Usage-Code aus dem
+  // statischen `meta.usageJsx`-String und zeigte andere Werte als die Regler.
+  const [config, setConfig] = useState<EffectConfigValues>(() =>
+    initialConfig ? normalizeConfigValues(m, initialConfig) : defaultConfigValues(m),
   );
+  const [presetName, setPresetName] = useState('');
+  const [presetKeys, setPresetKeys] = useState<string[]>(() => Object.keys(readPresetStore()));
+  const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    onConfigChange?.(config);
+  }, [config, onConfigChange]);
+
+  const setControl = (key: string, value: unknown) => {
+    const control = m.props.find((c) => c.key === key);
+    if (!control) return;
+    setConfig((current) => ({ ...current, [key]: normalizeControlValue(control, value) }));
+  };
+
+  const doc = useMemo(() => buildEffectConfigDocument(entry, config), [entry, config]);
+  const importLine = useMemo(() => buildImportLine(m), [m]);
+  const usageJsx = useMemo(() => buildUsageJsx(entry, config), [entry, config]);
+  const configJson = useMemo(() => buildConfigJson(entry, config), [entry, config]);
+
+  const storageKeyFor = (name: string) => `${m.id}::${name}`;
+
+  const savePreset = () => {
+    const name = presetName.trim();
+    if (!name) {
+      setNotice('Bitte einen Preset-Namen eingeben');
+      return;
+    }
+    const store = readPresetStore();
+    store[storageKeyFor(name)] = normalizeConfigValues(m, config);
+    writePresetStore(store);
+    setPresetKeys(Object.keys(store));
+    setNotice(`Preset „${name}“ gespeichert`);
+  };
+
+  const loadPreset = (name: string) => {
+    const stored = readPresetStore()[storageKeyFor(name)];
+    if (!stored) {
+      setNotice(`Preset „${name}“ nicht gefunden`);
+      return;
+    }
+    setConfig(normalizeConfigValues(m, stored));
+    setNotice(`Preset „${name}“ geladen`);
+  };
+
+  const savedForEffect = presetKeys
+    .filter((key) => key.startsWith(`${m.id}::`))
+    .map((key) => key.slice(`${m.id}::`.length));
 
   return (
     <div>
@@ -61,12 +139,14 @@ export function EffectDetail({ entry, onBack }: Props) {
           <span className="badge heavy">not for production</span>
         )}
         <span className="badge">{m.sourceWebsite}</span>
+        <span className="badge" data-testid="effect-version">v{doc.build.effectVersion}</span>
+        <span className="badge" data-testid="build-commit">{doc.build.commit}</span>
       </div>
 
       <div className="detail-grid">
         <div>
           <div className="fx-preview-detail">
-            <EffectPreview key={entry.meta.id} entry={entry} propValues={propValues} variant="detail" />
+            <EffectPreview key={entry.meta.id} entry={entry} propValues={config} variant="detail" />
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             {m.fullBleed && (
@@ -74,15 +154,31 @@ export function EffectDetail({ entry, onBack }: Props) {
                 ⛶ FULLSCREEN
               </button>
             )}
-            <CopyButton text={importLine} label="COPY IMPORT" />
-            <CopyButton text={m.usageJsx} label="COPY JSX" />
+            <CopyButton text={importLine} label="COPY IMPORT" testId="copy-import" />
+            <CopyButton text={usageJsx} label="COPY JSX" testId="copy-jsx" />
+            <CopyButton text={configJson} label="COPY CONFIG" testId="copy-config" />
+            <CopyButton
+              text={() => buildImplementationBrief(entry, config)}
+              label="COPY IMPLEMENTATION BRIEF"
+              testId="copy-brief"
+            />
+            <CopyButton
+              text={() => buildShareLink(entry, config)}
+              label="COPY SHARE LINK"
+              testId="copy-share-link"
+            />
           </div>
 
           <GitHubContributionPanel entry={entry} />
 
           <div className="panel" style={{ marginTop: 14 }}>
             <h4>Usage</h4>
-            <div className="codebox">{`${importLine}\n\n${m.usageJsx}`}</div>
+            <div className="codebox" data-testid="usage-code">{`${importLine}\n\n${usageJsx}`}</div>
+          </div>
+
+          <div className="panel">
+            <h4>Canonical Config</h4>
+            <div className="codebox" data-testid="config-json">{configJson}</div>
           </div>
 
           <div className="panel">
@@ -92,17 +188,62 @@ export function EffectDetail({ entry, onBack }: Props) {
         </div>
 
         <div>
-          <PropsPanel
-            controls={m.props}
-            values={propValues}
-            onChange={(k, v) => setPropValues((s) => ({ ...s, [k]: v }))}
-          />
+          <PropsPanel controls={m.props} values={config} onChange={setControl} />
+          {m.props.length > 0 && (
+            <div className="panel">
+              <h4>Presets</h4>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  data-testid="preset-name"
+                  placeholder="Preset-Name"
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  style={{ flex: '1 1 140px', minWidth: 120 }}
+                />
+                <button className="copy-btn" data-testid="save-preset" onClick={savePreset}>
+                  SAVE PRESET
+                </button>
+                <button
+                  className="copy-btn"
+                  data-testid="reset-config"
+                  onClick={() => {
+                    setConfig(defaultConfigValues(m));
+                    setNotice('Auf Katalog-Defaults zurückgesetzt');
+                  }}
+                >
+                  RESET
+                </button>
+              </div>
+              {savedForEffect.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                  {savedForEffect.map((name) => (
+                    <button
+                      key={name}
+                      className="copy-btn"
+                      data-load-preset={name}
+                      onClick={() => loadPreset(name)}
+                    >
+                      ⤓ {name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {notice && (
+                <p data-testid="preset-notice" style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--text-dim)' }}>
+                  {notice}
+                </p>
+              )}
+            </div>
+          )}
           <div className="panel">
             <h4>Metadaten</h4>
             <div className="meta-row"><span className="k">Source</span><span className="v">{m.sourceWebsite}</span></div>
             <div className="meta-row"><span className="k">Files</span><span className="v mono" style={{ fontSize: 10.5, wordBreak: 'break-all' }}>{m.sourceFiles.join(' · ')}</span></div>
             <div className="meta-row"><span className="k">Deps</span><span className="v">{m.dependencies.length ? m.dependencies.join(', ') : 'keine'}</span></div>
             <div className="meta-row"><span className="k">Best for</span><span className="v">{m.bestFor.join(', ')}</span></div>
+            <div className="meta-row"><span className="k">Effect Version</span><span className="v">{doc.build.effectVersion}</span></div>
+            <div className="meta-row"><span className="k">Build Commit</span><span className="v mono">{doc.build.commit}</span></div>
             <div className="meta-row">
               <span className="k">Letztes Update</span>
               <time className="v" dateTime={m.updatedAt}>{updated.date} · {updated.relative}</time>
@@ -129,7 +270,7 @@ export function EffectDetail({ entry, onBack }: Props) {
         </div>
       </div>
 
-      {fullscreen && <FullscreenPreview entry={entry} propValues={propValues} onClose={() => setFullscreen(false)} />}
+      {fullscreen && <FullscreenPreview entry={entry} propValues={config} onClose={() => setFullscreen(false)} />}
     </div>
   );
 }
