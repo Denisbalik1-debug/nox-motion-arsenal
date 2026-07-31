@@ -11,9 +11,10 @@ const CHROME = process.env.CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Applic
 
 const EFFECTS = ['scroll-pinned-product-stage', 'scroll-cosmic-depth-field'];
 
-const browser = await chromium.launch(
-  process.env.CI ? { headless: true } : { executablePath: CHROME, headless: true },
-);
+// playwright-core bringt keinen Browser mit — wie die übrigen Contract-Tests
+// fahren wir das System-Chrome. Auf dem CI-Runner ist es unter demselben Pfad
+// installiert und wird im Workflow vorher geprüft.
+const browser = await chromium.launch({ executablePath: CHROME, headless: true });
 const page = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
 page.on('pageerror', (error) => {
   throw error;
