@@ -10,6 +10,7 @@ import { SYSTEM_CATALOG } from '../effects/system/catalog';
 import { FORMS_CATALOG } from '../effects/forms/catalog';
 import { OVERLAYS_CATALOG } from '../effects/overlays/catalog';
 import { PREMIUM_CATALOG } from '../effects/premium/catalog';
+import { SOCIAL_PROOF_CATALOG } from '../effects/premium/socialProofCatalog';
 import { FORGE_SKILLTREE_CATALOG } from '../effects/forge-skilltree/catalog';
 import { CANVAS_UI_CATALOG } from '../effects/canvas-ui/catalog';
 import { IMG2THREEJS_CATALOG } from '../effects/img2threejs/catalog';
@@ -17,6 +18,7 @@ import { LAB_CATALOG } from '../effects/lab/catalog';
 import { ORIGINKIT_CATALOG } from '../effects/originkit/catalog';
 
 const RAW_EFFECTS_CATALOG: EffectEntry[] = [
+  ...SOCIAL_PROOF_CATALOG,
   ...PREMIUM_CATALOG,
   ...FORGE_SKILLTREE_CATALOG,
   ...BACKGROUNDS_CATALOG,
