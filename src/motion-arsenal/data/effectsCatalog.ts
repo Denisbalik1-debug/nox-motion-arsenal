@@ -101,6 +101,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Added touch-friendly variant and energy switchers, optional replay control, aria-live terminal output, responsive mobile layout, and a complete reduced-motion end state without runtime dependencies.',
     ],
   },
+  'skilltree-astral-constellation': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T02:09:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Added Focus OS, Revenue Command, and Agent Orchestration narratives with scenario-specific roots, node labels, and state topology.',
+      'Added calm, charged, and overdrive energy profiles that scale animation tempo, atmosphere density, and stage glow while preserving nodeCount, speed, stars, and showLabels.',
+      'Added keyboard-accessible, touch-friendly in-effect narrative and energy switchers without runtime dependencies or additional animation loops.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
