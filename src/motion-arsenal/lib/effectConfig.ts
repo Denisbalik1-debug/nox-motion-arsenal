@@ -100,7 +100,17 @@ export function defaultConfigValues(meta: EffectMeta): EffectConfigValues {
 
 /** Fremde/veraltete Keys werden verworfen, fehlende auf den Default gesetzt. */
 export function normalizeConfigValues(meta: EffectMeta, raw: unknown): EffectConfigValues {
-  const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const input = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const aliases: Record<string, string> = {
+    foregroundRatio: 'foregroundStarRatio',
+    mediumRatio: 'mediumStarRatio',
+    backgroundRatio: 'backgroundStarRatio',
+    mobileDPR: 'mobileDpr',
+  };
+  const source: Record<string, unknown> = { ...input };
+  for (const [alias, canonical] of Object.entries(aliases)) {
+    if (!(canonical in source) && alias in source) source[canonical] = source[alias];
+  }
   return Object.fromEntries(
     meta.props.map((control) => [
       control.key,

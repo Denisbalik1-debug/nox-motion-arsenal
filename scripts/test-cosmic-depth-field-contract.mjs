@@ -82,6 +82,15 @@ assert.ok(
 assert.ok(!source.includes('setInterval') && !source.includes('setTimeout'), 'no timer-driven animation');
 assert.ok(!/Math\.random\(/.test(source), 'field must be deterministic (seeded)');
 
+// Shared v2 configs from older dashboards use these four aliases.
+const configSource = readFileSync('src/motion-arsenal/lib/effectConfig.ts', 'utf8');
+for (const alias of ['foregroundRatio', 'mediumRatio', 'backgroundRatio', 'mobileDPR']) {
+  assert.ok(configSource.includes(`${alias}:`), `config alias missing: ${alias}`);
+}
+for (const canonical of ['foregroundStarRatio', 'mediumStarRatio', 'backgroundStarRatio', 'mobileDpr']) {
+  assert.ok(configSource.includes(`'${canonical}'`), `canonical alias target missing: ${canonical}`);
+}
+
 // --- Performance-Zusagen ---------------------------------------------------
 assert.ok(source.includes('makeSprite'), 'stars must use pre-rendered sprites');
 assert.ok(

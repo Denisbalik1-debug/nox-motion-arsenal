@@ -37,6 +37,7 @@ for (const contract of [
 }
 
 const expectedVariants = [
+  'nox-floating-card-os',
   'nox-revenue-os',
   'nox-global-sales-os',
   'project-x-command-center',
@@ -75,9 +76,11 @@ for (const contract of [
   'visualMode',
   "chrome === 'minimal'",
   'IntersectionObserver',
+  'previewScrollSimulation',
 ]) {
   assert.ok(source.includes(contract), `Page-scroll driver contract missing: ${contract}`);
 }
+assert.ok(source.includes("requestedPageDriven && !previewScrollSimulation"), 'bounded previews must simulate page scroll internally');
 assert.ok(
   source.includes('.pps-page .pps-shaft { position:absolute; inset:0; }'),
   'Page mode must fill the pinned stage; without it the stage collapses to zero height',
@@ -120,12 +123,14 @@ const REQUIRED_STAGE_CONTROLS = [
   'stageVisualIntensity', 'stageMorphStrength', 'stageColorShift', 'stageObjectSpread', 'stageSymbolScale',
   'mobileRotationTurns', 'mobileObjectScale', 'mobileEffectsQuality', 'disableRotationOnMobile',
   'reducedMotionRotation',
+  'cardStyle', 'stageCardVariant', 'cardScale', 'cardTilt', 'cardFloat', 'cardFloatSpeed',
+  'scrollRotationTurns', 'morphStrength', 'stageSpread', 'depth', 'showHud',
 ];
 for (const key of REQUIRED_STAGE_CONTROLS) {
   assert.ok(stageProps.includes(`key: '${key}'`), `dashboard control missing: ${key}`);
-  assert.ok(source.includes(`${key} =`) || source.includes(`${key}:`), `component does not accept prop: ${key}`);
+  assert.ok(source.includes(`${key} =`) || source.includes(`${key}:`) || source.includes(`  ${key},`), `component does not accept prop: ${key}`);
 }
-for (const group of ['Content', 'Scroll', 'Object Rotation', 'Object Presentation', 'Lighting', 'Background', 'Stage Visuals', 'Mobile', 'Reduced Motion']) {
+for (const group of ['Content', 'Scroll', 'Object Rotation', 'Object Presentation', 'Floating Card OS', 'Lighting', 'Background', 'Stage Visuals', 'Mobile', 'Reduced Motion']) {
   assert.ok(stageProps.includes(`group: '${group}'`), `control group missing: ${group}`);
 }
 
