@@ -64,7 +64,7 @@ export function NoxLogoMarquee({
         .nlm-kicker{padding-inline:clamp(18px,5vw,70px);font:700 10px/1 var(--mono,monospace);letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.48)}
         .nlm-track{display:flex;width:max-content;gap:14px;will-change:transform;animation:nlm-scroll var(--nlm-duration) linear infinite}
         .nlm-track.reverse{animation-direction:reverse}
-        .nlm-stage.pause .nlm-track:hover{animation-play-state:paused}
+        .nlm-shell.pause .nlm-track:hover{animation-play-state:paused}
         .nlm-item{display:flex;align-items:center;gap:12px;min-width:190px;padding:16px 20px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.025);box-shadow:inset 0 1px rgba(255,255,255,.04);text-decoration:none;color:inherit;transition:transform .24s ease,border-color .24s ease,background .24s ease}
         .nlm-item:hover,.nlm-item:focus-visible{transform:translateY(-3px);border-color:rgba(201,48,48,.5);background:rgba(201,48,48,.07);outline:none}
         .nlm-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;border:1px solid rgba(201,48,48,.36);background:linear-gradient(145deg,rgba(201,48,48,.18),rgba(255,255,255,.03));font:800 10px/1 var(--mono,monospace);letter-spacing:.08em;color:#ff8b8b;box-shadow:0 0 20px rgba(201,48,48,.08)}
