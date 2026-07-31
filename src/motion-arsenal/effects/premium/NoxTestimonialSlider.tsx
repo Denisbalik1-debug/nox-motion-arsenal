@@ -39,72 +39,50 @@ const PRESETS: Record<TestimonialVariant, TestimonialItem[]> = {
 };
 
 export function NoxTestimonialSlider({
-  variant = 'nox-clients',
-  items,
-  autoplay = true,
-  autoplayDelay = 5600,
-  showRating = true,
-  showMetric = true,
+  variant = 'nox-clients', items, autoplay = true, autoplayDelay = 5600, showRating = true, showMetric = true,
 }: NoxTestimonialSliderProps) {
   const testimonials = useMemo(() => (items?.length ? items : PRESETS[variant]), [items, variant]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const pointerStart = useRef<number | null>(null);
-
   const go = (next: number) => setIndex((next + testimonials.length) % testimonials.length);
 
   useEffect(() => {
-    if (!autoplay || paused || testimonials.length < 2) return;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => setReducedMotion(query.matches);
+    sync();
+    query.addEventListener?.('change', sync);
+    return () => query.removeEventListener?.('change', sync);
+  }, []);
+
+  useEffect(() => {
+    if (!autoplay || paused || reducedMotion || testimonials.length < 2) return;
     const id = window.setInterval(() => setIndex((current) => (current + 1) % testimonials.length), Math.max(2600, autoplayDelay));
     return () => window.clearInterval(id);
-  }, [autoplay, autoplayDelay, paused, testimonials.length]);
+  }, [autoplay, autoplayDelay, paused, reducedMotion, testimonials.length]);
 
   useEffect(() => setIndex(0), [variant, items]);
 
   return (
-    <section
-      className="nts-stage"
-      aria-roledescription="carousel"
-      aria-label="Customer testimonials"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
-      onKeyDown={(event) => {
-        if (event.key === 'ArrowLeft') go(index - 1);
-        if (event.key === 'ArrowRight') go(index + 1);
-      }}
+    <section className="nts-stage" aria-roledescription="carousel" aria-label="Customer testimonials"
+      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}
+      onKeyDown={(event) => { if (event.key === 'ArrowLeft') go(index - 1); if (event.key === 'ArrowRight') go(index + 1); }}
       onPointerDown={(event) => { pointerStart.current = event.clientX; }}
-      onPointerUp={(event) => {
-        if (pointerStart.current === null) return;
-        const delta = event.clientX - pointerStart.current;
-        pointerStart.current = null;
-        if (Math.abs(delta) < 42) return;
-        go(delta > 0 ? index - 1 : index + 1);
-      }}
-    >
+      onPointerUp={(event) => { if (pointerStart.current === null) return; const delta = event.clientX - pointerStart.current; pointerStart.current = null; if (Math.abs(delta) >= 42) go(delta > 0 ? index - 1 : index + 1); }}>
       <style>{CSS}</style>
       <div className="nts-shell">
         <div className="nts-kicker">CLIENT SIGNALS</div>
         <div className="nts-slides" aria-live="polite">
           {testimonials.map((item, itemIndex) => {
             const active = itemIndex === index;
+            const rating = Math.max(1, Math.min(5, item.rating ?? 5));
             return (
               <article key={`${item.name}-${itemIndex}`} className={`nts-card ${active ? 'is-active' : ''}`} aria-hidden={!active}>
                 <div className="nts-quote-mark" aria-hidden="true">“</div>
-                {showRating && (
-                  <div className="nts-rating" aria-label={`${Math.max(1, Math.min(5, item.rating ?? 5))} out of 5 stars`}>
-                    {'★'.repeat(Math.max(1, Math.min(5, item.rating ?? 5)))}
-                  </div>
-                )}
+                {showRating && <div className="nts-rating" aria-label={`${rating} out of 5 stars`}>{'★'.repeat(rating)}</div>}
                 <blockquote>{item.quote}</blockquote>
-                <footer>
-                  <div>
-                    <strong>{item.name}</strong>
-                    <span>{[item.role, item.company].filter(Boolean).join(' · ')}</span>
-                  </div>
-                  {showMetric && item.metric && <em>{item.metric}</em>}
-                </footer>
+                <footer><div><strong>{item.name}</strong><span>{[item.role, item.company].filter(Boolean).join(' · ')}</span></div>{showMetric && item.metric && <em>{item.metric}</em>}</footer>
               </article>
             );
           })}
@@ -112,9 +90,7 @@ export function NoxTestimonialSlider({
         <div className="nts-controls">
           <button type="button" onClick={() => go(index - 1)} aria-label="Previous testimonial">←</button>
           <div className="nts-dots" role="tablist" aria-label="Testimonials">
-            {testimonials.map((item, itemIndex) => (
-              <button key={`${item.name}-dot-${itemIndex}`} type="button" role="tab" aria-selected={itemIndex === index} aria-label={`Show testimonial ${itemIndex + 1}`} onClick={() => go(itemIndex)} />
-            ))}
+            {testimonials.map((item, itemIndex) => <button key={`${item.name}-dot-${itemIndex}`} type="button" role="tab" aria-selected={itemIndex === index} aria-label={`Show testimonial ${itemIndex + 1}`} onClick={() => go(itemIndex)} />)}
           </div>
           <button type="button" onClick={() => go(index + 1)} aria-label="Next testimonial">→</button>
         </div>
