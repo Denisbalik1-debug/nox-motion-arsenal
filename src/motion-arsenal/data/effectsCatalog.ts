@@ -123,6 +123,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Added optional labels, deterministic responsive placement, accessible scene labeling, and bounded CSS-only animation without runtime dependencies.',
     ],
   },
+  'skilltree-active-pulse-ring': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T04:08:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Added Active Quest, Agent Execution, and Conversion Signal narratives with scenario-specific labels, states, badges, and context copy.',
+      'Added calm, charged, and overdrive energy profiles that tune pulse tempo, node scale, float cadence, and atmosphere density while preserving pulseSpeed and size.',
+      'Added optional variant, energy, and context props, bounded sizing, accessible scene labeling, responsive context treatment, and no additional animation loops or runtime dependencies.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
