@@ -79,6 +79,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Improved production readability with node detail labels, a moving progress pulse, mobile label fallback, and a complete reduced-motion end state while preserving all legacy props.',
     ],
   },
+  'premium-signal-particles': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T00:09:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Added five production-ready particle narratives: Agent Constellation, Revenue Funnel Flight, Forge Ember Murmuration, Signal Resonance Vortex, and Command Formation.',
+      'Added calm, charged, and overdrive energy profiles plus operator-selectable orbit, swarm, settle, and automatic choreography while preserving the original count, mode, intensity, and sparkSize props.',
+      'Added configurable trail persistence, link distance, variant, energy, and mode switchers with a static reduced-motion presentation and a bounded single-Canvas2D particle budget.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
