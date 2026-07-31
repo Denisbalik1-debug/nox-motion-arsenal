@@ -18,6 +18,8 @@ const virtualEffectOwnedFilesId = 'virtual:effect-owned-files';
 const resolvedVirtualEffectOwnedFilesId = `\0${virtualEffectOwnedFilesId}`;
 const virtualCommunityFlagsId = 'virtual:community-flags';
 const resolvedVirtualCommunityFlagsId = `\0${virtualCommunityFlagsId}`;
+const virtualBuildInfoId = 'virtual:build-info';
+const resolvedVirtualBuildInfoId = `\0${virtualBuildInfoId}`;
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.css', '.json', '.glsl', '.vert', '.frag']);
 const RELATIVE_IMPORT_PATTERN = /(?:import|export)\s+(?:[^'"]*?\s+from\s+)?['"](\.[^'"]+)['"]/g;
 
@@ -113,6 +115,7 @@ function effectCommunityManifestPlugin(): Plugin {
       if (id === virtualEffectPackagesId) return resolvedVirtualEffectPackagesId;
       if (id === virtualEffectOwnedFilesId) return resolvedVirtualEffectOwnedFilesId;
       if (id === virtualCommunityFlagsId) return resolvedVirtualCommunityFlagsId;
+      if (id === virtualBuildInfoId) return resolvedVirtualBuildInfoId;
       return undefined;
     },
     load(id) {
@@ -149,6 +152,25 @@ function effectCommunityManifestPlugin(): Plugin {
       }
       if (id === resolvedVirtualEffectOwnedFilesId) {
         return `export default ${JSON.stringify(effectOwnedFiles())};`;
+      }
+      if (id === resolvedVirtualBuildInfoId) {
+        // Vercel stellt kein .git bereit; dort liefert die Env-Variable den SHA.
+        let commit = process.env.VERCEL_GIT_COMMIT_SHA ?? '';
+        if (!commit) {
+          try {
+            commit = execFileSync('git', ['rev-parse', 'HEAD'], {
+              cwd: projectRoot,
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'ignore'],
+            }).trim();
+          } catch {
+            commit = '';
+          }
+        }
+        return `export default ${JSON.stringify({
+          commit: commit ? commit.slice(0, 12) : 'unknown',
+          buildTime: new Date().toISOString(),
+        })};`;
       }
       if (id === resolvedVirtualCommunityFlagsId) {
         const names = [

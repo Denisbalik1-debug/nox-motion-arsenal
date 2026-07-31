@@ -86,6 +86,9 @@ jobs:
             npm run test:favorites
             if ($LASTEXITCODE -ne 0) { throw 'Favorites browser test failed.' }
 
+            npm run test:effect-config
+            if ($LASTEXITCODE -ne 0) { throw 'Effect config parity contract failed.' }
+
             npm run test:previews:smoke
             if ($LASTEXITCODE -ne 0) { throw 'Preview smoke test failed.' }
           } finally {
