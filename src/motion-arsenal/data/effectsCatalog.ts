@@ -112,6 +112,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Added keyboard-accessible, touch-friendly in-effect narrative and energy switchers without runtime dependencies or additional animation loops.',
     ],
   },
+  'skilltree-floating-nodes': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T03:08:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Added Capability Map, Agent Swarm, and Revenue Orbit narratives with production-oriented labels and node-state sequencing.',
+      'Added calm, charged, and overdrive energy profiles that tune float distance, tempo, atmosphere density, and pulse intensity while preserving count, floatDistance, and floatSpeed.',
+      'Added optional labels, deterministic responsive placement, accessible scene labeling, and bounded CSS-only animation without runtime dependencies.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
