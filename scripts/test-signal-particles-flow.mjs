@@ -42,13 +42,55 @@ async function regionLuma(page, cx, cy, size) {
   return page.evaluate(({ fn, cx, cy, size }) => eval(fn)(cx, cy, size), { fn: REGION_LUMA, cx, cy, size });
 }
 
+/**
+ * Helligkeitsschwerpunkt des gesamten Feldes, normalisiert auf 0..1. Deutlich
+ * stabiler als ein einzelner Ausschnitt: die driftende Wolke verschiebt lokale
+ * Dichte stark, den Gesamtschwerpunkt aber kaum.
+ */
+const CENTROID = `() => {
+  const canvas = document.querySelector('[data-preview-stage="detail"] canvas');
+  if (!canvas) return null;
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let sum = 0, sx = 0, sy = 0;
+  const step = 4 * 4; // jedes 4. Pixel reicht und hält es schnell
+  const perRow = canvas.width;
+  for (let i = 0; i < data.length; i += step) {
+    const p = i / 4;
+    const luma = data[i] + data[i + 1] + data[i + 2];
+    if (luma < 40) continue;
+    const x = p % perRow;
+    const y = (p - x) / perRow;
+    sum += luma; sx += x * luma; sy += y * luma;
+  }
+  if (sum <= 0) return null;
+  return { x: sx / sum / canvas.width, y: sy / sum / canvas.height };
+}`;
+
+async function centroid(page, samples = 5, gap = 300) {
+  let x = 0;
+  let y = 0;
+  let n = 0;
+  for (let i = 0; i < samples; i++) {
+    const c = await page.evaluate((fn) => eval(fn)(), CENTROID);
+    if (c) { x += c.x; y += c.y; n++; }
+    await page.waitForTimeout(gap);
+  }
+  if (!n) return null;
+  return { x: x / n, y: y / n };
+}
+
 const browser = await chromium.launch({ executablePath: CHROME, headless: true });
 
 try {
   // --- 1. Desktop: Flow lebt und folgt dem Cursor -------------------------
+  // Video nur auf Anforderung: recordVideo braucht Playwrights gebündeltes
+  // ffmpeg, das auf CI-Runnern mit playwright-core nicht installiert ist.
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
-    recordVideo: { dir: OUT, size: { width: 1440, height: 900 } },
+    ...(process.env.SIGNAL_RECORD_VIDEO === '1'
+      ? { recordVideo: { dir: OUT, size: { width: 1440, height: 900 } } }
+      : {}),
   });
   const page = await context.newPage();
   const errors = [];
@@ -146,16 +188,22 @@ try {
   const calmBox = await calmPage.locator('[data-preview-stage="detail"] canvas').boundingBox();
   await calmPage.waitForTimeout(1400);
 
-  // Cursor in eine Ecke: unter Reduced Motion darf keine Verdichtung entstehen.
-  const corner = { x: calmBox.x + calmBox.width * 0.2, y: calmBox.y + calmBox.height * 0.24 };
-  await calmPage.mouse.move(corner.x, corner.y);
-  await calmPage.waitForTimeout(2400);
-  const calmNear = await regionLuma(calmPage, corner.x - calmBox.x, corner.y - calmBox.y, 240);
-  const calmFar = await regionLuma(calmPage, calmBox.width * 0.8, calmBox.height * 0.76, 240);
-  assert(calmNear > 0, 'reduced motion renders nothing');
+  // Der Cursor sitzt in einer Ecke: ohne Anziehung darf der Schwerpunkt der
+  // Wolke nicht zu ihm wandern.
+  const target = { x: 0.2, y: 0.24 };
+  const distance = (c) => Math.hypot(c.x - target.x, c.y - target.y);
+
+  const calmBefore = await centroid(calmPage);
+  assert(calmBefore, 'reduced motion renders nothing');
+  await calmPage.mouse.move(calmBox.x + calmBox.width * target.x, calmBox.y + calmBox.height * target.y);
+  await calmPage.waitForTimeout(2600);
+  const calmAfter = await centroid(calmPage);
+  assert(calmAfter, 'reduced motion stopped rendering');
+  const calmDistBefore = distance(calmBefore);
+  const calmDistAfter = distance(calmAfter);
   assert(
-    calmNear < calmFar * 1.25,
-    `reduced motion still chases the cursor (near ${calmNear.toFixed(2)} vs far ${calmFar.toFixed(2)})`,
+    calmDistAfter > calmDistBefore * 0.7 && calmDistAfter > 0.12,
+    `reduced motion still chases the cursor (centroid distance ${calmDistBefore.toFixed(3)} -> ${calmDistAfter.toFixed(3)})`,
   );
   await calmPage.screenshot({ path: join(OUT, 'flow-reduced-motion.png') });
   await calm.close();
@@ -187,7 +235,7 @@ try {
     motionDelta: Number(Math.abs(frameA - frameB).toFixed(3)),
     cursorLeft: { near: Number(nearLeft.toFixed(2)), far: Number(farRight.toFixed(2)) },
     cursorRight: { near: Number(nearRight.toFixed(2)), far: Number(farLeft.toFixed(2)) },
-    reducedMotion: { near: Number(calmNear.toFixed(2)), far: Number(calmFar.toFixed(2)) },
+    reducedMotion: { centroidDistBefore: Number(calmDistBefore.toFixed(3)), centroidDistAfter: Number(calmDistAfter.toFixed(3)) },
     mobileLuma: Number(mobileLuma.toFixed(2)),
     artifacts: OUT,
   }, null, 2));
