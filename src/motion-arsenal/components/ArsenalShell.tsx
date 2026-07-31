@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { EffectCategory, EffectEntry } from '../types';
 import { effectUpdatedAtTimestamp } from '../lib/effectDates';
+import { EFFECT_COLLECTIONS } from '../data/collections';
 import { EffectCard } from './EffectCard';
 
 const EffectDetail = React.lazy(() => import('./EffectDetail').then((module) => ({ default: module.EffectDetail })));
@@ -66,6 +67,11 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(readFavorites);
   const [maintenanceSort, setMaintenanceSort] = useState<MaintenanceSort>('catalog');
+  const [collectionId, setCollectionId] = useState<string | null>(null);
+
+  const activeCollection = collectionId
+    ? EFFECT_COLLECTIONS.find((c) => c.id === collectionId) ?? null
+    : null;
 
   const openId = route.startsWith('/effect/') ? route.slice('/effect/'.length) : null;
   const openEntry = openId ? catalog.find((e) => e.meta.id === openId) : null;
@@ -78,7 +84,14 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const entries = catalog.filter((e) => {
+    // Sammlungen behalten ihre kuratierte Reihenfolge, solange nicht nach
+    // Update-Datum sortiert wird.
+    const source = activeCollection
+      ? activeCollection.effectIds
+          .map((id) => catalog.find((e) => e.meta.id === id))
+          .filter((e): e is EffectEntry => Boolean(e))
+      : catalog;
+    const entries = source.filter((e) => {
       const m = e.meta;
       if (favoritesOnly && !favorites.has(m.id)) return false;
       if (category !== 'all' && m.category !== category) return false;
@@ -99,7 +112,7 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
         (effectUpdatedAtTimestamp(a.meta.updatedAt) - effectUpdatedAtTimestamp(b.meta.updatedAt)) *
         direction,
     );
-  }, [catalog, query, category, mode, favoritesOnly, favorites, maintenanceSort]);
+  }, [catalog, query, category, mode, favoritesOnly, favorites, maintenanceSort, activeCollection]);
 
   useEffect(() => {
     try {
@@ -161,6 +174,23 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
         <p className="sub" style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-faint)', letterSpacing: '0.14em', margin: '4px 0 0' }}>
           INTERNAL EFFECT LIBRARY
         </p>
+        <div className="side-title">Sammlungen</div>
+        {EFFECT_COLLECTIONS.map((c) => (
+          <button
+            key={c.id}
+            className={`side-link ${collectionId === c.id ? 'active' : ''}`}
+            data-testid={`collection-${c.id}`}
+            title={c.description}
+            onClick={() => {
+              setCollectionId((current) => (current === c.id ? null : c.id));
+              setFavoritesOnly(false);
+              setCategory('all');
+            }}
+          >
+            <span>{c.label}</span>
+            <span className="side-count">{c.effectIds.length}</span>
+          </button>
+        ))}
         <div className="side-title">Meine Auswahl</div>
         <button
           className={`side-link favorites-link ${favoritesOnly ? 'active' : ''}`}
@@ -168,6 +198,7 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
           onClick={() => {
             setFavoritesOnly(true);
             setCategory('all');
+            setCollectionId(null);
           }}
         >
           <span><span aria-hidden="true">♥</span> Favoriten</span>
@@ -175,10 +206,11 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
         </button>
         <div className="side-title">Kategorien</div>
         <button
-          className={`side-link ${!favoritesOnly && category === 'all' ? 'active' : ''}`}
+          className={`side-link ${!favoritesOnly && !collectionId && category === 'all' ? 'active' : ''}`}
           onClick={() => {
             setFavoritesOnly(false);
             setCategory('all');
+            setCollectionId(null);
           }}
         >
           <span>Alle Effekte</span>
@@ -187,10 +219,11 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
         {CATEGORY_ORDER.map((c) => (
           <button
             key={c}
-            className={`side-link ${!favoritesOnly && category === c ? 'active' : ''}`}
+            className={`side-link ${!favoritesOnly && !collectionId && category === c ? 'active' : ''}`}
             onClick={() => {
               setFavoritesOnly(false);
               setCategory(c);
+              setCollectionId(null);
             }}
           >
             <span>{CATEGORY_LABELS[c]}</span>
@@ -235,6 +268,7 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
         </div>
         <p className="result-count">
           {filtered.length} / {catalog.length} EFFEKTE
+          {activeCollection ? ` · SAMMLUNG: ${activeCollection.label.toUpperCase()}` : ''}
           {favoritesOnly ? ` · ${favorites.size} FAVORITEN GESPEICHERT` : ''}
         </p>
         <div className="grid">

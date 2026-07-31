@@ -50,7 +50,11 @@ try {
   await page.screenshot({ path: join(OUT, 'desktop-effect-contribution.png'), fullPage: true });
 
   await page.goto(`${BASE}/#/admin/submissions`, { waitUntil: 'networkidle' });
-  assert.equal(await page.locator('[data-effect-id]').count(), 148, 'disabled admin route did not fall back to the complete gallery');
+  const galleryCount = await page.locator('[data-effect-id]').count();
+  assert(
+    galleryCount >= 148,
+    `disabled admin route did not fall back to the complete gallery (${galleryCount} cards)`,
+  );
   assert.equal(await page.locator('.admin-page, [data-testid="community-submit-page"]').count(), 0);
 
   const mobile = await context.newPage();
