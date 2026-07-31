@@ -9,6 +9,8 @@ export function useCanvas2D(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   draw: (ctx: CanvasRenderingContext2D, size: { w: number; h: number; dpr: number }, dt: number, elapsed: number) => void,
   running = true,
+  /** Optionale schärfere DPR-Grenze — Effekte mit eigenem Mobile-Budget. */
+  maxDpr = 2,
 ) {
   const drawRef = useRef(draw);
   drawRef.current = draw;
@@ -22,14 +24,24 @@ export function useCanvas2D(
     const size = { w: 0, h: 0, dpr: 1 };
     const resize = () => {
       const r = canvas.getBoundingClientRect();
-      size.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      size.dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
       size.w = Math.max(1, Math.round(r.width));
       size.h = Math.max(1, Math.round(r.height));
       canvas.width = size.w * size.dpr;
       canvas.height = size.h * size.dpr;
     };
     resize();
-    const ro = new ResizeObserver(resize);
+    // Ein Resize setzt canvas.width und LEERT damit die Zeichenfläche. Solange
+    // ein Loop läuft, füllt der nächste Frame das wieder auf — im Standbild-
+    // Modus (reduced motion, offscreen) bliebe sie sonst dauerhaft leer. Der
+    // ResizeObserver feuert direkt beim observe() und traf damit genau den
+    // einen gezeichneten Frame.
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (running) return;
+      ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
+      drawRef.current(ctx, size, 0, 0);
+    });
     ro.observe(canvas);
 
     let raf = 0;
@@ -49,7 +61,7 @@ export function useCanvas2D(
       ro.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [canvasRef, running]);
+  }, [canvasRef, running, maxDpr]);
 }
 
 // ---------------------------------------------------------------------------

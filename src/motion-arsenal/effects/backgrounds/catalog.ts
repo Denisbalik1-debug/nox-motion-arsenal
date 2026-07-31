@@ -4,6 +4,98 @@ import type { EffectEntry } from '../../types';
 export const BACKGROUNDS_CATALOG: EffectEntry[] = [
   {
     meta: {
+      id: 'scroll-cosmic-depth-field',
+      name: 'NoxCosmicDepthField',
+      displayName: 'Cosmic Depth Field',
+      category: 'backgrounds',
+      sourceWebsite: 'nox-original',
+      sourceFiles: [
+        'noxlabs-site: CosmicStage (3D-Sterne, Zentralprojektion, Tier-Budget)',
+        'NoxCosmicDepthField.tsx (Tiefenschichten, Fokusebene, Bokeh-Sprites)',
+      ],
+      mode: 'nox-adapted',
+      complexity: 'medium',
+      dependencies: [],
+      bestFor: ['durchgehende Seitenhintergründe', 'Premium-Dark-Sections', 'Hero → Content-Übergänge'],
+      performanceNotes:
+        'Ein Canvas2D-Loop mit vorgerenderten Sprite-Atlanten (7 Softness-Stufen) statt createRadialGradient pro Stern pro Frame; Tiefenunschärfe entsteht über die Sprite-Wahl, nicht über einen Canvas-Filter. Offscreen pausiert der Loop über IntersectionObserver, DPR ist auf 2 begrenzt (mobil konfigurierbar).',
+      mobileNotes:
+        'Eigene Mobile-Regler ab 700px Boxbreite: mobileStarCount (Anteil wird auf Sterne UND Staub angewandt), mobileScrollSpeed, mobileBloom und mobileDpr. Kein Pointer-Input, kein horizontaler Overflow — der Effekt liegt absolut in seiner Box.',
+      reducedMotionNotes:
+        'Ein einziges statisches Bild: kein Scroll-Parallax, kein Twinkle, keine Trails, kein rAF-Loop. Bloom, Tiefenunschärfe und Vignette bleiben als statische Bildwirkung erhalten.',
+      description:
+        'Ruhiger kosmischer Tiefenraum: geschichtete Sterne mit echter Fokusebene, weicher Tiefenunschärfe, dezentem Bloom und einer Bewegung, die ausschließlich am Scrollfortschritt hängt. Bewusst kein Screensaver — foregroundStarRatio und foregroundMaxSize deckeln große helle Vordergrundpunkte, trailLength bleibt niedrig, damit nichts durchs Bild schießt. Abgrenzung zu bg-nox-starfield-drift: dort ist die Warp-/Streak-Mechanik für Sektionsübergänge der Kern, hier Tiefe und Ruhe.',
+      currentUsage: [],
+      technicalBasis:
+        'Canvas2D, deterministische 3D-Sternkoordinaten (seeded), Layer-Quantisierung der Tiefe, Fokusabstand → Sprite-Softness, additiver Halo-Pass, Rückfaltung der Position in ein Band für konstante Dichte.',
+      importPath: '@/motion-arsenal/effects/backgrounds/NoxCosmicDepthField',
+      usageJsx:
+        '<NoxCosmicDepthField starCount={520} foregroundStarRatio={0.04} scrollParallax={0.18} scrollSmoothing={0.82} bloom={0.28} depthBlur={0.35} bokehStrength={0.15} trailLength={0.08} />',
+      props: [
+        { key: 'starCount', label: 'Star Count', type: 'range', default: 520, min: 60, max: 1400, step: 20, group: 'Density' },
+        { key: 'dustCount', label: 'Dust Count', type: 'range', default: 140, min: 0, max: 600, step: 10, group: 'Density' },
+        { key: 'foregroundStarRatio', label: 'Foreground Ratio', type: 'range', default: 0.04, min: 0, max: 0.3, step: 0.01, group: 'Density' },
+        { key: 'mediumStarRatio', label: 'Medium Ratio', type: 'range', default: 0.26, min: 0, max: 1, step: 0.02, group: 'Density' },
+        { key: 'backgroundStarRatio', label: 'Background Ratio', type: 'range', default: 0.7, min: 0, max: 1, step: 0.02, group: 'Density' },
+
+        { key: 'minStarSize', label: 'Min Star Size', type: 'range', default: 0.25, min: 0.1, max: 2, step: 0.05, group: 'Size' },
+        { key: 'maxStarSize', label: 'Max Star Size', type: 'range', default: 1.15, min: 0.3, max: 4, step: 0.05, group: 'Size' },
+        { key: 'foregroundMaxSize', label: 'Foreground Max Size', type: 'range', default: 1.8, min: 0.5, max: 6, step: 0.1, group: 'Size' },
+        { key: 'dustSize', label: 'Dust Size', type: 'range', default: 0.55, min: 0.1, max: 2, step: 0.05, group: 'Size' },
+
+        { key: 'depthLayers', label: 'Depth Layers', type: 'range', default: 5, min: 1, max: 12, step: 1, group: 'Depth' },
+        { key: 'perspectiveDepth', label: 'Perspective Depth', type: 'range', default: 0.85, min: 0.2, max: 2, step: 0.05, group: 'Depth' },
+        { key: 'nearPlane', label: 'Near Plane', type: 'range', default: 0.18, min: 0.05, max: 0.8, step: 0.01, group: 'Depth' },
+        { key: 'farPlane', label: 'Far Plane', type: 'range', default: 1, min: 0.3, max: 2, step: 0.05, group: 'Depth' },
+        { key: 'depthDistribution', label: 'Depth Distribution', type: 'range', default: 0.62, min: 0, max: 1, step: 0.02, group: 'Depth' },
+        { key: 'atmosphericPerspective', label: 'Atmospheric Perspective', type: 'range', default: 0.38, min: 0, max: 1, step: 0.02, group: 'Depth' },
+
+        { key: 'scrollSpeed', label: 'Scroll Speed', type: 'range', default: 0.06, min: 0, max: 0.6, step: 0.01, group: 'Scroll' },
+        { key: 'scrollParallax', label: 'Scroll Parallax', type: 'range', default: 0.18, min: 0, max: 1.2, step: 0.02, group: 'Scroll' },
+        { key: 'scrollSmoothing', label: 'Scroll Smoothing', type: 'range', default: 0.82, min: 0, max: 0.98, step: 0.02, group: 'Scroll' },
+        { key: 'verticalDrift', label: 'Vertical Drift', type: 'range', default: 0.02, min: 0, max: 0.3, step: 0.01, group: 'Scroll' },
+        { key: 'horizontalDrift', label: 'Horizontal Drift', type: 'range', default: 0.008, min: 0, max: 0.1, step: 0.002, group: 'Scroll' },
+        { key: 'velocityInfluence', label: 'Velocity Influence', type: 'range', default: 0.25, min: 0, max: 1.5, step: 0.05, group: 'Scroll' },
+
+        { key: 'bloom', label: 'Bloom', type: 'range', default: 0.28, min: 0, max: 1.2, step: 0.02, group: 'Glow / Bloom' },
+        { key: 'glowRadius', label: 'Glow Radius', type: 'range', default: 1.6, min: 0.2, max: 5, step: 0.1, group: 'Glow / Bloom' },
+        { key: 'glowIntensity', label: 'Glow Intensity', type: 'range', default: 0.22, min: 0, max: 1, step: 0.02, group: 'Glow / Bloom' },
+        { key: 'coreBrightness', label: 'Core Brightness', type: 'range', default: 1.05, min: 0.2, max: 1.6, step: 0.05, group: 'Glow / Bloom' },
+        { key: 'haloOpacity', label: 'Halo Opacity', type: 'range', default: 0.4, min: 0, max: 1, step: 0.02, group: 'Glow / Bloom' },
+
+        { key: 'depthBlur', label: 'Depth Blur', type: 'range', default: 0.35, min: 0, max: 1.5, step: 0.05, group: 'Blur / Bokeh' },
+        { key: 'backgroundBlur', label: 'Background Blur', type: 'range', default: 0.8, min: 0, max: 2.5, step: 0.05, group: 'Blur / Bokeh' },
+        { key: 'foregroundBlur', label: 'Foreground Blur', type: 'range', default: 0.6, min: 0, max: 2.5, step: 0.05, group: 'Blur / Bokeh' },
+        { key: 'bokehStrength', label: 'Bokeh Strength', type: 'range', default: 0.15, min: 0, max: 1, step: 0.01, group: 'Blur / Bokeh' },
+        { key: 'focusDepth', label: 'Focus Depth', type: 'range', default: 0.55, min: 0, max: 1, step: 0.02, group: 'Blur / Bokeh' },
+
+        { key: 'trailLength', label: 'Trail Length', type: 'range', default: 0.08, min: 0, max: 1, step: 0.01, group: 'Trails' },
+        { key: 'trailOpacity', label: 'Trail Opacity', type: 'range', default: 0.35, min: 0, max: 1, step: 0.02, group: 'Trails' },
+        { key: 'motionBlur', label: 'Motion Blur', type: 'range', default: 0.2, min: 0, max: 0.9, step: 0.02, group: 'Trails' },
+        { key: 'smear', label: 'Smear', type: 'range', default: 0.12, min: 0, max: 0.9, step: 0.02, group: 'Trails' },
+
+        { key: 'starOpacity', label: 'Star Opacity', type: 'range', default: 1, min: 0.1, max: 1.4, step: 0.02, group: 'Visual' },
+        { key: 'dustOpacity', label: 'Dust Opacity', type: 'range', default: 0.28, min: 0, max: 1, step: 0.02, group: 'Visual' },
+        { key: 'twinkle', label: 'Twinkle', type: 'range', default: 0.08, min: 0, max: 0.6, step: 0.01, group: 'Visual' },
+        { key: 'colorTemperature', label: 'Color Temperature', type: 'range', default: 0.35, min: 0, max: 1, step: 0.02, group: 'Visual' },
+        { key: 'vignette', label: 'Vignette', type: 'range', default: 0.25, min: 0, max: 1, step: 0.02, group: 'Visual' },
+        { key: 'nebulaOpacity', label: 'Nebula Opacity', type: 'range', default: 0.16, min: 0, max: 0.8, step: 0.02, group: 'Visual' },
+
+        { key: 'mobileStarCount', label: 'Mobile Star Count', type: 'range', default: 220, min: 30, max: 800, step: 10, group: 'Mobile' },
+        { key: 'mobileScrollSpeed', label: 'Mobile Scroll Speed', type: 'range', default: 0.04, min: 0, max: 0.4, step: 0.01, group: 'Mobile' },
+        { key: 'mobileBloom', label: 'Mobile Bloom', type: 'range', default: 0.18, min: 0, max: 1, step: 0.02, group: 'Mobile' },
+        { key: 'mobileDpr', label: 'Mobile DPR', type: 'range', default: 1.5, min: 1, max: 2, step: 0.1, group: 'Mobile' },
+
+        { key: 'seed', label: 'Seed', type: 'range', default: 20260731, min: 1, max: 99999999, step: 1, group: 'Mobile' },
+      ],
+      productionSafe: true,
+      status: 'production-safe',
+      fullBleed: true,
+    },
+    Component: lazy(() => import('./NoxCosmicDepthField')),
+  },
+  {
+    meta: {
       id: 'bg-nox-starfield-drift',
       name: 'NoxStarfieldDrift',
       displayName: 'NOX Starfield Drift',
