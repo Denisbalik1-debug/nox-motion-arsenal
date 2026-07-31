@@ -6,7 +6,7 @@ import {
   type CSSProperties,
   type PointerEvent,
 } from 'react';
-import { clamp, damp, lerp, smoothstep, usePrefersReducedMotion, useRafLoop } from '../../lib/animationUtils';
+import { clamp, damp, lerp, seededRandom, smoothstep, usePrefersReducedMotion, useRafLoop } from '../../lib/animationUtils';
 import { glyphPath } from '../../lib/svgUtils';
 
 // ---------------------------------------------------------------------------
@@ -38,6 +38,17 @@ export type StageScrollDriver = 'internal' | 'page';
  */
 export type StageVisualMode = 'shells' | 'signal-flow';
 
+/** Achsen, auf die der Scroll-Fortschritt als Drehung gelegt wird. */
+export type StageRotationAxis = 'x' | 'y' | 'z' | 'xy' | 'xyz';
+export type StageRotationDirection = 'clockwise' | 'counter-clockwise';
+/**
+ * `off`         — keine Drehung, das Objekt steht in seiner Basisrotation.
+ * `stage-only`  — keine Scroll-Drehung, aber die stufen-eigene Rotation bleibt.
+ * `static`      — Endzustand der letzten Stufe, komplett unbewegt.
+ */
+export type StageReducedMotionRotation = 'off' | 'stage-only' | 'static';
+export type StageEffectsQuality = 'low' | 'medium' | 'high';
+
 export interface PinnedProductStageProps {
   variant?: ProductStageVariantId;
   showVariantSwitcher?: boolean;
@@ -54,6 +65,84 @@ export interface PinnedProductStageProps {
   visualMode?: StageVisualMode;
   /** `demo` keeps the Arsenal chrome (agent ref, scroll hint). `minimal` drops it. */
   chrome?: 'demo' | 'minimal';
+
+  // --- Content ------------------------------------------------------------
+  /** Feste Stufe (0-basiert). -1 = dem Scroll folgen. */
+  stage?: number;
+  /** Kapitel laufen ohne Scroll durch — für Vorschauen und Screens. */
+  autoProgress?: boolean;
+  /** Sekunden pro Kapitel im Auto-Modus. */
+  autoProgressSpeed?: number;
+  /** Bequemer Schalter für scrollDriver="page". */
+  pageScrollMode?: boolean;
+  showStepNavigation?: boolean;
+  /** Modul-Beschriftungen und Kapitel-Tags ein-/ausblenden. */
+  showLabels?: boolean;
+
+  // --- Scroll -------------------------------------------------------------
+  /** Gesamtlänge der Bühne in Viewport-Höhen. > 0 schlägt compactScroll. */
+  scrollLength?: number;
+  /** 0 = hart am Scroll, 1 = stark nachlaufend. */
+  scrollSmoothing?: number;
+  /** Zieht den Fortschritt zur nächsten Kapitelmitte (0 = aus). */
+  stageSnapStrength?: number;
+  /** Sekunden für den Kapitelwechsel der Textspalte. */
+  stageTransitionDuration?: number;
+
+  // --- Object rotation ----------------------------------------------------
+  scrollRotationEnabled?: boolean;
+  rotationAxis?: StageRotationAxis;
+  /** Volle Umdrehungen über die gesamte Bühne. */
+  rotationTurns?: number;
+  rotationDirection?: StageRotationDirection;
+  baseRotationX?: number;
+  baseRotationY?: number;
+  baseRotationZ?: number;
+  /** Wie stark die stufen-eigene Rotation zusätzlich wirkt (0…1). */
+  stageRotationInfluence?: number;
+  /** 0 = sofort, 1 = sehr träge. */
+  rotationSmoothing?: number;
+
+  // --- Object presentation ------------------------------------------------
+  objectScale?: number;
+  objectDepth?: number;
+  perspective?: number;
+  cameraDistance?: number;
+  objectTilt?: number;
+  objectFloat?: number;
+  objectFloatSpeed?: number;
+
+  // --- Lighting -----------------------------------------------------------
+  glow?: number;
+  bloom?: number;
+  rimLight?: number;
+  highlightIntensity?: number;
+  shadowIntensity?: number;
+  glassOpacity?: number;
+  blurStrength?: number;
+
+  // --- Background ---------------------------------------------------------
+  backgroundIntensity?: number;
+  gridOpacity?: number;
+  ambientParticles?: number;
+  vignette?: number;
+  atmosphericGlow?: number;
+
+  // --- Stage-specific object change ---------------------------------------
+  stageVisualIntensity?: number;
+  stageMorphStrength?: number;
+  stageColorShift?: number;
+  stageObjectSpread?: number;
+  stageSymbolScale?: number;
+
+  // --- Mobile -------------------------------------------------------------
+  mobileRotationTurns?: number;
+  mobileObjectScale?: number;
+  mobileEffectsQuality?: StageEffectsQuality;
+  disableRotationOnMobile?: boolean;
+
+  // --- Reduced motion -----------------------------------------------------
+  reducedMotionRotation?: StageReducedMotionRotation;
 }
 
 type CssVars = CSSProperties & Record<`--${string}`, string | number>;
@@ -482,6 +571,57 @@ const CSS = String.raw`
 .pps-flow .pps-shell { opacity:calc(.72 - var(--shell-index) * .12); }
 .pps-flow .pps-orbit { opacity:.5; }
 @media (prefers-reduced-motion:reduce) { .pps-flow .pps-fragment { transition:none; } }
+
+/* ── configurable presentation layer ──────────────────────────────────────
+   Alles darunter hängt an CSS-Variablen, die die Controls setzen. Fehlt eine
+   Variable, greift der historische Wert — bestehende Einbindungen ändern sich
+   dadurch nicht. */
+.pps-product-zone { perspective:calc(var(--pps-perspective,1200) * 1px); }
+.pps-product-wrap { width:calc(min(31cqw,42cqh) * var(--pps-object-scale,1)); }
+.pps-shell {
+  transform:
+    translateZ(calc((var(--shell-index) - 2) * 17px * var(--pps-object-depth,1)))
+    rotate(calc((var(--shell-index) - 2) * 8deg))
+    scale(calc(1 + var(--pps-explode) * var(--shell-index) * .045));
+  border-color:color-mix(in srgb,var(--pps-accent) calc((72% - var(--shell-index) * 9%) * var(--pps-rim,1)),rgba(255,255,255,.08));
+  background:linear-gradient(145deg,rgba(255,255,255,calc(.045 * var(--pps-glass,1))),rgba(255,255,255,calc(.008 * var(--pps-glass,1))));
+  box-shadow:
+    inset 0 0 26px rgba(255,255,255,calc(.025 * var(--pps-highlight,1))),
+    0 0 calc((8px + var(--pps-glow) * 24px) * var(--pps-bloom-scale,1)) color-mix(in srgb,var(--pps-accent) calc(16% * var(--pps-bloom-scale,1)),transparent);
+}
+.pps-aura {
+  filter:blur(calc(22px * var(--pps-blur,1)));
+  opacity:calc((.34 + var(--pps-glow) * .38) * var(--pps-bloom-scale,1));
+}
+.pps-ground { opacity:calc((.16 + var(--pps-glow) * .16) * var(--pps-shadow,1)); }
+.pps-stage-grid { opacity:calc(.3 * var(--pps-grid,1)); }
+.pps-root::before { opacity:var(--pps-bg,1); }
+.pps-fragment {
+  width:calc(25% * var(--pps-symbol,1));
+  height:calc(17% * var(--pps-symbol,1));
+  background:rgba(8,8,10,calc(.82 * var(--pps-glass,1)));
+  transform:
+    translate(-50%,-50%)
+    translate3d(
+      calc(var(--pps-explode) * var(--frag-x) * 118px * var(--pps-spread,1)),
+      calc(var(--pps-explode) * var(--frag-y) * 118px * var(--pps-spread,1)),
+      calc(var(--frag-z) * var(--pps-object-depth,1)))
+    rotate(calc(var(--pps-explode) * var(--frag-r)));
+}
+.pps-copy { transition-duration:calc(var(--pps-stage-transition,.5) * 1s),calc(var(--pps-stage-transition,.5) * 1.2s),calc(var(--pps-stage-transition,.5) * 1s); }
+/* Atmosphäre und Vignette liegen über der Bühne, aber unter der Textspalte. */
+.pps-atmosphere { position:absolute; inset:0; z-index:16; pointer-events:none; background:radial-gradient(58% 52% at 32% 50%,color-mix(in srgb,var(--pps-accent) 26%,transparent),transparent 68%); opacity:var(--pps-atmo,0); mix-blend-mode:screen; }
+.pps-vignette { position:absolute; inset:0; z-index:17; pointer-events:none; background:radial-gradient(120% 100% at 50% 50%,transparent 48%,rgba(2,2,4,.9) 100%); opacity:var(--pps-vignette,0); }
+/* Ambient-Partikel: reine DOM-Punkte mit CSS-Drift, kein zweiter Canvas. */
+.pps-ambient { position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; }
+.pps-mote { position:absolute; width:2px; height:2px; border-radius:50%; background:color-mix(in srgb,var(--pps-accent-2) 70%,white); opacity:.16; animation:pps-mote-drift linear infinite; }
+@keyframes pps-mote-drift { from { transform:translate3d(0,14px,0); opacity:0; } 12% { opacity:.22; } 88% { opacity:.18; } to { transform:translate3d(6px,-26px,0); opacity:0; } }
+@media (prefers-reduced-motion:reduce) { .pps-mote { animation:none; opacity:.14; } }
+.pps-quality-low .pps-mote,
+.pps-quality-low .pps-atmosphere { display:none; }
+.pps-quality-low .pps-aura { filter:blur(calc(14px * var(--pps-blur,1))); }
+.pps-nolabels .pps-fragment strong,
+.pps-nolabels .pps-tags { display:none; }
 `;
 
 export function PinnedProductStage({
@@ -496,15 +636,66 @@ export function PinnedProductStage({
   compactScroll = 0.78,
   visualMode = 'shells',
   chrome = 'demo',
+  stage: fixedStage = -1,
+  autoProgress = false,
+  autoProgressSpeed = 2.4,
+  pageScrollMode = false,
+  showStepNavigation = true,
+  showLabels = true,
+  scrollLength = 0,
+  scrollSmoothing = 0.18,
+  stageSnapStrength = 0,
+  stageTransitionDuration = 0.5,
+  scrollRotationEnabled = true,
+  rotationAxis = 'y',
+  rotationTurns = 0.85,
+  rotationDirection = 'clockwise',
+  baseRotationX = 0,
+  baseRotationY = 0,
+  baseRotationZ = 0,
+  stageRotationInfluence = 0.35,
+  rotationSmoothing = 0.12,
+  objectScale = 1,
+  objectDepth = 1,
+  perspective = 1100,
+  cameraDistance = 0,
+  objectTilt = 6,
+  objectFloat = 0,
+  objectFloatSpeed = 0.5,
+  glow = 0.6,
+  bloom = 0.35,
+  rimLight = 1,
+  highlightIntensity = 1,
+  shadowIntensity = 1,
+  glassOpacity = 1,
+  blurStrength = 1,
+  backgroundIntensity = 1,
+  gridOpacity = 1,
+  ambientParticles = 0,
+  vignette = 0,
+  atmosphericGlow = 0,
+  stageVisualIntensity = 1,
+  stageMorphStrength = 1,
+  stageColorShift = 1,
+  stageObjectSpread = 1,
+  stageSymbolScale = 1,
+  mobileRotationTurns = 0.25,
+  mobileObjectScale = 1,
+  mobileEffectsQuality = 'medium',
+  disableRotationOnMobile = false,
+  reducedMotionRotation = 'static',
 }: PinnedProductStageProps) {
   const reduced = usePrefersReducedMotion();
-  const pageDriven = scrollDriver === 'page';
+  const pageDriven = scrollDriver === 'page' || pageScrollMode;
   const rootRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(!pageDriven);
+  const [isNarrow, setIsNarrow] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const productRef = useRef<HTMLDivElement>(null);
   const smooth = useRef(reduced ? 1 : 0);
+  /** Aktuell gerenderte Rotation — eigene Trägheit, damit `rotationSmoothing` wirkt. */
+  const rot = useRef({ x: 0, y: 0, z: 0 });
   const [selectedVariant, setSelectedVariant] = useState<ProductStageVariantId>(variant);
   const [active, setActive] = useState(reduced ? 4 : 0);
   const [copiedRef, setCopiedRef] = useState(false);
@@ -526,6 +717,19 @@ export function PinnedProductStage({
     return () => io.disconnect();
   }, [pageDriven]);
 
+  // Mobile-Overrides greifen an der eigenen Boxbreite, nicht am Viewport —
+  // die Bühne läuft im Arsenal in einer Vorschaubox.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === 'undefined') {
+      setIsNarrow(typeof window !== 'undefined' && window.innerWidth < 700);
+      return;
+    }
+    const ro = new ResizeObserver(([entry]) => setIsNarrow(entry.contentRect.width < 700));
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, []);
+
   const config = PRODUCT_STAGE_VARIANTS[selectedVariant];
   const sections = config.sections;
   const n = sections.length;
@@ -544,22 +748,40 @@ export function PinnedProductStage({
   };
 
   useRafLoop(
-    (dt) => {
+    (dt, elapsed) => {
       const scroller = scrollerRef.current;
       const stage = stageRef.current;
       const product = productRef.current;
       if (!scroller || !stage || !product) return;
 
-      // Page mode reads the document scroll against the stage's own travel,
-      // so the section behaves like any other pinned block on the page.
-      const raw = pageDriven
-        ? (() => {
-            const rect = scroller.getBoundingClientRect();
-            const travel = rect.height - window.innerHeight;
-            return travel <= 0 ? 0 : clamp(-rect.top / travel, 0, 1);
-          })()
-        : scroller.scrollTop / Math.max(1, scroller.scrollHeight - scroller.clientHeight);
-      smooth.current = damp(smooth.current, raw, damping, dt);
+      // Fortschrittsquelle: feste Stufe > Auto-Lauf > echter Scroll.
+      let raw: number;
+      if (fixedStage >= 0) {
+        raw = n > 1 ? clamp(fixedStage, 0, n - 1) / (n - 1) : 0;
+      } else if (autoProgress) {
+        const cycle = Math.max(0.2, autoProgressSpeed) * n;
+        raw = (elapsed % cycle) / cycle;
+      } else if (pageDriven) {
+        // Page mode reads the document scroll against the stage's own travel,
+        // so the section behaves like any other pinned block on the page.
+        const rect = scroller.getBoundingClientRect();
+        const travel = rect.height - window.innerHeight;
+        raw = travel <= 0 ? 0 : clamp(-rect.top / travel, 0, 1);
+      } else {
+        raw = scroller.scrollTop / Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+      }
+
+      // Snap zieht den Fortschritt zur nächsten Kapitelmitte, ohne den Scroll
+      // zu übernehmen — der Nutzer bleibt Herr über die Position.
+      if (stageSnapStrength > 0 && n > 1) {
+        const nearestStop = Math.round(raw * (n - 1)) / (n - 1);
+        raw = lerp(raw, nearestStop, clamp(stageSnapStrength, 0, 1));
+      }
+
+      // `scrollSmoothing` ist der lesbare Regler; `damping` bleibt als
+      // historischer Prop erhalten und setzt die Basis-Trägheit.
+      const lambda = Math.max(0.6, damping * (1 - clamp(scrollSmoothing, 0, 0.95)));
+      smooth.current = damp(smooth.current, raw, lambda, dt);
       const progress = clamp(smooth.current, 0, 1);
       const timeline = progress * (n - 1);
       const sectionIndex = clamp(Math.floor(timeline), 0, n - 2);
@@ -567,22 +789,57 @@ export function PinnedProductStage({
       const a = sections[sectionIndex];
       const b = sections[sectionIndex + 1];
 
-      const rotX = lerp(a.rotX, b.rotX, local);
-      const authoredRotY = lerp(a.rotY, b.rotY, local);
-      const rotY = authoredRotY + timeline * (rotatePerSection - 90) * 0.22;
-      const rotZ = lerp(a.rotZ, b.rotZ, local);
-      const scale = lerp(a.scale, b.scale, local) * (1 + Math.sin(timeline * Math.PI) * scalePulse * 0.22);
-      const explode = lerp(a.explode, b.explode, local);
-      const scan = lerp(a.scan, b.scan, local);
-      const accent = colorShift ? mixHex(a.accent, b.accent, local) : sections[0].accent;
-      const accent2 = colorShift ? mixHex(a.accent2, b.accent2, local) : sections[0].accent2;
-      const scanPhase = (progress * 3.4) % 1;
+      const morph = clamp(stageMorphStrength, 0, 2);
+      const authoredRotX = lerp(a.rotX, b.rotX, local) * morph;
+      const authoredRotY = lerp(a.rotY, b.rotY, local) * morph;
+      const authoredRotZ = lerp(a.rotZ, b.rotZ, local) * morph;
 
-      product.style.transform = `rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+      // Scroll-gekoppelte Eigendrehung. Bewusst kein zeitbasierter Endlos-
+      // Spin: der Winkel ist eine reine Funktion des Fortschritts, damit
+      // Rückwärtsscrollen die Drehung exakt zurücknimmt.
+      const turns = isNarrow
+        ? (disableRotationOnMobile ? 0 : mobileRotationTurns)
+        : rotationTurns;
+      const sign = rotationDirection === 'counter-clockwise' ? -1 : 1;
+      const spin = scrollRotationEnabled ? progress * turns * 360 * sign : 0;
+      const axisX = rotationAxis === 'x' ? 1 : rotationAxis === 'xy' ? 0.45 : rotationAxis === 'xyz' ? 0.35 : 0;
+      const axisY = rotationAxis === 'y' || rotationAxis === 'xy' || rotationAxis === 'xyz' ? 1 : 0;
+      const axisZ = rotationAxis === 'z' ? 1 : rotationAxis === 'xyz' ? 0.22 : 0;
+      const influence = clamp(stageRotationInfluence, 0, 1);
+      // Legacy: `rotatePerSection` bleibt als zusätzlicher Y-Drift wirksam.
+      const legacyDrift = timeline * (rotatePerSection - 90) * 0.22;
+
+      const targetX = baseRotationX + spin * axisX + authoredRotX * influence;
+      const targetY = baseRotationY + spin * axisY + authoredRotY * influence + legacyDrift;
+      const targetZ = baseRotationZ + spin * axisZ + authoredRotZ * influence;
+
+      // Eigene, weichere Nachführung für die Rotation (0 = hart am Scroll).
+      const rotLambda = Math.max(0.8, 26 * (1 - clamp(rotationSmoothing, 0, 0.95)));
+      rot.current.x = damp(rot.current.x, targetX, rotLambda, dt);
+      rot.current.y = damp(rot.current.y, targetY, rotLambda, dt);
+      rot.current.z = damp(rot.current.z, targetZ, rotLambda, dt);
+
+      const baseScale = lerp(a.scale, b.scale, local) * (1 + Math.sin(timeline * Math.PI) * scalePulse * 0.22);
+      const scale = baseScale * (isNarrow ? mobileObjectScale : 1);
+      const explode = lerp(a.explode, b.explode, local) * clamp(stageVisualIntensity, 0, 2);
+      const scan = lerp(a.scan, b.scan, local) * clamp(stageVisualIntensity, 0, 2);
+      const shift = clamp(stageColorShift, 0, 1);
+      const accent = colorShift ? mixHex(sections[0].accent, mixHex(a.accent, b.accent, local), shift) : sections[0].accent;
+      const accent2 = colorShift ? mixHex(sections[0].accent2, mixHex(a.accent2, b.accent2, local), shift) : sections[0].accent2;
+      const scanPhase = (progress * 3.4) % 1;
+      const float = objectFloat > 0
+        ? Math.sin(elapsed * Math.PI * 2 * Math.max(0.02, objectFloatSpeed)) * objectFloat
+        : 0;
+
+      product.style.transform =
+        `translate3d(0,${float.toFixed(2)}px,${(-cameraDistance).toFixed(1)}px) ` +
+        `rotateX(${(rot.current.x + objectTilt).toFixed(2)}deg) ` +
+        `rotateY(${rot.current.y.toFixed(2)}deg) ` +
+        `rotateZ(${rot.current.z.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
       stage.style.setProperty('--pps-progress', progress.toFixed(4));
       stage.style.setProperty('--pps-accent', accent);
       stage.style.setProperty('--pps-accent-2', accent2);
-      stage.style.setProperty('--pps-glow', (0.42 + Math.sin(timeline * Math.PI) * 0.46).toFixed(3));
+      stage.style.setProperty('--pps-glow', ((0.42 + Math.sin(timeline * Math.PI) * 0.46) * (0.4 + glow)).toFixed(3));
       stage.style.setProperty('--pps-explode', explode.toFixed(3));
       stage.style.setProperty('--pps-scan', scan.toFixed(3));
       stage.style.setProperty('--pps-scan-phase', scanPhase.toFixed(3));
@@ -593,6 +850,19 @@ export function PinnedProductStage({
     },
     !reduced && inView,
   );
+
+  // Reduced motion: kein Loop, aber ein definierter Endzustand je Modus.
+  useEffect(() => {
+    if (!reduced) return;
+    const product = productRef.current;
+    if (!product) return;
+    const last = sections[n - 1];
+    const stageTerm = reducedMotionRotation === 'stage-only' ? clamp(stageRotationInfluence, 0, 1) : 0;
+    product.style.transform =
+      `rotateX(${(baseRotationX + last.rotX * stageTerm + objectTilt).toFixed(2)}deg) ` +
+      `rotateY(${(baseRotationY + last.rotY * stageTerm).toFixed(2)}deg) ` +
+      `rotateZ(${(baseRotationZ + last.rotZ * stageTerm).toFixed(2)}deg) scale(${last.scale})`;
+  }, [reduced, reducedMotionRotation, baseRotationX, baseRotationY, baseRotationZ, objectTilt, stageRotationInfluence, sections, n]);
 
   const goToSection = (index: number) => {
     const scroller = scrollerRef.current;
@@ -640,7 +910,38 @@ export function PinnedProductStage({
     '--pps-orbit': reduced ? 360 : 0,
     '--pps-px': '0px',
     '--pps-py': '0px',
+    // Konfigurierbare Präsentationsschicht — siehe CSS-Block unten.
+    '--pps-perspective': perspective,
+    '--pps-object-scale': isNarrow ? objectScale * mobileObjectScale : objectScale,
+    '--pps-object-depth': objectDepth,
+    '--pps-bloom-scale': 0.6 + bloom,
+    '--pps-rim': rimLight,
+    '--pps-highlight': highlightIntensity,
+    '--pps-shadow': shadowIntensity,
+    '--pps-glass': glassOpacity,
+    '--pps-blur': blurStrength,
+    '--pps-bg': backgroundIntensity,
+    '--pps-grid': gridOpacity,
+    '--pps-vignette': vignette,
+    '--pps-atmo': atmosphericGlow,
+    '--pps-spread': stageObjectSpread,
+    '--pps-symbol': stageSymbolScale,
+    '--pps-stage-transition': stageTransitionDuration,
   };
+
+  // Ambient-Motes deterministisch aus dem Seed — gleicher Seed, gleiches Bild.
+  const motes = useMemo(() => {
+    const count = Math.round(clamp(ambientParticles, 0, 60));
+    if (!count) return [];
+    const rnd = seededRandom(seed * 977 + 41);
+    return Array.from({ length: count }, () => ({
+      left: `${(rnd() * 100).toFixed(2)}%`,
+      top: `${(rnd() * 100).toFixed(2)}%`,
+      duration: `${(7 + rnd() * 11).toFixed(2)}s`,
+      delay: `${(-rnd() * 12).toFixed(2)}s`,
+      scale: 0.6 + rnd() * 1.6,
+    }));
+  }, [ambientParticles, seed]);
 
   const productTransform = reduced
     ? `rotateX(${final.rotX}deg) rotateY(${final.rotY}deg) rotateZ(${final.rotZ}deg) scale(${final.scale})`
@@ -649,7 +950,14 @@ export function PinnedProductStage({
   const stageBody = (
     <div
       ref={rootRef}
-      className={`pps-root${pageDriven ? ' pps-page' : ''}${visualMode === 'signal-flow' ? ' pps-flow' : ''}${chrome === 'minimal' ? ' pps-minimal' : ''}`}
+      className={[
+        'pps-root',
+        pageDriven ? 'pps-page' : '',
+        visualMode === 'signal-flow' ? 'pps-flow' : '',
+        chrome === 'minimal' ? 'pps-minimal' : '',
+        showLabels ? '' : 'pps-nolabels',
+        isNarrow && mobileEffectsQuality === 'low' ? 'pps-quality-low' : '',
+      ].filter(Boolean).join(' ')}
       onPointerMove={handlePointerMove}
       style={stageVars}
     >
@@ -663,6 +971,25 @@ export function PinnedProductStage({
           <div ref={stageRef} className="pps-stage" style={stageVars}>
             <div className="pps-stage-grid" />
             <div className="pps-horizon" />
+            {motes.length > 0 && (
+              <div className="pps-ambient" aria-hidden="true">
+                {motes.map((mote, index) => (
+                  <span
+                    key={index}
+                    className="pps-mote"
+                    style={{
+                      left: mote.left,
+                      top: mote.top,
+                      animationDuration: mote.duration,
+                      animationDelay: mote.delay,
+                      scale: String(mote.scale),
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+            {atmosphericGlow > 0 && <div className="pps-atmosphere" aria-hidden="true" />}
+            {vignette > 0 && <div className="pps-vignette" aria-hidden="true" />}
 
             <div className="pps-progress" aria-hidden="true">
               <span>{config.stageLabel}</span>
@@ -755,6 +1082,7 @@ export function PinnedProductStage({
 
             <div className="pps-scroll-hint">SCROLL TO OPERATE</div>
 
+            {showStepNavigation && (
             <nav className="pps-nav" aria-label="Product story chapters">
               {sections.map((section, index) => (
                 <button
@@ -768,6 +1096,7 @@ export function PinnedProductStage({
                 </button>
               ))}
             </nav>
+            )}
           </div>
 
           <div className={pageDriven ? 'pps-copy-overlay' : 'pps-copy-layer'}>
@@ -801,7 +1130,9 @@ export function PinnedProductStage({
     <div
       ref={scrollerRef}
       className="pps-track"
-      style={{ height: `calc(${(n * compactScroll).toFixed(3)} * 100svh)` }}
+      // `scrollLength` gibt die Gesamtlänge direkt vor und schlägt damit die
+      // Kapitelhöhe aus `compactScroll`.
+      style={{ height: `calc(${(scrollLength > 0 ? scrollLength : n * compactScroll).toFixed(3)} * 100svh)` }}
     >
       <div className="pps-sticky">{stageBody}</div>
     </div>

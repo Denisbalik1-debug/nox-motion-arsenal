@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { EffectCategory, EffectEntry } from '../types';
 import { effectUpdatedAtTimestamp } from '../lib/effectDates';
 import { EFFECT_COLLECTIONS } from '../data/collections';
-import { decodeConfigParam, SHARE_PARAM, type EffectConfigValues } from '../lib/effectConfig';
+import { decodeConfigParam, decodeShareContext, SHARE_PARAM, type EffectConfigValues } from '../lib/effectConfig';
 import { EffectCard } from './EffectCard';
 
 const EffectDetail = React.lazy(() => import('./EffectDetail').then((module) => ({ default: module.EffectDetail })));
@@ -83,9 +83,11 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
 
   const openId = routePath.startsWith('/effect/') ? routePath.slice('/effect/'.length) : null;
   const openEntry = openId ? catalog.find((e) => e.meta.id === openId) : null;
+  const sharedParam = new URLSearchParams(routeQuery).get(SHARE_PARAM);
   const sharedConfig: EffectConfigValues | null = openEntry
-    ? decodeConfigParam(openEntry.meta, new URLSearchParams(routeQuery).get(SHARE_PARAM))
+    ? decodeConfigParam(openEntry.meta, sharedParam)
     : null;
+  const sharedContext = openEntry ? decodeShareContext(sharedParam) : null;
 
   const counts = useMemo(() => {
     const c = new Map<EffectCategory, number>();
@@ -158,6 +160,7 @@ export function ArsenalShell({ catalog }: { catalog: EffectEntry[] }) {
               key={`${openEntry.meta.id}:${routeQuery}`}
               entry={openEntry}
               initialConfig={sharedConfig}
+              initialContext={sharedContext}
               onBack={() => navigate('/')}
             />
           </React.Suspense>

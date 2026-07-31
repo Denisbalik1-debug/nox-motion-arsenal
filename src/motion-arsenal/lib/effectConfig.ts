@@ -223,7 +223,12 @@ export function buildUsageJsx(entry: EffectEntry, values: EffectConfigValues): s
   return `<${name}\n${attributes.map((a) => `  ${a}`).join('\n')}\n/>`;
 }
 
-export function buildImplementationBrief(entry: EffectEntry, values: EffectConfigValues): string {
+export function buildImplementationBrief(
+  entry: EffectEntry,
+  values: EffectConfigValues,
+  context?: ShareContext,
+  origin?: string,
+): string {
   const doc = buildEffectConfigDocument(entry, values);
   const m = entry.meta;
   const lines: string[] = [];
@@ -231,15 +236,24 @@ export function buildImplementationBrief(entry: EffectEntry, values: EffectConfi
   lines.push(`# Implementation Brief — ${m.displayName ?? m.name}`);
   lines.push('');
   lines.push(`Effect ID:      ${doc.effectId}`);
+  if (doc.preset) lines.push(`Variant:        ${doc.preset}`);
+  lines.push(`Usage:          ${context?.usage?.trim() || '— (kein Einsatzkontext angegeben)'}`);
+  if (context?.note?.trim()) lines.push(`Note:           ${context.note.trim()}`);
   lines.push(`Component:      ${doc.component}`);
   lines.push(`Import:         ${doc.importPath}`);
   lines.push(`Effect version: ${doc.build.effectVersion}`);
+  lines.push(`Config version: ${SHARE_CONFIG_VERSION}`);
   lines.push(`Build commit:   ${doc.build.commit}`);
   lines.push(`Build time:     ${doc.build.buildTime}`);
   lines.push(`Last update:    ${doc.build.lastUpdatedAt}`);
   lines.push(`Status:         ${doc.build.improvementStatus}${doc.build.lastImprovedAt ? ` (${doc.build.lastImprovedAt})` : ''}`);
   lines.push('');
-  lines.push('## Konfiguration');
+  lines.push('## Props (nur Abweichungen vom Default)');
+  lines.push('```json');
+  lines.push(JSON.stringify(diffFromDefaults(m, values), null, 2));
+  lines.push('```');
+  lines.push('');
+  lines.push('## Konfiguration (vollständig)');
   if (doc.preset) lines.push(`- preset: ${doc.preset}`);
   if (doc.materialVariant) lines.push(`- materialVariant: ${doc.materialVariant}`);
   if (doc.energy) lines.push(`- energy: ${doc.energy}`);
@@ -261,6 +275,9 @@ export function buildImplementationBrief(entry: EffectEntry, values: EffectConfi
   lines.push(`- Full-bleed Layout: ${doc.responsive.fullBleed ? 'ja' : 'nein'}`);
   lines.push(`- Click-to-run (heavy): ${doc.responsive.clickToRun ? 'ja' : 'nein'}`);
   lines.push(`- Reduced Motion: ${doc.reducedMotion.notes}`);
+  lines.push('');
+  lines.push('## Share URL');
+  lines.push(buildShareLink(entry, values, origin, context));
   lines.push('');
   lines.push('## Canonical Config');
   lines.push('```json');
@@ -287,24 +304,100 @@ function fromBase64Url(text: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-export function encodeConfigParam(values: EffectConfigValues): string {
-  return toBase64Url(JSON.stringify(values));
+/** Aktuelle Version des Share-Payloads. v1 = flache Prop-Map (Altlinks). */
+export const SHARE_CONFIG_VERSION = 2;
+
+/** Zusätzlicher Kontext, den der Link mitträgt — rein optional. */
+export interface ShareContext {
+  /** Wofür die Konfiguration gedacht ist, z. B. „Homepage Revenue OS Section". */
+  usage?: string;
+  /** Freie Notiz für den empfangenden Agenten. */
+  note?: string;
+}
+
+interface SharePayloadV2 extends ShareContext {
+  v: number;
+  id: string;
+  /** Nur die vom Katalog-Default abweichenden Props. */
+  p: EffectConfigValues;
+}
+
+/** Reduziert auf die Abweichungen — der Link bleibt lesbar und kurz. */
+export function diffFromDefaults(meta: EffectMeta, values: EffectConfigValues): EffectConfigValues {
+  const normalized = normalizeConfigValues(meta, values);
+  const out: EffectConfigValues = {};
+  for (const control of meta.props) {
+    const fallback = normalizeControlValue(control, control.default);
+    // Strikter Vergleich: `false` und `0` sind echte Werte, keine Leerstellen.
+    if (normalized[control.key] !== fallback) out[control.key] = normalized[control.key];
+  }
+  return out;
+}
+
+export function encodeConfigParam(
+  values: EffectConfigValues,
+  meta?: EffectMeta,
+  context?: ShareContext,
+): string {
+  // Ohne Meta bleibt das alte flache Format erhalten (Rückwärtskompatibilität
+  // für Aufrufer, die nur Werte haben).
+  if (!meta) return toBase64Url(JSON.stringify(values));
+  const payload: SharePayloadV2 = {
+    v: SHARE_CONFIG_VERSION,
+    id: meta.id,
+    p: diffFromDefaults(meta, values),
+  };
+  if (context?.usage?.trim()) payload.usage = context.usage.trim();
+  if (context?.note?.trim()) payload.note = context.note.trim();
+  return toBase64Url(JSON.stringify(payload));
+}
+
+function parseSharePayload(encoded: string): { values: unknown; context: ShareContext } | null {
+  try {
+    const parsed = JSON.parse(fromBase64Url(encoded));
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const candidate = parsed as Partial<SharePayloadV2> & Record<string, unknown>;
+      if (typeof candidate.v === 'number' && candidate.p && typeof candidate.p === 'object') {
+        return {
+          values: candidate.p,
+          context: {
+            usage: typeof candidate.usage === 'string' ? candidate.usage : undefined,
+            note: typeof candidate.note === 'string' ? candidate.note : undefined,
+          },
+        };
+      }
+      // v1: flache Prop-Map ohne Hülle — alte Links funktionieren weiter.
+      return { values: parsed, context: {} };
+    }
+  } catch {
+    // Ein kaputter Link darf den Effekt nicht blockieren.
+  }
+  return null;
 }
 
 export function decodeConfigParam(meta: EffectMeta, encoded: string | null): EffectConfigValues | null {
   if (!encoded) return null;
-  try {
-    return normalizeConfigValues(meta, JSON.parse(fromBase64Url(encoded)));
-  } catch {
-    // Ein kaputter Link darf den Effekt nicht blockieren — Defaults gewinnen.
-    return null;
-  }
+  const parsed = parseSharePayload(encoded);
+  if (!parsed) return null;
+  // normalizeConfigValues verwirft unbekannte Keys, klemmt Zahlen in ihren
+  // Bereich und fällt bei ungültigen Select-Werten auf den Default zurück.
+  return normalizeConfigValues(meta, parsed.values);
 }
 
-export function buildShareLink(entry: EffectEntry, values: EffectConfigValues, origin?: string): string {
+/** Einsatzkontext/Notiz aus einem Link lesen (fehlt bei v1-Links). */
+export function decodeShareContext(encoded: string | null): ShareContext {
+  if (!encoded) return {};
+  return parseSharePayload(encoded)?.context ?? {};
+}
+
+export function buildShareLink(
+  entry: EffectEntry,
+  values: EffectConfigValues,
+  origin?: string,
+  context?: ShareContext,
+): string {
   const base = origin ?? (typeof window === 'undefined' ? '' : `${window.location.origin}${window.location.pathname}`);
-  const normalized = normalizeConfigValues(entry.meta, values);
-  return `${base}#/effect/${entry.meta.id}?${SHARE_PARAM}=${encodeConfigParam(normalized)}`;
+  return `${base}#/effect/${entry.meta.id}?${SHARE_PARAM}=${encodeConfigParam(values, entry.meta, context)}`;
 }
 
 // --- Presets (localStorage) -------------------------------------------------

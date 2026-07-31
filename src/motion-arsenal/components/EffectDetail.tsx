@@ -14,6 +14,7 @@ import {
   readPresetStore,
   writePresetStore,
   type EffectConfigValues,
+  type ShareContext,
 } from '../lib/effectConfig';
 import { EffectPreview } from './EffectPreview';
 import { PropsPanel } from './PropsPanel';
@@ -25,6 +26,8 @@ interface Props {
   onBack: () => void;
   /** Aus dem Share-Link deserialisierte Konfiguration. */
   initialConfig?: EffectConfigValues | null;
+  /** Einsatzkontext/Notiz aus dem Share-Link. */
+  initialContext?: ShareContext | null;
   onConfigChange?: (values: EffectConfigValues) => void;
 }
 
@@ -60,7 +63,7 @@ function CopyButton({
   );
 }
 
-export function EffectDetail({ entry, onBack, initialConfig, onConfigChange }: Props) {
+export function EffectDetail({ entry, onBack, initialConfig, initialContext, onConfigChange }: Props) {
   const m = entry.meta;
   const updated = formatEffectUpdatedAt(m.updatedAt);
   const [fullscreen, setFullscreen] = useState(false);
@@ -71,6 +74,11 @@ export function EffectDetail({ entry, onBack, initialConfig, onConfigChange }: P
   const [config, setConfig] = useState<EffectConfigValues>(() =>
     initialConfig ? normalizeConfigValues(m, initialConfig) : defaultConfigValues(m),
   );
+  // Einsatzkontext und Notiz reisen im Share-Link und im Brief mit — sie sind
+  // kein Prop des Effekts und gehören deshalb nicht in `config`.
+  const [usage, setUsage] = useState(initialContext?.usage ?? '');
+  const [note, setNote] = useState(initialContext?.note ?? '');
+  const shareContext: ShareContext = { usage, note };
   const [presetName, setPresetName] = useState('');
   const [presetKeys, setPresetKeys] = useState<string[]>(() => Object.keys(readPresetStore()));
   const [notice, setNotice] = useState('');
@@ -158,12 +166,12 @@ export function EffectDetail({ entry, onBack, initialConfig, onConfigChange }: P
             <CopyButton text={usageJsx} label="COPY JSX" testId="copy-jsx" />
             <CopyButton text={configJson} label="COPY CONFIG" testId="copy-config" />
             <CopyButton
-              text={() => buildImplementationBrief(entry, config)}
+              text={() => buildImplementationBrief(entry, config, shareContext)}
               label="COPY IMPLEMENTATION BRIEF"
               testId="copy-brief"
             />
             <CopyButton
-              text={() => buildShareLink(entry, config)}
+              text={() => buildShareLink(entry, config, undefined, shareContext)}
               label="COPY SHARE LINK"
               testId="copy-share-link"
             />
@@ -189,6 +197,34 @@ export function EffectDetail({ entry, onBack, initialConfig, onConfigChange }: P
 
         <div>
           <PropsPanel controls={m.props} values={config} onChange={setControl} />
+          <div className="panel">
+            <h4>Handoff-Kontext</h4>
+            <div className="prop-row">
+              <label htmlFor="share-usage"><span>Einsatzkontext</span></label>
+              <input
+                id="share-usage"
+                data-testid="share-usage"
+                type="text"
+                placeholder="z. B. Homepage Revenue OS Section"
+                value={usage}
+                onChange={(e) => setUsage(e.target.value)}
+              />
+            </div>
+            <div className="prop-row">
+              <label htmlFor="share-note"><span>Notiz</span></label>
+              <input
+                id="share-note"
+                data-testid="share-note"
+                type="text"
+                placeholder="optionaler Hinweis für den nächsten Agenten"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </div>
+            <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--text-dim)' }}>
+              Beides reist im Share-Link und im Implementation Brief mit.
+            </p>
+          </div>
           {m.props.length > 0 && (
             <div className="panel">
               <h4>Presets</h4>

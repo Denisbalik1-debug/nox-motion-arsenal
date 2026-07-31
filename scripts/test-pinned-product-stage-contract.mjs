@@ -94,4 +94,63 @@ assert.ok(!/,\s0,\s0\.\d+,\s'/.test(noxSlice), 'nox-revenue-os chapters must kee
 assert.ok(!source.includes('fetch(') && !coreSystem.includes('fetch('), 'Effect must not make network requests');
 assert.ok(!source.includes('Math.random') && !coreSystem.includes('Math.random'), 'Effect must stay deterministic');
 
+// --- Scroll-gekoppelte Eigendrehung ----------------------------------------
+// Die Drehung muss eine reine Funktion des Fortschritts sein. Ein zeitbasierter
+// Term (elapsed) im Winkel würde Rückwärtsscrollen kaputt machen.
+assert.ok(source.includes('const spin = scrollRotationEnabled ? progress * turns * 360 * sign : 0;'),
+  'rotation must be progress * turns * 360 * direction');
+assert.ok(source.includes('rot.current.x = damp(rot.current.x, targetX, rotLambda, dt);'),
+  'rotation must be damped through its own state (rotationSmoothing)');
+for (const term of ['baseRotationX', 'baseRotationY', 'baseRotationZ', 'stageRotationInfluence']) {
+  assert.ok(source.includes(`${term} +`) || source.includes(`${term},`) || source.includes(`clamp(${term}`),
+    `rotation formula missing term: ${term}`);
+}
+assert.ok(!/const spin[^;]*elapsed/.test(source), 'spin must not depend on elapsed time');
+assert.ok(!/target[XYZ] = [^;]*elapsed/.test(source), 'rotation targets must not depend on elapsed time');
+
+const stageProps = catalog.slice(catalog.indexOf('props: ['), catalog.indexOf('productionSafe'));
+const REQUIRED_STAGE_CONTROLS = [
+  'variant', 'stage', 'autoProgress', 'pageScrollMode', 'showStepNavigation', 'showLabels', 'compactScroll',
+  'scrollLength', 'scrollSmoothing', 'stageSnapStrength', 'stageTransitionDuration',
+  'scrollRotationEnabled', 'rotationAxis', 'rotationTurns', 'rotationDirection',
+  'baseRotationX', 'baseRotationY', 'baseRotationZ', 'stageRotationInfluence', 'rotationSmoothing',
+  'objectScale', 'objectDepth', 'perspective', 'cameraDistance', 'objectTilt', 'objectFloat', 'objectFloatSpeed',
+  'glow', 'bloom', 'rimLight', 'highlightIntensity', 'shadowIntensity', 'glassOpacity', 'blurStrength',
+  'backgroundIntensity', 'gridOpacity', 'ambientParticles', 'vignette', 'atmosphericGlow',
+  'stageVisualIntensity', 'stageMorphStrength', 'stageColorShift', 'stageObjectSpread', 'stageSymbolScale',
+  'mobileRotationTurns', 'mobileObjectScale', 'mobileEffectsQuality', 'disableRotationOnMobile',
+  'reducedMotionRotation',
+];
+for (const key of REQUIRED_STAGE_CONTROLS) {
+  assert.ok(stageProps.includes(`key: '${key}'`), `dashboard control missing: ${key}`);
+  assert.ok(source.includes(`${key} =`) || source.includes(`${key}:`), `component does not accept prop: ${key}`);
+}
+for (const group of ['Content', 'Scroll', 'Object Rotation', 'Object Presentation', 'Lighting', 'Background', 'Stage Visuals', 'Mobile', 'Reduced Motion']) {
+  assert.ok(stageProps.includes(`group: '${group}'`), `control group missing: ${group}`);
+}
+
+// Operator-Defaults für nox-revenue-os.
+const defaultOf = (key) => {
+  const match = stageProps.match(new RegExp(`key: '${key}'[^}]*?default: ([-\\d.]+|'[a-z-]+'|true|false)`));
+  assert.ok(match, `no default found for ${key}`);
+  return match[1].replace(/'/g, '');
+};
+assert.equal(defaultOf('scrollRotationEnabled'), 'true');
+assert.equal(defaultOf('rotationAxis'), 'y');
+assert.equal(Number(defaultOf('rotationTurns')), 0.85);
+assert.equal(defaultOf('rotationDirection'), 'clockwise');
+assert.equal(Number(defaultOf('rotationSmoothing')), 0.12);
+assert.equal(Number(defaultOf('stageRotationInfluence')), 0.35);
+assert.equal(Number(defaultOf('objectTilt')), 6);
+assert.equal(Number(defaultOf('perspective')), 1100);
+assert.equal(Number(defaultOf('glow')), 0.6);
+assert.equal(Number(defaultOf('bloom')), 0.35);
+assert.equal(Number(defaultOf('mobileRotationTurns')), 0.25);
+
+// Mobile-/Reduced-Motion-Zusagen müssen im Code stehen, nicht nur im Katalog.
+assert.ok(source.includes('disableRotationOnMobile ? 0 : mobileRotationTurns'), 'mobile rotation override missing');
+assert.ok(source.includes("reducedMotionRotation === 'stage-only'"), 'reduced motion rotation modes missing');
+
+console.log(`PinnedProductStage rotation + control surface: OK (${REQUIRED_STAGE_CONTROLS.length} controls verified)`);
+
 console.log('PinnedProductStage semantic core registry contract: OK');
