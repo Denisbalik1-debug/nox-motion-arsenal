@@ -134,6 +134,17 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
       'Added optional variant, energy, and context props, bounded sizing, accessible scene labeling, responsive context treatment, and no additional animation loops or runtime dependencies.',
     ],
   },
+  'skilltree-recommended-focus-ring': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T05:10:00.000Z',
+    lastImprovedBy: 'foundry-hourly',
+    improvementVersion: '2.1.0',
+    improvementChangelog: [
+      'Added Next Best Action, Operator Priority, and Conversion Path narratives with scenario-specific labels, recommendation badges, and context copy.',
+      'Added calm, charged, and overdrive energy profiles that tune ring speed, node scale, float cadence, and atmosphere density while preserving spinSpeed and showBadge.',
+      'Added optional variant, energy, and context props, bounded speed input, accessible scene labeling, responsive context treatment, and no additional animation loops or runtime dependencies.',
+    ],
+  },
 };
 
 function deriveImprovementStatus(entry: EffectEntry): EffectImprovementStatus {
