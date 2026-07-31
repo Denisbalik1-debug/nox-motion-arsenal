@@ -78,11 +78,23 @@ const IMPROVEMENT_OVERRIDES: Record<string, Partial<EffectEntry['meta']>> = {
     improvementStatus: 'improved',
     lastImprovedAt: '2026-07-30T21:07:00.000Z',
     lastImprovedBy: 'foundry-hourly',
-    improvementVersion: '2.1.0',
+    improvementVersion: '2.2.0',
     improvementChangelog: [
       'Exposed all five material variants and three energy profiles directly in the Arsenal control panel.',
       'Added production controls for depth, glass opacity, material scale, and optional in-effect switchers while preserving the original props.',
       'Documented the single-WebGL-context budget, touch fallback, and reduced-motion behavior for safer customer-site adoption.',
+      'Added production lighting gates for pointer reflection, hover glare, caustic sweep, specular intensity, and ambient reflection; disabled lighting starts no shader or material rAF.',
+    ],
+  },
+  'skilltree-glass-metal-panel': {
+    improvementStatus: 'improved',
+    lastImprovedAt: '2026-07-31T15:40:00.000Z',
+    lastImprovedBy: 'codex',
+    improvementVersion: '2.0.0',
+    improvementChangelog: [
+      'Added the large nox-revenue-glass-panel variant with factual operating-state labels instead of demo metrics.',
+      'Added dashboard and share-safe controls for pointer spotlight, hover glow, specular follow, depth, tilt, and internal switchers.',
+      'Added a static production mode with no WebGL and no persistent lighting rAF.',
     ],
   },
   'premium-data-stream-journey': {
