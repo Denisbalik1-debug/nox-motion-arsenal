@@ -75,6 +75,8 @@ export interface PinnedProductStageProps {
   autoProgressSpeed?: number;
   /** Bequemer Schalter für scrollDriver="page". */
   pageScrollMode?: boolean;
+  /** Arsenal-only adapter for page mode inside a bounded preview box. */
+  previewScrollSimulation?: boolean;
   showStepNavigation?: boolean;
   /** Modul-Beschriftungen und Kapitel-Tags ein-/ausblenden. */
   showLabels?: boolean;
@@ -640,6 +642,7 @@ export function PinnedProductStage({
   autoProgress = false,
   autoProgressSpeed = 2.4,
   pageScrollMode = false,
+  previewScrollSimulation = false,
   showStepNavigation = true,
   showLabels = true,
   scrollLength = 0,
@@ -686,7 +689,8 @@ export function PinnedProductStage({
   reducedMotionRotation = 'static',
 }: PinnedProductStageProps) {
   const reduced = usePrefersReducedMotion();
-  const pageDriven = scrollDriver === 'page' || pageScrollMode;
+  const requestedPageDriven = scrollDriver === 'page' || pageScrollMode;
+  const pageDriven = requestedPageDriven && !previewScrollSimulation;
   const rootRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(!pageDriven);
   const [isNarrow, setIsNarrow] = useState(false);

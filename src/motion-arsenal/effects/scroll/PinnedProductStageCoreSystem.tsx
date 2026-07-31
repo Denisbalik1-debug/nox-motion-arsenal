@@ -80,7 +80,8 @@ export function PinnedProductStageCoreSystem({
   ...motionProps
 }: PinnedProductStageProps) {
   const [selectedVariant, setSelectedVariant] = useState<ProductStageVariantId>(variant);
-  const pageDriven = motionProps.scrollDriver === 'page' || motionProps.pageScrollMode === true;
+  const pageDriven = (motionProps.scrollDriver === 'page' || motionProps.pageScrollMode === true)
+    && motionProps.previewScrollSimulation !== true;
 
   useEffect(() => setSelectedVariant(variant), [variant]);
 

@@ -29,6 +29,7 @@
     "test:community:e2e": "node scripts/test-community-e2e.mjs",
     "test:visual-config": "node scripts/test-visual-config-serialization.mjs",
     "test:cosmic-depth-field": "node scripts/test-cosmic-depth-field-contract.mjs"
+    ,"test:product-stage-share": "node scripts/test-product-stage-share-regression.mjs"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",

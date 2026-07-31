@@ -75,9 +75,11 @@ for (const contract of [
   'visualMode',
   "chrome === 'minimal'",
   'IntersectionObserver',
+  'previewScrollSimulation',
 ]) {
   assert.ok(source.includes(contract), `Page-scroll driver contract missing: ${contract}`);
 }
+assert.ok(source.includes("requestedPageDriven && !previewScrollSimulation"), 'bounded previews must simulate page scroll internally');
 assert.ok(
   source.includes('.pps-page .pps-shaft { position:absolute; inset:0; }'),
   'Page mode must fill the pinned stage; without it the stage collapses to zero height',

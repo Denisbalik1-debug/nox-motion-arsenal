@@ -116,6 +116,9 @@ function PreviewBody({ entry, propValues, variant, stage, scale }: {
   const needsGate = entry.meta.clickToRun || entry.meta.complexity === 'heavy';
   const [armed, setArmed] = useState(!needsGate);
   const Comp = entry.Component;
+  const previewProps = entry.meta.id === 'scroll-pinned-product-stage'
+    ? { ...(propValues ?? {}), previewScrollSimulation: true }
+    : propValues;
 
   if (!armed) {
     return (
@@ -152,7 +155,7 @@ function PreviewBody({ entry, propValues, variant, stage, scale }: {
             transformOrigin: 'center',
           }}
         >
-          <Comp {...(propValues ?? {})} />
+          <Comp {...(previewProps ?? {})} />
         </div>
       </Suspense>
     </PreviewErrorBoundary>

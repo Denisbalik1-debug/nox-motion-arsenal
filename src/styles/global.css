@@ -213,6 +213,9 @@ code, .mono { font-family: var(--mono); font-size: 12.5px; }
   overflow: hidden;
   contain: strict;
 }
+.arsenal-cosmic-background { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: #05060b; }
+.arsenal-cosmic-background .nox-cosmic-depth-field { position: absolute !important; inset: 0; }
+.arsenal-app-content { position: relative; z-index: 1; min-height: 100vh; }
 .favorite-btn {
   position: absolute;
   top: 11px;
