@@ -25,6 +25,10 @@ assert.ok(!rift.includes('Math.random('));
 assert.ok(rift.includes('smoothstep(0.88, 0.96'));
 assert.ok(rift.includes('smoothstep(0.96, 1'));
 assert.ok(rift.includes('function hash('));
+assert.ok(rift.includes('bottomPulseProgressFromEdge'));
+assert.ok(rift.includes('viewportHeight * 0.92'));
+assert.ok(rift.includes('viewportHeight * 0.55'));
+assert.ok(rift.includes('0.70 + edgeProgress * 0.30'));
 
 // The new contract must not recreate the old conceptual failure modes.
 const implementation = rift.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -38,7 +42,7 @@ assert.ok(rift.includes('autoDemo'));
 
 for (const mode of ['static-line', 'crossfade-only', 'hidden']) assert.ok(rift.includes(mode));
 assert.ok(rift.includes('prefers-reduced-motion'));
-assert.ok(catalog.includes("improvementVersion: '2.1.0'"));
+assert.ok(catalog.includes("improvementVersion: '2.1.1'"));
 assert.ok(catalog.includes('improvementChangelog'));
 
 console.log(`Bottom Pulse Horizon contract: OK (${CONTROLS.length} controls verified)`);

@@ -31,6 +31,15 @@ export interface NoxHorizonRiftProps {
 type HorizonStyle = CSSProperties & Record<`--${string}`, string | number>;
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+export const bottomPulseProgressFromEdge = (rectBottom: number, viewportHeight: number) => {
+  const start = viewportHeight * 0.92;
+  const end = viewportHeight * 0.55;
+  const edgeProgress = clamp01((start - rectBottom) / Math.max(1, start - end));
+
+  // Keep the original 70/88/96/100 timeline while giving its visible phase
+  // roughly 80–140 px of real scroll on common desktop/mobile viewports.
+  return edgeProgress <= 0 ? 0 : 0.70 + edgeProgress * 0.30;
+};
 const smoothstep = (edge0: number, edge1: number, value: number) => {
   const t = clamp01((value - edge0) / Math.max(0.0001, edge1 - edge0));
   return t * t * (3 - 2 * t);

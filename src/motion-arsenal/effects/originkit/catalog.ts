@@ -246,7 +246,7 @@ export const ORIGINKIT_CATALOG: EffectEntry[] = [
       reducedMotionNotes: 'classic: über Mode deaktivierbar. nox-horizon-rift: crossfade-only blendet die Energieader aus; static-line erlaubt eine statische dünne Linie, hidden entfernt sie vollständig.',
       description: 'Elektrischer Blitz als Hero-Akzent. Variante `nox-horizon-rift` ist als `Bottom Pulse Horizon` eine scrollgebundene Energieader an der unteren Hero-Kante: bis 70% bleibt der Hero unverändert, zwischen 88–96% erscheinen zwei sanfte Pulse, danach lösen sich wenige Funken in den bestehenden Sternenhimmel auf. Keine Maske, kein eigener Untergrund, exakt reversibel über `progress`.',
       importPath: '@/motion-arsenal/effects/originkit/ThunderStrike',
-      usageJsx: '<ThunderStrike variant="nox-horizon-rift" progress={scrollProgress} horizonPosition={0.965} lineThickness={2.5} pulseStrength={0.28} pulseCount={2} glow={0.68} bloom={0.2} jitter={0.12} sparkAmount={8} dissolveStrength={0.7} heroFade={0.18} cosmicReveal={0.45} />',
+      usageJsx: 'const progress = bottomPulseProgressFromEdge(heroRect.bottom, window.innerHeight);\n<ThunderStrike variant="nox-horizon-rift" progress={progress} horizonPosition={0.965} lineThickness={2.5} pulseStrength={0.28} pulseCount={2} glow={0.68} bloom={0.2} jitter={0.12} sparkAmount={8} dissolveStrength={0.7} heroFade={0.18} cosmicReveal={0.45} />',
       props: [
         { key: 'variant', label: 'Variant', type: 'select', default: 'classic', options: ['classic', 'nox-horizon-rift'], group: 'Variant' },
 
@@ -274,12 +274,13 @@ export const ORIGINKIT_CATALOG: EffectEntry[] = [
         { key: 'angle', label: 'Angle (°)', type: 'range', default: -27, min: -90, max: 90, step: 1, group: 'Classic' },
       ],
       improvementStatus: 'improved',
-      improvementVersion: '2.1.0',
+      improvementVersion: '2.1.1',
       improvementChangelog: [
         'Reframed `nox-horizon-rift` as `Bottom Pulse Horizon`: a narrow lower-edge energy seam, not a full-viewport reveal.',
         'Removed the clip mask, foreign cosmic layer, fullscreen bloom and heavy Canvas path; the existing page Cosmic Background remains the only field.',
         'Reduced the surface to progress, horizon position, line/pulse/glow controls, sparse dissolve sparks, hero fade and cosmic reveal metadata.',
         'Kept the progress model deterministic and reversible, with no permanent animation loop and reduced mobile/reduced-motion output.',
+        'Added the production edge-progress helper so normal-flow heroes traverse the visible pulse window without a synthetic sticky scroll track.',
         'Fixed the classic shader catalog props: the previous entries (boltCount, mode, duration …) did not exist on the component, so the preview silently ran on defaults.',
       ],
       productionSafe: true,
