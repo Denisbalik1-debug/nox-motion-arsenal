@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import NoxHorizonRift, { type NoxHorizonRiftProps } from './NoxHorizonRift';
 
 /**
  * ThunderStrike — GPU electric lightning shader (fbm-driven crackle).
@@ -37,7 +38,17 @@ function rgbToHslWithSV(rgb: string): { h: number; s: number; v: number } {
   return { h: h >= 0 ? h : h + 360, s, v };
 }
 
-interface Props {
+/**
+ * `classic`         — der portierte Originkit-Shader (Default, unverändert).
+ * `nox-horizon-rift`— scrollgebundene Hero→Cosmic-Kante, siehe NoxHorizonRift.
+ *                     Eigene Implementierung, weil der Shader zeitgetrieben ist
+ *                     und sich weder am Scroll festmachen noch rückwärts
+ *                     abspielen lässt.
+ */
+export type ThunderStrikeVariant = 'classic' | 'nox-horizon-rift';
+
+interface Props extends Partial<NoxHorizonRiftProps> {
+  variant?: ThunderStrikeVariant;
   lightningColor?: string;
   backgroundColor?: string;
   xOffset?: number;
@@ -49,6 +60,14 @@ interface Props {
 }
 
 export default function ThunderStrike(props: Props) {
+  if (props.variant === 'nox-horizon-rift') {
+    const { variant, lightningColor, backgroundColor, xOffset, speed, intensity, size, angle, ...rift } = props;
+    return <NoxHorizonRift {...rift} />;
+  }
+  return <ThunderStrikeClassic {...props} />;
+}
+
+function ThunderStrikeClassic(props: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
