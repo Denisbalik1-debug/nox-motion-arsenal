@@ -23,7 +23,8 @@ export type ProductStageVariantId =
   | 'project-x-command-center'
   | 'ai-growth-engine'
   | 'conversion-website-system'
-  | 'automation-ops-system';
+  | 'automation-ops-system'
+  | 'nox-scroll-story';
 
 /**
  * `internal` — the stage owns a scroll container (Arsenal preview default).
@@ -55,6 +56,14 @@ export type StageRotationDirection = 'clockwise' | 'counter-clockwise';
  * zusätzlich driftet die Bühne nur `stackDrift` über die ganze Sektion.
  */
 export type StageRotationMode = 'free-spin' | 'depth-flip';
+/**
+ * `pinned-stage`  — bisheriges Verhalten: eine gepinnte Bühne, der Text wird
+ *                   an Ort und Stelle ausgetauscht.
+ * `sticky-story`  — das Visual klebt links, die Kapitel scrollen rechts als
+ *                   echter DOM-Content vorbei. Kein Scroll-Gefängnis, kein
+ *                   Textaustausch am selben Platz.
+ */
+export type StageLayoutMode = 'pinned-stage' | 'sticky-story';
 /**
  * `off`         — keine Drehung, das Objekt steht in seiner Basisrotation.
  * `stage-only`  — keine Scroll-Drehung, aber die stufen-eigene Rotation bleibt.
@@ -104,6 +113,29 @@ export interface PinnedProductStageProps {
   stageSnapStrength?: number;
   /** Sekunden für den Kapitelwechsel der Textspalte. */
   stageTransitionDuration?: number;
+
+  // --- Layout -------------------------------------------------------------
+  /** `pinned-stage` (Default) oder `sticky-story`. */
+  layoutMode?: StageLayoutMode;
+  /** sticky-story: Höhe eines Kapitels in vh. */
+  chapterHeight?: number;
+  /** sticky-story: Abstand des klebenden Visuals zur Viewport-Oberkante, in vh. */
+  stickyOffset?: number;
+  /** sticky-story: Fokuslinie im Viewport (0…1) für die aktive Stufe. */
+  activeThreshold?: number;
+  /** sticky-story: Ruheneigung der Tafel, [rotateX, rotateY] in Grad. */
+  panelTilt?: [number, number];
+  /** sticky-story: Einzelachsen für die Oberfläche; überschreiben `panelTilt`. */
+  panelTiltX?: number;
+  panelTiltY?: number;
+  /** sticky-story: translateZ im Wechselimpuls. */
+  panelDepth?: number;
+  /** sticky-story: Millisekunden, die der Inhalt vor dem Tausch ausblendet. */
+  contentTransition?: number;
+  /** sticky-story: Einblendung der Kapiteltexte. */
+  textReveal?: 'blur-rise' | 'fade' | 'none';
+  /** sticky-story: Tafel je Kapitel auch mobil zeigen. */
+  mobileStack?: boolean;
 
   // --- Object rotation ----------------------------------------------------
   scrollRotationEnabled?: boolean;
@@ -470,6 +502,32 @@ export const PRODUCT_STAGE_VARIANTS: Record<ProductStageVariantId, ProductStageV
       motion('03 / CONTROL', 'KEEP HUMANS\nON THE GATES', 'High-impact actions remain behind approval, validation and audit controls instead of disappearing into invisible automation.', '#8f62ff', '#d7c1ff', -7, 164, -5, 1.12, 0.48, 1, 'GO', 'APPROVAL REQUIRED', [96, 86, 74], ['APPROVAL', 'VALIDATE', 'AUDIT']),
       motion('04 / RESILIENCE', 'BUILD FOR\nFAILURE AND RECOVERY', 'Retries, fallback routes, logs and alerts turn fragile workflows into observable operational infrastructure.', '#27d6a1', '#a9ffe5', 11, 258, 3, 0.98, 0.18, 0.34, '99.9%', 'TARGET UPTIME', [100, 95, 90], ['RETRY', 'FALLBACK', 'ALERTS']),
       motion('05 / SCALE', 'RUN THE\nOPERATION AS CODE', 'The completed system can be reused, versioned and expanded without rebuilding the business process from zero.', '#ff4f40', '#ffd2a8', -4, 360, 0, 1.08, 0, 0.12, 'LIVE', 'OPS SYSTEM READY', [100, 100, 100], ['REUSE', 'VERSION', 'SCALE']),
+    ],
+  },
+  // Für `layoutMode="sticky-story"` gedacht: das Visual bleibt links stehen,
+  // die fünf Kapitel scrollen rechts als echter DOM-Content vorbei. Die
+  // authored Rotationen sind bewusst winzig — die Tafel soll lesbar bleiben,
+  // nicht kippen.
+  'nox-scroll-story': {
+    id: 'nox-scroll-story',
+    shortLabel: 'SCROLL STORY',
+    productName: 'NOX REVENUE OPERATING SYSTEM',
+    stageLabel: 'SIGNAL TO COMMAND',
+    agentReference: 'motion:scroll-pinned-product-stage@nox-scroll-story',
+    ctaLabel: 'SYSTEM BESPRECHEN',
+    meterLabels: ['SIGNAL', 'STRUKTUR', 'FREIGABE'],
+    fragments: [
+      { x: -1, y: -0.72, z: 46, r: -16, label: 'WEBSITE' },
+      { x: 0.92, y: -0.64, z: 34, r: 13, label: 'GOOGLE' },
+      { x: -1.04, y: 0.62, z: 24, r: 10, label: 'CONTENT' },
+      { x: 1.02, y: 0.7, z: 52, r: -12, label: 'FORMULAR' },
+    ],
+    sections: [
+      motion('01 / SIGNAL CAPTURE', 'CAPTURE THE\nREAL SIGNAL', 'Website, Google, Content und Formulare laufen als verwertbare Nachfrage-Signale an einer Stelle zusammen.', '#cf5264', '#f0b9c2', -2, -3, 0, 1, .82, .1, 'EINGANG', 'SIGNAL INPUT ACTIVE', [30, 14, 8], ['RADAR', 'INPUTS', 'SIGNALS']),
+      motion('02 / QUALIFICATION', 'QUALIFY THE\nRIGHT OPPORTUNITY', 'Fit, Bedarf und Dringlichkeit werden strukturiert bewertet. Die nächste sinnvolle Bearbeitung wird sichtbar.', '#c99a61', '#f1d49a', -1, -1, 0, 1, .8, .18, 'SCORE', 'QUALIFICATION READY', [72, 48, 22], ['SCORE', 'FUNNEL', 'FIT']),
+      motion('03 / PITCH MUTATION', 'MUTATE THE\nOFFER', 'Messaging, Proof und Angebot verändern sich mit Branche, Kontext und Entscheidungslage – statt als statischer Standardpitch.', '#9a78d7', '#d6cbff', 0, 1, 0, 1, .84, .26, 'MUTATION', 'OFFER MODULES ALIGNED', [88, 74, 40], ['KONTEXT', 'PROOF', 'ANGEBOT']),
+      motion('04 / AGENT FOLLOW-UP', 'PREPARE THE\nNEXT ACTION', 'Agenten bereiten Follow-ups, Anreicherung und nächste Aufgaben vor. Versendet wird erst nach deiner Freigabe.', '#58ad91', '#b7f8df', 1, 3, 0, 1, .82, .2, 'QUEUED', 'ACTION QUEUE PREPARED', [96, 88, 62], ['AUFGABE', 'TIMING', 'ENTWURF']),
+      motion('05 / OPERATOR COMMAND', 'KEEP THE\nFINAL CONTROL', 'Das System schlägt vor und bereitet vor. Über Freigaben, Outreach und nächste Aktionen entscheidest weiterhin du.', '#d95d4d', '#ffd0a1', 2, 5, 0, 1, .8, .12, 'READY', 'OPERATOR CONTROL ACTIVE', [100, 100, 100], ['VORSCHLAG', 'PRÜFUNG', 'FREIGABE']),
     ],
   },
 };

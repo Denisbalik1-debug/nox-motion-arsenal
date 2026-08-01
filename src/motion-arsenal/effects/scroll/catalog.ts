@@ -36,6 +36,7 @@ export const SCROLL_CATALOG: EffectEntry[] = [
           options: [
             'nox-floating-card-os',
             'nox-revenue-os',
+            'nox-scroll-story',
             'nox-global-sales-os',
             'project-x-command-center',
             'ai-growth-engine',
@@ -44,6 +45,19 @@ export const SCROLL_CATALOG: EffectEntry[] = [
           ],
           group: 'Content',
         },
+
+        { key: 'layoutMode', label: 'Layout Mode', type: 'select', default: 'pinned-stage', options: ['pinned-stage', 'sticky-story'], group: 'Sticky Story' },
+        { key: 'chapterHeight', label: 'Story Chapter Height (vh)', type: 'range', default: 68, min: 45, max: 100, step: 1, group: 'Sticky Story' },
+        { key: 'stickyOffset', label: 'Sticky Offset (vh)', type: 'range', default: 0, min: 0, max: 20, step: 1, group: 'Sticky Story' },
+        { key: 'activeThreshold', label: 'Active Threshold', type: 'range', default: 0.42, min: 0.2, max: 0.8, step: 0.01, group: 'Sticky Story' },
+        // panelTilt ist im Code ein Tupel; die Oberfläche steuert beide Achsen
+        // einzeln und bleibt damit im serialisierbaren Control-Schema.
+        { key: 'panelTiltX', label: 'Panel Tilt X (°)', type: 'range', default: 4, min: 0, max: 6, step: 1, group: 'Sticky Story' },
+        { key: 'panelTiltY', label: 'Panel Tilt Y (°)', type: 'range', default: -6, min: -14, max: 14, step: 1, group: 'Sticky Story' },
+        { key: 'panelDepth', label: 'Panel Depth (px)', type: 'range', default: -30, min: -80, max: 0, step: 5, group: 'Sticky Story' },
+        { key: 'contentTransition', label: 'Content Transition (ms)', type: 'range', default: 160, min: 100, max: 180, step: 10, group: 'Sticky Story' },
+        { key: 'textReveal', label: 'Text Reveal', type: 'select', default: 'blur-rise', options: ['blur-rise', 'fade', 'none'], group: 'Sticky Story' },
+        { key: 'mobileStack', label: 'Mobile Stack', type: 'boolean', default: true, group: 'Sticky Story' },
         { key: 'showVariantSwitcher', label: 'Show Variant Switcher', type: 'boolean', default: true, group: 'Content' },
         { key: 'chrome', label: 'Chrome', type: 'select', default: 'demo', options: ['demo', 'minimal'], group: 'Content' },
         { key: 'stage', label: 'Fixed Stage (-1 = Scroll)', type: 'range', default: -1, min: -1, max: 4, step: 1, group: 'Content' },

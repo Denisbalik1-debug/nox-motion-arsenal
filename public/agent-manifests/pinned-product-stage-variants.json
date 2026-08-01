@@ -105,6 +105,27 @@
         "operations transformation"
       ],
       "jsx": "<PinnedProductStageCoreSystem variant=\"automation-ops-system\" showVariantSwitcher={false} />"
+    },
+    {
+      "id": "nox-scroll-story",
+      "label": "NOX SCROLL STORY",
+      "coreArtifact": "Eine grosse Revenue-Tafel, die stehen bleibt, waehrend fuenf Kapitel an ihr vorbeiscrollen.",
+      "reference": "motion:scroll-pinned-product-stage@nox-scroll-story",
+      "layoutMode": "sticky-story",
+      "rotationMode": "n/a - sticky-story dreht nicht, es kippt nur dezent (panelTilt)",
+      "bestFor": [
+        "noxlabs.net Revenue-Sektion",
+        "lange Erklaerstrecken ohne Scroll-Sperre"
+      ],
+      "jsx": "<PinnedProductStageCoreSystem variant=\"nox-scroll-story\" layoutMode=\"sticky-story\" chapterHeight={68} stickyOffset={0} activeThreshold={0.42} panelDepth={-30} contentTransition={160} textReveal=\"blur-rise\" mobileStack showVariantSwitcher={false} />",
+      "chapters": [
+        "01 SIGNAL CAPTURE",
+        "02 QUALIFICATION",
+        "03 PITCH MUTATION",
+        "04 AGENT FOLLOW-UP",
+        "05 OPERATOR COMMAND"
+      ],
+      "honesty": "System states only; no fabricated outcome claims."
     }
   ],
   "scrollDrivers": {
@@ -114,5 +135,9 @@
   "rotationModes": {
     "free-spin": "Default. rotateY waechst monoton: progress x rotationTurns x 360. Richtig fuer abstrakte Kernobjekte, falsch fuer lesbare Tafeln — ab einer Vierteldrehung laeuft die Flaeche durch 90 Grad (Kante) und 180 Grad (Rueckseite).",
     "depth-flip": "Beschraenkte Choreografie fuer lesbare Tafeln: pro Kapitel dreht das Objekt 0 -> readableAngle -> 0 zurueck und weicht dabei in die Tiefe. Zusaetzlich driftet die Buehne nur stackDrift ueber die gesamte Sektion. Der Winkel bleibt damit unter der 90-Grad-Kante, Rueckseiten werden nie sichtbar. Auf noxlabs.net der Modus fuer die Revenue-Sektion."
+  },
+  "layoutModes": {
+    "pinned-stage": "Default. Eine gepinnte Buehne; der Text wird an Ort und Stelle ausgetauscht. Fuer kurze, gefuehrte Produktdemos.",
+    "sticky-story": "Das Visual klebt links (position:sticky), die fuenf Kapitel scrollen rechts als echter DOM-Content vorbei. Kein Scroll-Gefaengnis, kein Textaustausch am selben Platz, die Seite laeuft danach normal weiter. Auf noxlabs.net der Modus fuer die Revenue-Sektion."
   }
 }
