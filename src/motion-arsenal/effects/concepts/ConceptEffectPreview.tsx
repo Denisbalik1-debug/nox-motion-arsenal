@@ -1,13 +1,67 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export function ConceptEffectPreview({ name, tone }: { name: string; tone: number }) {
-  const accent = ['#d4a24a', '#c95a4d', '#8e9cff', '#63c4aa'][tone % 4];
-  return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#08090d' }}>
-      <div style={{ position: 'absolute', inset: 0, opacity: .26, backgroundImage: 'linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px)', backgroundSize: '22px 22px' }} />
-      <div style={{ position: 'absolute', width: '78%', aspectRatio: '1', border: `1px solid ${accent}99`, borderRadius: tone % 2 ? '12%' : '50%', left: '11%', top: '10%', transform: `rotate(${tone * 11}deg)`, boxShadow: `0 0 46px ${accent}2d` }} />
-      <div style={{ position: 'absolute', width: '42%', height: '12%', background: `linear-gradient(90deg, transparent, ${accent}, transparent)`, left: '29%', top: `${24 + (tone % 4) * 12}%`, filter: 'blur(1px)' }} />
-      <div style={{ position: 'absolute', left: 12, bottom: 10, right: 12, color: '#d7cebf', fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '.12em' }}>CONCEPT DECK / {name.toUpperCase()}</div>
-    </div>
-  );
+type PreviewProps = { kind: string; name: string; tone: number };
+
+const accents = ['#d9a542', '#df6556', '#8998ff', '#59c7ae'];
+const characters = 'NOX01/<>+*';
+
+function Frame({ children, accent, label }: { children: React.ReactNode; accent: string; label: string }) {
+  return <div className="nox-concept-frame" style={{ '--accent': accent } as React.CSSProperties}>
+    <style>{`.nox-concept-frame{position:relative;width:100%;height:100%;overflow:hidden;background:#08090d;color:#f5f0e9;font-family:var(--mono,monospace)}.nox-concept-frame *{box-sizing:border-box}.nox-concept-label{position:absolute;left:12px;bottom:9px;z-index:4;font-size:9px;letter-spacing:.12em;color:#e6ded2;opacity:.88}@keyframes nox-float{50%{transform:translate3d(8px,-10px,0) scale(1.06)}}@keyframes nox-shimmer{to{background-position:200% center}}@keyframes nox-slide{to{transform:translateX(-50%)}}@keyframes nox-dash{to{stroke-dashoffset:-180}}@keyframes nox-drop{to{transform:translateY(190px)}}@keyframes nox-blind{50%{transform:scaleY(.15);opacity:.25}}@keyframes nox-orbit{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.nox-concept-frame *{animation:none!important;transition:none!important}}`}</style>
+    {children}<span className="nox-concept-label">LIVE PROTOTYPE / {label.toUpperCase()}</span>
+  </div>;
+}
+
+function GlyphRain() {
+  return <div style={{ display: 'flex', justifyContent: 'space-around', height: '100%', overflow: 'hidden', color: '#6df0bd', opacity: .8 }}>
+    {Array.from({ length: 13 }, (_, column) => <span key={column} style={{ writingMode: 'vertical-rl', fontSize: 14, letterSpacing: 5, animation: `nox-drop ${2.4 + (column % 4) * .45}s linear ${-column * .28}s infinite` }}>{characters.slice(column % 5) + characters.slice(0, column % 5)}</span>)}
+  </div>;
+}
+
+function Heatmap() {
+  return <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10,1fr)', gap: 3, padding: '13% 10%', height: '100%' }}>{Array.from({ length: 60 }, (_, i) => <i key={i} style={{ background: `rgba(217,165,66,${.12 + ((i * 17) % 10) / 12})`, aspectRatio: '1', border: '1px solid rgba(255,255,255,.04)' }} />)}</div>;
+}
+
+export function ConceptEffectPreview({ kind, name, tone }: PreviewProps) {
+  const accent = accents[tone % accents.length];
+  const [active, setActive] = useState(false);
+  const [pointer, setPointer] = useState({ x: 50, y: 50 });
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    setPointer({ x: ((event.clientX - box.left) / box.width) * 100, y: ((event.clientY - box.top) / box.height) * 100 });
+  };
+  const wrapper = (children: React.ReactNode) => <Frame accent={accent} label={name}>{children}</Frame>;
+
+  switch (kind) {
+    case 'bayer-dither-dissolve': return wrapper(<div style={{ height: '100%', background: `radial-gradient(circle at 50% 45%,${accent} 0 2px,transparent 3px) 0 0/10px 10px`, maskImage: 'linear-gradient(90deg,transparent,black 30% 70%,transparent)', animation: 'nox-shimmer 2.7s linear infinite', backgroundSize: '10px 10px, 200% 100%' }} />);
+    case 'inverse-glow-cursor': return wrapper(<div onPointerMove={onPointerMove} style={{ height: '100%', cursor: 'crosshair', background: `radial-gradient(circle at ${pointer.x}% ${pointer.y}%,#fff 0 2%,${accent}aa 5%,transparent 22%), linear-gradient(125deg,#0a0b0e,#191019)` }}><i style={{ position: 'absolute', left: `${pointer.x}%`, top: `${pointer.y}%`, width: 44, height: 44, border: `1px solid ${accent}`, borderRadius: '50%', transform: 'translate(-50%,-50%)', mixBlendMode: 'screen' }} /></div>);
+    case 'lenticular-tilt': return wrapper(<div onPointerMove={onPointerMove} style={{ height: '100%', perspective: 500, display: 'grid', placeItems: 'center' }}><div style={{ width: '62%', height: '64%', transform: `rotateX(${(pointer.y - 50) / -7}deg) rotateY(${(pointer.x - 50) / 7}deg)`, transition: 'transform .15s', background: `repeating-linear-gradient(90deg,${accent} 0 2px,#10121c 2px 6px),linear-gradient(135deg,#3c4270,#101116)`, boxShadow: `0 0 35px ${accent}55` }} /></div>);
+    case 'elastic-lag-grid': return wrapper(<div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 7, padding: '13%', height: '100%' }}>{Array.from({ length: 20 }, (_, i) => <i key={i} style={{ background: `${accent}${i % 3 === 0 ? 'cc' : '44'}`, aspectRatio: '1', animation: `nox-float ${1.6 + (i % 4) * .22}s ease-in-out ${-i * .08}s infinite` }} />)}</div>);
+    case 'glyph-matrix-rain': return wrapper(<GlyphRain />);
+    case 'kinetic-twist-typo': return wrapper(<div style={{ height: '100%', display: 'grid', placeItems: 'center', fontSize: 'clamp(34px,8vw,74px)', fontWeight: 900, letterSpacing: '-.12em', color: accent, transform: 'rotate(-8deg)' }}>NOX<span style={{ display: 'inline-block', animation: 'nox-orbit 4s linear infinite' }}>O</span></div>);
+    case 'path-follow-hero-scroll': return wrapper(<svg viewBox="0 0 600 260" style={{ width: '100%', height: '100%' }}><path d="M0 205 C135 20 250 260 600 55" fill="none" stroke={`${accent}88`} strokeWidth="2"/><circle r="10" fill={accent}><animateMotion dur="3s" repeatCount="indefinite" path="M0 205 C135 20 250 260 600 55" /></circle></svg>);
+    case 'progressive-blur-stack': return wrapper(<div style={{ position: 'relative', height: '100%' }}>{[0, 1, 2].map(i => <div key={i} style={{ position: 'absolute', width: '55%', height: '38%', left: `${18 + i * 7}%`, top: `${17 + i * 12}%`, background: `${accent}${i === 2 ? 'dd' : '55'}`, border: '1px solid #ffffff33', backdropFilter: `blur(${i * 3}px)`, transform: `rotate(${i * 4 - 4}deg)`, opacity: .55 + i * .2 }} />)}</div>);
+    case 'magnetic-field-cards': return wrapper(<div onPointerMove={onPointerMove} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, height: '100%' }}>{[0, 1, 2].map(i => <div key={i} style={{ width: '19%', height: '45%', border: `1px solid ${accent}99`, background: '#13141b', transform: `translate(${(pointer.x - 50) * (i - 1) / 14}px,${(pointer.y - 50) * (i - 1) / 16}px) rotate(${(i - 1) * 8}deg)`, transition: 'transform .12s' }} />)}</div>);
+    case 'scroll-synced-typo-background': return wrapper(<div style={{ height: '100%', overflow: 'hidden', display: 'grid', placeItems: 'center' }}><strong style={{ fontSize: 'clamp(70px,17vw,160px)', color: `${accent}22`, letterSpacing: '-.12em', animation: 'nox-float 4s ease-in-out infinite' }}>SCROLL</strong></div>);
+    case 'aurora-borealis-background': return wrapper(<div style={{ height: '100%', background: `radial-gradient(circle at 25% 70%,${accent}88,transparent 35%),radial-gradient(circle at 75% 30%,#5e79ee88,transparent 38%),#071014`, filter: 'saturate(1.2)' }}><i style={{ position: 'absolute', inset: '18%', borderRadius: '50%', background: `${accent}44`, filter: 'blur(30px)', animation: 'nox-float 5s ease-in-out infinite' }} /></div>);
+    case 'scroll-driven-css-reveal': return wrapper(<div style={{ height: '100%', display: 'grid', alignContent: 'center', gap: 9, padding: '0 16%' }}>{[.95,.7,.85,.5].map((w,i) => <i key={i} style={{ display: 'block', width: `${w*100}%`, height: 17, background: accent, transformOrigin: 'left', animation: `nox-blind 2.4s ease-in-out ${i*.14}s infinite` }} />)}</div>);
+    case 'lenticular-scroll-image': return wrapper(<div style={{ height: '100%', background: `repeating-linear-gradient(90deg,transparent 0 4px,${accent}88 4px 7px),linear-gradient(135deg,#252a47,#111)`, backgroundSize: 'auto,180% 180%', animation: 'nox-shimmer 3s linear infinite' }} />);
+    case 'backdrop-blur-grain-overlay': return wrapper(<div onClick={() => setActive(!active)} style={{ height: '100%', display: 'grid', placeItems: 'center', background: `linear-gradient(135deg,${accent}44,transparent 50%),repeating-radial-gradient(#fff1 0 1px,transparent 1px 4px)` }}><div style={{ width: '58%', height: '42%', border: `1px solid ${accent}`, background: active ? '#ffffff2a' : '#111a', backdropFilter: 'blur(12px)', transition: 'all .3s' }}> </div></div>);
+    case 'view-transition-api-cross-fade': return wrapper(<div onClick={() => setActive(!active)} style={{ height: '100%', display: 'grid', placeItems: 'center', cursor: 'pointer', background: active ? `${accent}cc` : '#12131c', transition: 'background .45s' }}><b style={{ fontSize: 25, opacity: active ? 1 : .45, transition: 'opacity .45s' }}>{active ? 'NEXT VIEW' : 'CURRENT VIEW'}</b></div>);
+    case 'gsap-flip-gallery-morph': return wrapper(<div onClick={() => setActive(!active)} style={{ height: '100%', padding: 18, display: 'grid', gridTemplateColumns: active ? '1fr' : 'repeat(3,1fr)', gap: 7, cursor: 'pointer', transition: 'grid-template-columns .4s' }}>{[0,1,2,3,4,5].map(i => <i key={i} style={{ background: i === 0 ? accent : '#1a1b25', minHeight: 26, gridColumn: active && i === 0 ? '1 / -1' : undefined, gridRow: active && i === 0 ? '1 / span 2' : undefined, transition: 'all .4s' }} />)}</div>);
+    case 'holographic-type-effect': return wrapper(<div style={{ height: '100%', display: 'grid', placeItems: 'center' }}><b style={{ fontSize: 'clamp(32px,9vw,82px)', background: `linear-gradient(100deg,${accent},#fff,#7b8cff,${accent})`, backgroundSize: '200% auto', WebkitBackgroundClip: 'text', color: 'transparent', animation: 'nox-shimmer 2.4s linear infinite' }}>HOLO</b></div>);
+    case 'dithered-data-heatmap': return wrapper(<Heatmap />);
+    case 'infinite-parallax-loop': return wrapper(<div style={{ whiteSpace: 'nowrap', paddingTop: '34%', overflow: 'hidden', color: accent, fontSize: 32, fontWeight: 800 }}><span style={{ display: 'inline-block', animation: 'nox-slide 7s linear infinite' }}>NOX / SIGNAL / MOTION / NOX / SIGNAL / MOTION / NOX / SIGNAL / MOTION / </span></div>);
+    case 'grid-blind-mask-reveal': return wrapper(<div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', height: '100%' }}>{Array.from({ length: 32 }, (_,i) => <i key={i} style={{ background: i % 3 ? '#171822' : accent, animation: `nox-blind 1.8s ease-in-out ${i*.04}s infinite` }} />)}</div>);
+    case 'polaroid-stack-scroll': return wrapper(<div style={{ height: '100%', position: 'relative' }}>{[0,1,2,3].map(i => <i key={i} style={{ position:'absolute', width:'35%', height:'55%', left:`${24+i*8}%`, top:`${18+i*4}%`, background:'#eee', border:'7px solid #eee', boxShadow:'0 8px 22px #0008', transform:`rotate(${i*8-12}deg)`, animation:`nox-float ${2.6+i*.2}s ease-in-out ${-i*.2}s infinite` }} />)}</div>);
+    case 'horizontal-pin-gallery': return wrapper(<div style={{ display:'flex', gap:10, width:'180%', height:'100%', padding:'16% 0', animation:'nox-slide 5s ease-in-out infinite alternate' }}>{[0,1,2,3].map(i => <i key={i} style={{ flex:'0 0 25%', background:i%2?accent:'#25263a', border:`1px solid ${accent}88` }} />)}</div>);
+    case 'layered-zoom-dolly': return wrapper(<div style={{ height:'100%', display:'grid', placeItems:'center', perspective:500 }}>{[0,1,2].map(i => <i key={i} style={{ position:'absolute', width:`${72-i*16}%`, height:`${72-i*16}%`, border:`1px solid ${accent}`, transform:`translateZ(${i*30}px)`, animation:`nox-float ${2.8-i*.35}s ease-in-out infinite`, opacity:.35+i*.25 }} />)}</div>);
+    case 'svg-metric-graph-draw': return wrapper(<svg viewBox="0 0 600 260" style={{ width:'100%',height:'100%' }}><path d="M20 215 L110 165 L190 187 L270 78 L365 125 L470 47 L580 83" fill="none" stroke={accent} strokeWidth="5" strokeDasharray="18 10" style={{ animation:'nox-dash 3s linear infinite' }}/><path d="M20 215 L110 165 L190 187 L270 78 L365 125 L470 47 L580 83" fill="none" stroke="#fff" strokeWidth="1" opacity=".45"/></svg>);
+    case 'tumbler-vault-otp': return wrapper(<div onClick={() => setActive(!active)} style={{ height:'100%',display:'flex',justifyContent:'center',alignItems:'center',gap:8,cursor:'pointer' }}>{[1,7,4,9].map((digit,i) => <b key={i} style={{ width:42,height:56,display:'grid',placeItems:'center',border:`1px solid ${accent}`,fontSize:26,background:'#12131a',transform: active ? `translateY(${i%2?-4:4}px)` : 'none',transition:'transform .25s' }}>{(digit+(active?1:0))%10}</b>)}</div>);
+    case 'peel-reveal-modal': return wrapper(<div onClick={() => setActive(!active)} style={{ height:'100%', display:'grid', placeItems:'center', cursor:'pointer', background:'#171825' }}><b style={{ padding:'12px 18px', background:accent, color:'#12100c', opacity:active?1:.25, transition:'opacity .35s' }}>{active?'REVEALED':'PEEL'}</b><i style={{ position:'absolute', right:0, top:0, borderTop:`70px solid ${accent}`, borderLeft:'70px solid transparent', transform:active?'rotate(90deg)':'none', transformOrigin:'top right', transition:'transform .4s' }} /></div>);
+    case 'canvas-line-typography': return wrapper(<svg viewBox="0 0 600 260" style={{width:'100%',height:'100%'}}><text x="55" y="155" fill="none" stroke={accent} strokeWidth="1.6" fontSize="115" fontWeight="800" letterSpacing="-10">NOX</text>{Array.from({length:9},(_,i)=><path key={i} d={`M20 ${42+i*21} C180 ${22+i*18} 390 ${248-i*15} 590 ${100+i*9}`} stroke={`${accent}55`} fill="none" />)}</svg>);
+    case 'squiggly-distortion-text': return wrapper(<svg viewBox="0 0 600 260" style={{width:'100%',height:'100%'}}><defs><filter id="nox-squiggle"><feTurbulence baseFrequency=".012 .09" numOctaves="2" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="12" /></filter></defs><text x="42" y="155" filter="url(#nox-squiggle)" fill={accent} fontSize="88" fontWeight="800">SQUIGGLY</text></svg>);
+    case 'dotted-world-map-connect': return wrapper(<svg viewBox="0 0 600 260" style={{width:'100%',height:'100%'}}><g fill={accent}>{Array.from({length:95},(_,i)=><circle key={i} cx={55+(i*47)%500} cy={45+(i*73)%165} r={i%5?2:3.5} opacity={.35+(i%4)*.15}/>)}</g><path d="M90 155 Q250 25 430 110 T545 65" fill="none" stroke="#fff" strokeWidth="1.5" strokeDasharray="7 8" style={{animation:'nox-dash 4s linear infinite'}}/></svg>);
+    default: return wrapper(<div style={{ height:'100%', display:'grid', placeItems:'center', color:accent }}>Prototype</div>);
+  }
 }
