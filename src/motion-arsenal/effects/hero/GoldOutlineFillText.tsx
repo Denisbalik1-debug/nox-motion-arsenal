@@ -8,13 +8,23 @@ import { NOX_COLORS } from '../../lib/motionPresets';
 // und füllt sich mit einem Gold-Gradienten (background-clip: text) — wie eine
 // Gravur, die nachgeschmiedet wird. Trigger: scroll / hover / click / none.
 // Optionaler Shimmer-Sweep über die fertige Fläche. CSS-only, kein Canvas.
+//
+// Verhalten:
+// - fillOn='scroll': Latch — einmal sichtbar → dauerhaft gefüllt (kein
+//   Zurückspringen beim Rausscrollen, keine zweite Entrance-Sequenz).
+// - fillOn='hover': Pointer-Events (pointerenter/pointerleave) — deckt Maus
+//   UND Touch-Tap ab (auf Touch-Geräten füllt das Antippen).
+// - fillOn='click': Toggle mit Keyboard-Support (role="button", tabIndex=0,
+//   Enter/Space, aria-pressed) — nicht ausschließlich Maus-bedienbar.
+// - Reduced Motion: sofort gefüllt, KEINE Transition, KEIN Shimmer, keine
+//   Endlosanimation (JS-Klassen-Logik + @media (prefers-reduced-motion:reduce)).
 // ---------------------------------------------------------------------------
 
 export interface GoldOutlineFillTextProps {
   text?: string;
   /** Konturbreite in px. */
   strokeWidth?: number;
-  /** Füll-Trigger: 'scroll' (in-view) | 'hover' | 'click' | 'none'. */
+  /** Füll-Trigger: 'scroll' (in-view, gelatcht) | 'hover' (Pointer) | 'click' (Toggle) | 'none'. */
   fillOn?: 'scroll' | 'hover' | 'click' | 'none';
   /** Shimmer-Sweep über die gefüllte Fläche. */
   shimmer?: boolean;
@@ -50,30 +60,49 @@ export function GoldOutlineFillText({
   const inView = useInView(rootRef, '80px');
   const [clicked, setClicked] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const [touched, setTouched] = useState(false);
+  const [scrollLatched, setScrollLatched] = useState(false);
+  const latchRef = useRef(false);
 
   const sp = Math.max(0.2, Math.min(3, speed));
   const safeText = typeof text === 'string' && text ? text : 'FORGED';
   const safeAlign = ['left', 'center', 'right'].includes(align) ? align : 'center';
 
-  // Scroll-Trigger: einmalig füllen, sobald im Viewport.
-  const scrollFilled = fillOn === 'scroll' && inView;
+  // Scroll-Trigger mit Latch: einmal sichtbar → dauerhaft gefüllt.
+  // Der Latch (nicht inView selbst) hält den gefüllten Zustand nach dem
+  // Rausscrollen; die Entrance-Transition läuft dadurch genau einmal.
+  useEffect(() => {
+    if (fillOn === 'scroll' && inView && !latchRef.current) {
+      latchRef.current = true;
+      setScrollLatched(true);
+    }
+  }, [inView, fillOn]);
+
+  const scrollFilled = fillOn === 'scroll' && (inView || scrollLatched);
   const hoverFilled = fillOn === 'hover' && hovered;
   const clickFilled = fillOn === 'click' && clicked;
   const filled = reduced || fillOn === 'none' || scrollFilled || hoverFilled || clickFilled;
 
-  // Hover-Tracking (auch Touch-Tap als Fallback).
-  const onMouseEnter = () => setHovered(true);
-  const onMouseLeave = () => setHovered(false);
+  // Pointer-Events statt Mouse-Events: decken Maus, Touch-Tap und Stift ab.
+  // Auf Touch-Geräten feuert pointerenter beim Antippen → fillOn='hover'
+  // füllt dort ebenfalls. Für explizite Tap-Interaktion: fillOn='click'.
+  const onPointerEnter = () => setHovered(true);
+  const onPointerLeave = () => setHovered(false);
   const onTap = () => {
-    setTouched(true);
     if (fillOn === 'click') setClicked((c) => !c);
+  };
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (fillOn !== 'click') return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setClicked((c) => !c);
+    }
   };
 
   // Seed deterministisch in CSS-Var (wird aktuell nur für künftige Varianten genutzt).
   const seedVar = (seed % 97 + 3).toString();
 
   const Tag = as;
+  const interactive = fillOn === 'click';
 
   return (
     <div
@@ -120,6 +149,10 @@ export function GoldOutlineFillText({
           background-size: 300% 100%;
           animation: goftShimmer calc(2.6s / var(--goft-speed)) linear infinite;
         }
+        .goft-text[role="button"] { cursor: pointer; }
+        .goft-text[role="button"]:focus-visible {
+          outline: 2px solid var(--goft-color); outline-offset: 6px; border-radius: 4px;
+        }
         @keyframes goftShimmer {
           from { background-position: 200% 0; }
           to { background-position: -100% 0; }
@@ -130,13 +163,26 @@ export function GoldOutlineFillText({
         @media (hover: none) and (pointer: coarse) {
           .goft-root { touch-action: manipulation; }
         }
+        @media (prefers-reduced-motion: reduce) {
+          .goft-text, .goft-text.goft-filled { transition: none !important; }
+          .goft-text.goft-filled { background-position: 0 0; }
+          .goft-text.goft-shimmer { animation: none !important; }
+        }
       `}</style>
 
       <Tag
-        className={`goft-text${filled ? ' goft-filled' : ''}${shimmer && filled ? ' goft-shimmer' : ''}`}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
+        className={`goft-text${filled ? ' goft-filled' : ''}${shimmer && filled && !reduced ? ' goft-shimmer' : ''}`}
+        onPointerEnter={onPointerEnter}
+        onPointerLeave={onPointerLeave}
         onClick={onTap}
+        {...(interactive
+          ? {
+              role: 'button' as const,
+              tabIndex: 0,
+              onKeyDown,
+              'aria-pressed': clicked,
+            }
+          : {})}
       >
         {safeText}
       </Tag>

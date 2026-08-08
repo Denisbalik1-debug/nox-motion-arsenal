@@ -6,9 +6,12 @@ import { EASE, NOX_COLORS } from '../../lib/motionPresets';
 // GaugeNeedleSweep — NOX Data/System DNA.
 // Analoges Gold-Tachometer: SVG-Skala zeichnet sich selbst, Ticks staggern
 // deterministisch, die Nadel schwingt mit Feder-Overshoot auf den Zielwert
-// und der Zahlenwert zählt parallel hoch. Einmalige Sequenz beim In-View,
-// danach 0 Laufzeitkosten (rAF nur während des Count-ups, dann gestoppt).
-// Kein Canvas, kein WebGL.
+// und der Zahlenwert zählt parallel hoch. Einmalige Sequenz beim In-View:
+// solange der Effekt außerhalb des Viewports ist, laufen KEINE CSS-Animationen
+// (anim() liefert 'none'), erst beim In-View startet die Sequenz genau einmal
+// (startedRef wird nur im Start-Zweig gesetzt). Reduced Motion setzt sofort
+// den Endzustand ohne Animation. Danach 0 Laufzeitkosten (rAF nur während des
+// Count-ups, dann gestoppt). Kein Canvas, kein WebGL.
 // ---------------------------------------------------------------------------
 
 export interface GaugeNeedleSweepProps {
@@ -72,8 +75,11 @@ export function GaugeNeedleSweep({
   const tickCount = clamp(Math.round(ticks), 3, 31);
   const over = clamp(overshoot, 0, 1);
 
-  const startPct = sweep === 'min' ? 0 : clamp((clampedValue - safeMin) / (safeMax - safeMin), 0, 1);
-  const targetPct = (clampedValue - safeMin) / (safeMax - safeMin);
+  // min === max: Skala hat keine Spannweite → Nadel bleibt bei START_DEG,
+  // Werte bleiben endlich (keine Division durch 0).
+  const span = safeMax - safeMin === 0 ? 1 : safeMax - safeMin;
+  const startPct = sweep === 'min' ? 0 : clamp((clampedValue - safeMin) / span, 0, 1);
+  const targetPct = (clampedValue - safeMin) / span;
 
   const rnd = useMemo(() => seededRandom(seed), [seed]);
   const ticksArr = useMemo(
@@ -94,21 +100,37 @@ export function GaugeNeedleSweep({
     return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${RADIUS} ${RADIUS} 0 1 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
   }, []);
 
-  const [run, setRun] = useState(0);
+  const [started, setStarted] = useState(false);
   const [counting, setCounting] = useState(false);
-  const [display, setDisplay] = useState(startPct * (safeMax - safeMin) + safeMin);
+  const [display, setDisplay] = useState(startPct * span + safeMin);
   const startedRef = useRef(false);
 
-  // Einmalige Sequenz: beim In-View starten (reduced-motion → sofort Endzustand).
+  // Einmalige Sequenz: startet nur, wenn tatsächlich im Viewport.
+  // startedRef wird AUSSCHLIESSLICH im Start-Zweig gesetzt — mountet der
+  // Effekt below-fold, bleibt er false und die Sequenz startet beim ersten
+  // In-View. Reduced Motion setzt direkt den Endzustand (auch dann gilt der
+  // Effekt als "gestartet": keine spätere Animation mehr).
+  // Wert-Änderungen nach dem Start: Label folgt (erneuter kurzer Count-up),
+  // Nadel-Keyframes werden neu berechnet → Nadel zeigt auf den neuen Wert.
   useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
+    if (startedRef.current) {
+      if (reduced) {
+        setDisplay(clampedValue);
+        setCounting(false);
+      } else {
+        setCounting(true);
+      }
+      return;
+    }
     if (reduced) {
+      startedRef.current = true;
       setDisplay(clampedValue);
       setCounting(false);
+      setStarted(true);
     } else if (inView) {
-      setRun((r) => r + 1);
+      startedRef.current = true;
       setCounting(true);
+      setStarted(true);
     }
   }, [inView, reduced, clampedValue]);
 
@@ -133,8 +155,34 @@ export function GaugeNeedleSweep({
   const toDeg = START_DEG + targetPct * SWEEP_DEG;
   const overDeg = (toDeg - fromDeg) * 0.06 * over;
 
+  // Nadel per Web Animations API: startet beim In-View, restartet sauber bei
+  // jedem Wertwechsel nach dem Start (CSS-Animationen restarten nicht bei
+  // Keyframe-Änderung). Kein Remount — Fokus/State bleibt erhalten.
+  const needleRef = useRef<SVGGElement>(null);
+  useEffect(() => {
+    const el = needleRef.current;
+    if (!el || reduced || !started) return;
+    const sweep = el.animate(
+      [
+        { transform: `rotate(${fromDeg.toFixed(2)}deg)` },
+        { transform: `rotate(${(toDeg + overDeg).toFixed(2)}deg)`, offset: 0.72 },
+        { transform: `rotate(${toDeg.toFixed(2)}deg)` },
+      ],
+      {
+        duration: 950 / sp,
+        delay: 550 / sp,
+        easing: 'cubic-bezier(.34,1.56,.64,1)',
+        fill: 'both',
+      },
+    );
+    return () => sweep.cancel();
+  }, [started, fromDeg, toDeg, overDeg, sp, reduced]);
+
+  // Animation nur, wenn die Sequenz gestartet hat. reduced → nie animieren.
+  // !started → 'none' (Effekt hängt im Ausgangszustand, Styles unten setzen
+  // die initialen Werte). started → echte Sequenz.
   const anim = (name: string, dur: number, delay: number, ease: string = EASE.outExpo) =>
-    reduced ? undefined : `${name} ${dur.toFixed(2)}s ${ease} ${delay.toFixed(2)}s both`;
+    reduced ? undefined : started ? `${name} ${dur.toFixed(2)}s ${ease} ${delay.toFixed(2)}s both` : 'none';
 
   return (
     <div
@@ -170,11 +218,6 @@ export function GaugeNeedleSweep({
           letter-spacing: 0.26em; text-transform: uppercase; }
         @keyframes gndsDraw { to { stroke-dashoffset: 0; } }
         @keyframes gndsTickIn { to { opacity: 1; } }
-        @keyframes gndsSweep {
-          0% { transform: rotate(${fromDeg.toFixed(2)}deg); }
-          72% { transform: rotate(${(toDeg + overDeg).toFixed(2)}deg); }
-          100% { transform: rotate(${toDeg.toFixed(2)}deg); }
-        }
       `}</style>
 
       <svg
@@ -185,18 +228,18 @@ export function GaugeNeedleSweep({
       >
         {/* Hintergrund-Track */}
         <path className="gnds-track" d={arc} />
-        {/* Selbstzeichnende Skala */}
+        {/* Selbstzeichnende Skala — Ausgang: unsichtbar (offset 100), reduced: sofort gezeichnet */}
         <path
           className="gnds-scale"
           d={arc}
           pathLength={100}
           style={{
             strokeDasharray: 100,
-            strokeDashoffset: 100,
+            strokeDashoffset: reduced ? 0 : started ? undefined : 100,
             animation: anim('gndsDraw', 0.7 / sp, 0.1 / sp),
           }}
         />
-        {/* Deterministische Ticks mit Stagger */}
+        {/* Deterministische Ticks mit Stagger — Ausgang: opacity 0, reduced: sofort sichtbar */}
         {ticksArr.map((t, i) => {
           const deg = START_DEG + t.pct * SWEEP_DEG;
           const r1 = t.major ? 66 : 70;
@@ -210,18 +253,20 @@ export function GaugeNeedleSweep({
               y1={y1.toFixed(2)}
               x2={x2.toFixed(2)}
               y2={y2.toFixed(2)}
-              style={{ animation: anim('gndsTickIn', 0.25 / sp, (0.22 + i * 0.035) / sp) }}
+              style={{
+                animation: anim('gndsTickIn', 0.25 / sp, (0.22 + i * 0.035) / sp),
+                opacity: reduced ? 1 : started ? undefined : 0,
+              }}
             />
           );
         })}
-        {/* Nadel mit Overshoot */}
+        {/* Nadel mit Overshoot — Ausgang: Startposition, reduced: sofort Zielposition.
+            Nach Start übernimmt die WAAPI-Sequenz (needleRef) die Bewegung. */}
         <g
+          ref={needleRef}
           className="gnds-needle-wrap"
           style={{
-            animation: reduced
-              ? undefined
-              : `gndsSweep ${(0.95 / sp).toFixed(2)}s ${EASE.krankOvershoot} ${(0.55 / sp).toFixed(2)}s both`,
-            transform: reduced ? `rotate(${toDeg.toFixed(2)}deg)` : undefined,
+            transform: reduced || !started ? `rotate(${(reduced ? toDeg : fromDeg).toFixed(2)}deg)` : undefined,
           }}
         >
           <line className="gnds-needle" x1={CX} y1={CY} x2={CX} y2={30} />
