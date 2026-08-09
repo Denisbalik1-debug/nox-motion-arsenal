@@ -122,9 +122,31 @@ function finish() {
   const runInfo = JSON.parse(readFileSync(RUN_FILE, 'utf8'));
   const ids = runInfo.chosen.map((e) => e.id);
 
-  const changed = g(['status', '--porcelain']);
-  if (!changed) {
-    console.error('ABBRUCH: nichts geaendert. Ein Lauf ohne Verbesserung wird nicht committet.');
+  // Nur echte Effektarbeit zaehlt. Die Steuer- und Buchhaltungsdateien unter
+  // .nox/ schreibt der Lauf selbst — wuerden sie mitzaehlen, gaebe ein Lauf
+  // ohne jede Verbesserung einen leeren Commit und ginge live.
+  const changed = (g(['status', '--porcelain']) || '')
+    .split('\n')
+    .map((line) => line.slice(3).trim())
+    .filter(Boolean)
+    .filter((file) => !file.startsWith('.nox/'));
+
+  const touchedEffects = changed.filter((file) => file.startsWith('src/motion-arsenal/effects/'));
+  if (touchedEffects.length === 0) {
+    console.error('ABBRUCH: keine Aenderung unter src/motion-arsenal/effects/.');
+    console.error('Ein Lauf ohne Verbesserung wird nicht committet und nicht deployt.');
+    if (changed.length) console.error(`Geaendert waren nur: ${changed.join(', ')}`);
+    process.exit(1);
+  }
+
+  // Gegenprobe: die geaenderten Dateien muessen zu den heute gezogenen
+  // Effekten gehoeren. Sonst hat der Lauf an etwas anderem gearbeitet.
+  const expectedDirs = new Set(runInfo.chosen.map((e) => dirname(e.file)));
+  const strays = touchedEffects.filter((file) => !expectedDirs.has(dirname(file)));
+  if (strays.length && !hasFlag('allow-strays')) {
+    console.error('ABBRUCH: Aenderungen ausserhalb der heutigen Effekt-Familien:');
+    for (const file of strays) console.error(`  ${file}`);
+    console.error('Mit --allow-strays bewusst zulassen.');
     process.exit(1);
   }
 
