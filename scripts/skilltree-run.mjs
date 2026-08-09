@@ -125,9 +125,14 @@ function finish() {
   // Nur echte Effektarbeit zaehlt. Die Steuer- und Buchhaltungsdateien unter
   // .nox/ schreibt der Lauf selbst — wuerden sie mitzaehlen, gaebe ein Lauf
   // ohne jede Verbesserung einen leeren Commit und ginge live.
-  const changed = (g(['status', '--porcelain']) || '')
-    .split('\n')
-    .map((line) => line.slice(3).trim())
+  // Reine Pfade statt `status --porcelain`: dessen Statuspraefix ist zwei
+  // Zeichen breit und die erste Zeile verliert ihr fuehrendes Leerzeichen,
+  // sobald die Ausgabe getrimmt wird — das schnitt Pfade an.
+  const changed = [
+    ...(g(['diff', '--name-only', 'HEAD']) || '').split('\n'),
+    ...(g(['ls-files', '--others', '--exclude-standard']) || '').split('\n'),
+  ]
+    .map((file) => file.trim())
     .filter(Boolean)
     .filter((file) => !file.startsWith('.nox/'));
 
