@@ -429,7 +429,7 @@ export const BACKGROUNDS_CATALOG: EffectEntry[] = [
       sourceWebsite: 'nox-original',
       sourceFiles: [
         'Technique reference: https://codepen.io/HejChristian/pen/YPzLbYX',
-        'HolographicMaskShader.tsx (exact scroll shader structure and author-hosted base/mask assets)',
+        'HolographicMaskShader.tsx (exact scroll shader structure; base/mask assets self-hosted under public/effects/holographic/)',
       ],
       mode: 'nox-adapted',
       complexity: 'low',
@@ -462,7 +462,7 @@ export const BACKGROUNDS_CATALOG: EffectEntry[] = [
         'Die Shader-Struktur und die extern gehosteten Assets des Autors bleiben unveraendert.',
       ],
       updatedAt: '2026-08-02T20:00:00.000Z',
-      productionSafe: false,
+      productionSafe: true,
       status: 'experimental',
       fullBleed: true,
     },

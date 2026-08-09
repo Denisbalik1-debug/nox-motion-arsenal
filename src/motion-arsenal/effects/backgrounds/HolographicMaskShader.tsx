@@ -73,7 +73,7 @@ export default function HolographicMaskShader({
       <div className="shader">
         <img
           className="holo-base"
-          src="https://assets.codepen.io/2153413/sparrow-base.png"
+          src="/effects/holographic/sparrow-base.png"
           alt="Silhouette design of a sparrow sitting on a branch"
         />
         <div
@@ -82,7 +82,7 @@ export default function HolographicMaskShader({
         >
           <img
             className="shader-layer mask"
-            src="https://assets.codepen.io/2153413/sparrow-mask.png"
+            src="/effects/holographic/sparrow-mask.png"
             alt=""
             aria-hidden="true"
           />
