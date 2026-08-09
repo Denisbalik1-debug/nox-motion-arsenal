@@ -36,31 +36,38 @@ const entries = [
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-export const CONCEPTS_CATALOG: EffectEntry[] = entries.map(([name, description, technicalBasis], tone) => ({
-  meta: {
-    id: `concept-${slug(name)}`,
-    name: name.replace(/[^A-Za-z0-9]/g, ''),
-    displayName: name,
-    category: 'concepts',
-    sourceWebsite: 'nox-original',
-    sourceFiles: [`NOX-Arsenal_Neue-Effekte_2026-08-01-02.zip / Effekte/${name}.md`],
-    mode: 'nox-concept',
-    complexity: technicalBasis.includes('WebGL') || technicalBasis.includes('GSAP') ? 'high' : 'medium',
-    dependencies: [],
-    bestFor: ['Experimentelle Motion- und Interaktionsprototypen'],
-    performanceNotes: 'Interaktive Prototyp-Preview: Produktions-Performance noch nicht validiert.',
-    mobileNotes: 'Mobile-Verhalten vor Produktion separat verifizieren.',
-    reducedMotionNotes: 'Statische, vollständig lesbare Endansicht ist vorgesehen.',
-    description,
-    technicalBasis,
-    importPath: '@/motion-arsenal/effects/concepts',
-    usageJsx: `<${name.replace(/[^A-Za-z0-9]/g, '')} />`,
-    props: [],
-    updatedAt: '2026-08-02T10:09:00.000Z',
-    improvementStatus: 'needs-review',
-    improvementVersion: '0.1.0',
-    productionSafe: false,
-    status: 'experimental',
-  },
-  Component: () => <ConceptEffectPreview kind={slug(name)} name={name} tone={tone} />,
-}));
+/** Provenance for concepts intentionally removed from the visible gallery after consolidation. */
+export const CONSOLIDATED_CONCEPTS: Partial<Record<(typeof entries)[number][0], string>> = {
+  'Magnetic Field Cards': 'cursor-magnetic-cta',
+};
+
+export const CONCEPTS_CATALOG: EffectEntry[] = entries
+  .filter(([name]) => !CONSOLIDATED_CONCEPTS[name])
+  .map(([name, description, technicalBasis], tone) => ({
+    meta: {
+      id: `concept-${slug(name)}`,
+      name: name.replace(/[^A-Za-z0-9]/g, ''),
+      displayName: name,
+      category: 'concepts',
+      sourceWebsite: 'nox-original',
+      sourceFiles: [`NOX-Arsenal_Neue-Effekte_2026-08-01-02.zip / Effekte/${name}.md`],
+      mode: 'nox-concept',
+      complexity: technicalBasis.includes('WebGL') || technicalBasis.includes('GSAP') ? 'high' : 'medium',
+      dependencies: [],
+      bestFor: ['Experimentelle Motion- und Interaktionsprototypen'],
+      performanceNotes: 'Interaktive Prototyp-Preview: Produktions-Performance noch nicht validiert.',
+      mobileNotes: 'Mobile-Verhalten vor Produktion separat verifizieren.',
+      reducedMotionNotes: 'Statische, vollständig lesbare Endansicht ist vorgesehen.',
+      description,
+      technicalBasis,
+      importPath: '@/motion-arsenal/effects/concepts',
+      usageJsx: `<${name.replace(/[^A-Za-z0-9]/g, '')} />`,
+      props: [],
+      updatedAt: '2026-08-02T10:09:00.000Z',
+      improvementStatus: 'needs-review',
+      improvementVersion: '0.1.0',
+      productionSafe: false,
+      status: 'experimental',
+    },
+    Component: () => <ConceptEffectPreview kind={slug(name)} name={name} tone={tone} />,
+  }));
