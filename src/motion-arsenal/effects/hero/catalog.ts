@@ -311,6 +311,9 @@ export const HERO_CATALOG: EffectEntry[] = [
       productionSafe: true,
     },
     Component: lazy(() => import('./AngledGoldStrike')),
+  },
+  {
+    meta: {
       id: 'hero-gold-outline-fill-text',
       name: 'GoldOutlineFillText',
       displayName: 'Gold Outline Fill Text',
