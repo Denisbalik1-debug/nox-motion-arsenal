@@ -21,3 +21,9 @@ coverage/
 !.env.example
 whats-new.html
 audit_recovery.json
+
+.vercel
+.env*
+
+# Vercel lokal (Token! nie committen)
+.env.local
