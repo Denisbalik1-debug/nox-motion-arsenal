@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "capturedAt": "2026-08-09T00:32:47.431Z",
+  "capturedAt": "2026-08-09T00:50:08.359Z",
   "note": "Oeffentlicher Vertrag jedes Effekts. Der Skilltree-Guard prueft Aenderungen dagegen. Nur bewusst und mit Begruendung neu schreiben.",
   "effects": {
     "bg-depth-glow-stack": {
@@ -211,7 +211,57 @@
       "name": "HolographicMaskShader",
       "category": "backgrounds",
       "importPath": "@/motion-arsenal/effects/backgrounds/HolographicMaskShader",
-      "props": []
+      "props": [
+        {
+          "key": "palette",
+          "type": "select",
+          "default": "spectrum",
+          "options": [
+            "spectrum",
+            "gold",
+            "ice",
+            "ember",
+            "mono"
+          ]
+        },
+        {
+          "key": "gradientAngle",
+          "type": "range",
+          "default": 0,
+          "min": 0,
+          "max": 360
+        },
+        {
+          "key": "saturation",
+          "type": "range",
+          "default": 60,
+          "min": 0,
+          "max": 100
+        },
+        {
+          "key": "lightness",
+          "type": "range",
+          "default": 55,
+          "min": 20,
+          "max": 80
+        },
+        {
+          "key": "blendMode",
+          "type": "select",
+          "default": "color-dodge",
+          "options": [
+            "color-dodge",
+            "screen",
+            "overlay",
+            "hard-light"
+          ]
+        },
+        {
+          "key": "showNote",
+          "type": "boolean",
+          "default": true
+        }
+      ]
     },
     "bg-noise-fog-field": {
       "id": "bg-noise-fog-field",
@@ -536,6 +586,53 @@
           "default": 1.1,
           "min": 0.3,
           "max": 3
+        },
+        {
+          "key": "tearDirection",
+          "type": "select",
+          "default": "horizontal",
+          "options": [
+            "horizontal",
+            "vertical",
+            "both"
+          ]
+        },
+        {
+          "key": "sliceShape",
+          "type": "select",
+          "default": "band",
+          "options": [
+            "band",
+            "wedge",
+            "block"
+          ]
+        },
+        {
+          "key": "scanline",
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "key": "splitColorA",
+          "type": "color",
+          "default": "#ff3b3b"
+        },
+        {
+          "key": "splitColorB",
+          "type": "color",
+          "default": "#39d0ff"
+        },
+        {
+          "key": "accentColor",
+          "type": "color",
+          "default": "#d4a24a"
+        },
+        {
+          "key": "seed",
+          "type": "range",
+          "default": 19,
+          "min": 1,
+          "max": 99
         }
       ]
     },
@@ -1671,7 +1768,67 @@
       "name": "NoxOrbitalStation",
       "category": "img2threejs",
       "importPath": "@/motion-arsenal/effects/img2threejs/NoxOrbitalStation",
-      "props": []
+      "props": [
+        {
+          "key": "lighting",
+          "type": "select",
+          "default": "neutral",
+          "options": [
+            "neutral",
+            "grazing",
+            "reference"
+          ]
+        },
+        {
+          "key": "exposure",
+          "type": "range",
+          "default": 1.1,
+          "min": 0.4,
+          "max": 2
+        },
+        {
+          "key": "backgroundColor",
+          "type": "color",
+          "default": "#05060a"
+        },
+        {
+          "key": "spinDirection",
+          "type": "select",
+          "default": "clockwise",
+          "options": [
+            "clockwise",
+            "counter-clockwise"
+          ]
+        },
+        {
+          "key": "spinSpeed",
+          "type": "range",
+          "default": 0.6,
+          "min": 0,
+          "max": 3
+        },
+        {
+          "key": "azimuth",
+          "type": "range",
+          "default": 12,
+          "min": -180,
+          "max": 180
+        },
+        {
+          "key": "elevation",
+          "type": "range",
+          "default": 8,
+          "min": -60,
+          "max": 60
+        },
+        {
+          "key": "margin",
+          "type": "range",
+          "default": 1.3,
+          "min": 1,
+          "max": 2.5
+        }
+      ]
     },
     "lab-active-theory-trails": {
       "id": "lab-active-theory-trails",
@@ -7182,6 +7339,45 @@
           "default": 0.55,
           "min": 0,
           "max": 0.85
+        },
+        {
+          "key": "scanDirection",
+          "type": "select",
+          "default": "left-to-right",
+          "options": [
+            "left-to-right",
+            "right-to-left",
+            "top-to-bottom"
+          ]
+        },
+        {
+          "key": "scanSpeed",
+          "type": "range",
+          "default": 1,
+          "min": 0.3,
+          "max": 2.5
+        },
+        {
+          "key": "nodeShape",
+          "type": "select",
+          "default": "circle",
+          "options": [
+            "circle",
+            "hex",
+            "diamond"
+          ]
+        },
+        {
+          "key": "dustCount",
+          "type": "range",
+          "default": 32,
+          "min": 0,
+          "max": 64
+        },
+        {
+          "key": "shadowColor",
+          "type": "color",
+          "default": "#cb97f2"
         }
       ]
     },
