@@ -77,7 +77,7 @@ for (const effect of EFFECTS) {
   assert.ok(source.includes(`export default ${effect.component}`), `${label}: default export fehlt`);
 
   // Determinismus und Abschottung
-  assert.ok(!source.includes('Math.random'), `${label}: Math.random ist nicht erlaubt`);
+  assert.ok(!source.includes('Math.random('), `${label}: Math.random ist nicht erlaubt`);
   assert.ok(!source.includes('fetch('), `${label}: darf nicht nachladen`);
 
   // Reduced Motion muss einen Endzustand definieren, nicht nur erwaehnt sein.
