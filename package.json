@@ -32,7 +32,13 @@
     "test:visual-config": "node scripts/test-visual-config-serialization.mjs",
     "test:cosmic-depth-field": "node scripts/test-cosmic-depth-field-contract.mjs",
     "test:product-stage-share": "node scripts/test-product-stage-share-regression.mjs",
-    "test:horizon-rift": "node scripts/test-horizon-rift-contract.mjs"
+    "test:horizon-rift": "node scripts/test-horizon-rift-contract.mjs",
+    "own:check": "node scripts/own-deployment.mjs check",
+    "own:adopt": "node scripts/own-deployment.mjs adopt",
+    "skilltree": "node scripts/skilltree-run.mjs preflight",
+    "skilltree:finish": "node scripts/skilltree-run.mjs finish",
+    "skilltree:status": "node scripts/skilltree-rotation.mjs status",
+    "skilltree:guard": "node scripts/skilltree-guard.mjs verify"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",
