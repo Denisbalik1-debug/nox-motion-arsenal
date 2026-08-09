@@ -23,10 +23,42 @@
 // Website, die den Effekt heute einbindet, ihn morgen genauso. Neue Moeglich-
 // keiten liegen daneben, statt das Bestehende zu ersetzen.
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { catalogFilesIn, readEffects, workingTreeReader } from './lib/catalog-parse.mjs';
+
+// Ein Prop, das im Katalog steht, aber in der Implementierung nicht vorkommt,
+// erzeugt einen Regler ohne Wirkung. Genau das ist beim ersten Skilltree-Lauf
+// passiert: `shadowColor` war deklariert, färbte aber nur den Staub. Diese
+// Prüfung findet den Fall, bevor er im Panel landet.
+function wiringGaps(effect) {
+  if (!effect.importPath.startsWith('@/motion-arsenal/')) return null;
+  const relative = effect.importPath.replace('@/motion-arsenal/', 'src/motion-arsenal/');
+  const entry = [`${relative}.tsx`, `${relative}.ts`].find((c) => existsSync(join(ROOT, c)));
+  if (!entry) return null; // Effekt ohne eigene Datei — nicht prüfbar, nicht melden
+
+  // Größere Effekte verteilen sich über mehrere Dateien (Renderer, Szene,
+  // Presets, Styles). Ein Prop gilt als verdrahtet, wenn es irgendwo in der
+  // Familie ankommt — sonst meldet die Prüfung lauter Fehlalarme.
+  const family = dirname(join(ROOT, entry));
+  let sources = '';
+  try {
+    for (const name of readdirSync(family)) {
+      if (/\.(tsx?|css)$/.test(name)) sources += readFileSync(join(family, name), 'utf8');
+    }
+  } catch {
+    sources = readFileSync(join(ROOT, entry), 'utf8');
+  }
+
+  const gaps = effect.props.filter((prop) => {
+    const uses = sources.match(new RegExp(`\\b${prop.key}\\b`, 'g')) ?? [];
+    // Ein Treffer ist die Deklaration selbst; erst ab zwei wird der Wert
+    // tatsächlich gelesen.
+    return uses.length < 2;
+  });
+  return gaps.length ? { file: entry, keys: gaps.map((p) => p.key) } : null;
+}
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const EFFECTS_DIR = join(ROOT, 'src', 'motion-arsenal', 'effects');
@@ -135,6 +167,20 @@ function verify() {
     if (!baseline.effects[effect.id]) growth.push(`${effect.id}: neuer Effekt (${effect.props.length} Props)`);
   }
 
+  // Verdrahtung nur für Effekte prüfen, die sich gegenüber dem Snapshot
+  // verändert haben — Altlasten im Bestand sollen den Lauf nicht blockieren.
+  const changedIds = new Set();
+  for (const effect of effects) {
+    const before = baseline.effects[effect.id];
+    if (!before || before.props.length !== effect.props.length) changedIds.add(effect.id);
+  }
+  const wiring = [];
+  for (const effect of effects) {
+    if (!changedIds.has(effect.id)) continue;
+    const gap = wiringGaps(effect);
+    if (gap) wiring.push(`${effect.id}: ${gap.keys.join(', ')} — im Katalog deklariert, in ${gap.file} nicht verwendet`);
+  }
+
   console.log(`\nSkilltree-Guard — ${effects.length} Effekte gegen Snapshot vom ${String(baseline.capturedAt).slice(0, 10)}\n`);
 
   if (growth.length) {
@@ -145,14 +191,22 @@ function verify() {
     console.log('Keine Erweiterungen gefunden.\n');
   }
 
-  if (violations.length) {
-    console.log(`VERTRAGSBRUCH (${violations.length}) — dieser Stand darf nicht gemerged werden:`);
-    for (const line of violations) console.log(`  !  ${line}`);
+  if (wiring.length) {
+    console.log(`REGLER OHNE WIRKUNG (${wiring.length}):`);
+    for (const line of wiring) console.log(`  ?  ${line}`);
     console.log('');
+  }
+
+  if (violations.length || wiring.length) {
+    if (violations.length) {
+      console.log(`VERTRAGSBRUCH (${violations.length}) — dieser Stand darf nicht gemerged werden:`);
+      for (const line of violations) console.log(`  !  ${line}`);
+      console.log('');
+    }
     process.exit(1);
   }
 
-  console.log('Vertrag eingehalten: nichts entfernt, nichts umdesignt.\n');
+  console.log('Vertrag eingehalten: nichts entfernt, nichts umdesignt, jeder Regler verdrahtet.\n');
 }
 
 const command = process.argv[2] || 'verify';

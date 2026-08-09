@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "capturedAt": "2026-08-09T00:50:08.359Z",
+  "capturedAt": "2026-08-09T18:43:24.497Z",
   "note": "Oeffentlicher Vertrag jedes Effekts. Der Skilltree-Guard prueft Aenderungen dagegen. Nur bewusst und mit Begruendung neu schreiben.",
   "effects": {
     "bg-depth-glow-stack": {
@@ -1032,6 +1032,57 @@
         }
       ]
     },
+    "cursor-dodge-button": {
+      "id": "cursor-dodge-button",
+      "name": "DodgeButton",
+      "category": "cursor",
+      "importPath": "@/motion-arsenal/effects/cursor/DodgeButton",
+      "props": [
+        {
+          "key": "color",
+          "type": "color",
+          "default": "#d4a24a"
+        },
+        {
+          "key": "dodgeRadius",
+          "type": "range",
+          "default": 120,
+          "min": 40,
+          "max": 260
+        },
+        {
+          "key": "dodgeDistance",
+          "type": "range",
+          "default": 46,
+          "min": 12,
+          "max": 120
+        },
+        {
+          "key": "maxDodges",
+          "type": "range",
+          "default": 5,
+          "min": 1,
+          "max": 12
+        },
+        {
+          "key": "damping",
+          "type": "range",
+          "default": 9,
+          "min": 3,
+          "max": 18
+        },
+        {
+          "key": "label",
+          "type": "text",
+          "default": "Fang mich"
+        },
+        {
+          "key": "successLabel",
+          "type": "text",
+          "default": "Gefangen ✓"
+        }
+      ]
+    },
     "cursor-hover-distortion": {
       "id": "cursor-hover-distortion",
       "name": "HoverDistortionShader",
@@ -1108,6 +1159,13 @@
             "ember",
             "mono"
           ]
+        },
+        {
+          "key": "dprCap",
+          "type": "range",
+          "default": 1.5,
+          "min": 1,
+          "max": 2
         }
       ]
     },
@@ -1147,6 +1205,13 @@
             "ember",
             "mono"
           ]
+        },
+        {
+          "key": "dprCap",
+          "type": "range",
+          "default": 1.5,
+          "min": 1,
+          "max": 2
         }
       ]
     },
@@ -1315,6 +1380,55 @@
         }
       ]
     },
+    "forms-fingerprint-scan-submit": {
+      "id": "forms-fingerprint-scan-submit",
+      "name": "FingerprintScanSubmit",
+      "category": "forms",
+      "importPath": "@/motion-arsenal/effects/forms/FingerprintScanSubmit",
+      "props": [
+        {
+          "key": "color",
+          "type": "color",
+          "default": "#d4a24a"
+        },
+        {
+          "key": "speed",
+          "type": "range",
+          "default": 1,
+          "min": 0.1,
+          "max": 3
+        },
+        {
+          "key": "scanDuration",
+          "type": "range",
+          "default": 2.2,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "key": "pulseRings",
+          "type": "range",
+          "default": 4,
+          "min": 1,
+          "max": 6
+        },
+        {
+          "key": "label",
+          "type": "text",
+          "default": "Fingerprint bestätigen"
+        },
+        {
+          "key": "successLabel",
+          "type": "text",
+          "default": "Verifiziert"
+        },
+        {
+          "key": "autoReset",
+          "type": "boolean",
+          "default": true
+        }
+      ]
+    },
     "forms-question-transition": {
       "id": "forms-question-transition",
       "name": "QuestionTransition",
@@ -1360,7 +1474,7 @@
       "id": "forms-selection-energy-ripple",
       "name": "SelectionEnergyRipple",
       "category": "forms",
-      "importPath": "@/motion-arsenal/effects/forms/SelectionEnergyRipple",
+      "importPath": "@/motion-arsenal/effects/forms/SelectionEnergyRippleV2",
       "props": [
         {
           "key": "accent",
@@ -1439,6 +1553,54 @@
           "key": "showTelemetry",
           "type": "boolean",
           "default": true
+        }
+      ]
+    },
+    "hero-angled-gold-strike": {
+      "id": "hero-angled-gold-strike",
+      "name": "Angled Gold Strikethrough",
+      "category": "hero",
+      "importPath": "@/motion-arsenal/effects/hero/AngledGoldStrike",
+      "props": [
+        {
+          "key": "color",
+          "type": "color",
+          "default": "#d4a24a"
+        },
+        {
+          "key": "angle",
+          "type": "range",
+          "default": -7,
+          "min": -20,
+          "max": 20
+        },
+        {
+          "key": "thickness",
+          "type": "range",
+          "default": 3,
+          "min": 1,
+          "max": 8
+        },
+        {
+          "key": "speed",
+          "type": "range",
+          "default": 1,
+          "min": 0.1,
+          "max": 3
+        },
+        {
+          "key": "trigger",
+          "type": "select",
+          "default": "hover",
+          "options": [
+            "hover",
+            "auto"
+          ]
+        },
+        {
+          "key": "struck",
+          "type": "boolean",
+          "default": false
         }
       ]
     },
@@ -1677,6 +1839,50 @@
           "key": "showEnergySwitcher",
           "type": "boolean",
           "default": true
+        }
+      ]
+    },
+    "hero-pointer-text-depth": {
+      "id": "hero-pointer-text-depth",
+      "name": "Pointer Text Depth",
+      "category": "hero",
+      "importPath": "@/motion-arsenal/effects/hero/PointerTextDepth",
+      "props": [
+        {
+          "key": "text",
+          "type": "text",
+          "default": "NOX FORGE"
+        },
+        {
+          "key": "depth",
+          "type": "range",
+          "default": 1,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "key": "speed",
+          "type": "range",
+          "default": 1,
+          "min": 0.1,
+          "max": 3
+        },
+        {
+          "key": "color",
+          "type": "color",
+          "default": "#d4a24a"
+        },
+        {
+          "key": "glow",
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "key": "seed",
+          "type": "range",
+          "default": 7,
+          "min": 1,
+          "max": 20
         }
       ]
     },
@@ -6563,12 +6769,86 @@
           "options": [
             "nox-floating-card-os",
             "nox-revenue-os",
+            "nox-scroll-story",
             "nox-global-sales-os",
             "project-x-command-center",
             "ai-growth-engine",
             "conversion-website-system",
             "automation-ops-system"
           ]
+        },
+        {
+          "key": "layoutMode",
+          "type": "select",
+          "default": "pinned-stage",
+          "options": [
+            "pinned-stage",
+            "sticky-story"
+          ]
+        },
+        {
+          "key": "chapterHeight",
+          "type": "range",
+          "default": 68,
+          "min": 45,
+          "max": 100
+        },
+        {
+          "key": "stickyOffset",
+          "type": "range",
+          "default": 0,
+          "min": 0,
+          "max": 20
+        },
+        {
+          "key": "activeThreshold",
+          "type": "range",
+          "default": 0.42,
+          "min": 0.2,
+          "max": 0.8
+        },
+        {
+          "key": "panelTiltX",
+          "type": "range",
+          "default": 4,
+          "min": 0,
+          "max": 6
+        },
+        {
+          "key": "panelTiltY",
+          "type": "range",
+          "default": -6,
+          "min": -14,
+          "max": 14
+        },
+        {
+          "key": "panelDepth",
+          "type": "range",
+          "default": -30,
+          "min": -80,
+          "max": 0
+        },
+        {
+          "key": "contentTransition",
+          "type": "range",
+          "default": 160,
+          "min": 100,
+          "max": 180
+        },
+        {
+          "key": "textReveal",
+          "type": "select",
+          "default": "blur-rise",
+          "options": [
+            "blur-rise",
+            "fade",
+            "none"
+          ]
+        },
+        {
+          "key": "mobileStack",
+          "type": "boolean",
+          "default": true
         },
         {
           "key": "showVariantSwitcher",
@@ -6666,6 +6946,29 @@
           "key": "scrollRotationEnabled",
           "type": "boolean",
           "default": true
+        },
+        {
+          "key": "rotationMode",
+          "type": "select",
+          "default": "free-spin",
+          "options": [
+            "free-spin",
+            "depth-flip"
+          ]
+        },
+        {
+          "key": "readableAngle",
+          "type": "range",
+          "default": 55,
+          "min": 15,
+          "max": 80
+        },
+        {
+          "key": "stackDrift",
+          "type": "range",
+          "default": 16,
+          "min": 0,
+          "max": 60
         },
         {
           "key": "rotationAxis",

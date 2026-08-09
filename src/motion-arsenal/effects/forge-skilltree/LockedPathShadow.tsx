@@ -30,6 +30,83 @@ type ShadowNode = {
   path: string;
 };
 
+// --- Einfärbung -------------------------------------------------------------
+// `shadowColor` soll den kompletten Violett-Anteil der Szene tragen: Strahl,
+// Sperrpfade, Knotenränder, Glows und Staub. Diese Töne einzeln zu
+// parametrisieren hieße zwei Dutzend CSS-Variablen zu pflegen — stattdessen
+// wird der Farbabstand zum Standardton einmal berechnet und auf jeden
+// violetten rgba-Wert im Stylesheet angewandt. Gold, Weiß, Grün und die
+// dunklen Flächen bleiben unberührt.
+//
+// Beim Standardton ist der Abstand null, also gibt die Funktion exakt die
+// ursprünglichen Werte zurück — das Aussehen ohne gesetztes Prop ist
+// unverändert.
+
+const DEFAULT_SHADOW = '#cb97f2';
+
+function rgbToHsl(r: number, g: number, b: number) {
+  const rr = r / 255, gg = g / 255, bb = b / 255;
+  const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb);
+  const l = (max + min) / 2;
+  if (max === min) return { h: 0, s: 0, l };
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === rr) h = ((gg - bb) / d + (gg < bb ? 6 : 0)) / 6;
+  else if (max === gg) h = ((bb - rr) / d + 2) / 6;
+  else h = ((rr - gg) / d + 4) / 6;
+  return { h: h * 360, s, l };
+}
+
+function hslToRgb(h: number, s: number, l: number) {
+  const hue = ((h % 360) + 360) % 360 / 360;
+  if (s === 0) {
+    const v = Math.round(l * 255);
+    return [v, v, v];
+  }
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const channel = (t: number) => {
+    let tt = t;
+    if (tt < 0) tt += 1;
+    if (tt > 1) tt -= 1;
+    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2) return q;
+    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  return [channel(hue + 1 / 3), channel(hue), channel(hue - 1 / 3)].map((v) => Math.round(v * 255));
+}
+
+function parseHex(hex: string) {
+  const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!match) return null;
+  const value = parseInt(match[1], 16);
+  return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+}
+
+// Violett im Sinne dieser Szene: Farbton zwischen Blau und Magenta und
+// erkennbar bunt. Das trifft alle Schattentöne und keinen der Goldakzente.
+const isShadowTone = (h: number, s: number) => h >= 250 && h <= 325 && s > 0.08;
+
+function tintStylesheet(css: string, shadowColor: string) {
+  const target = parseHex(shadowColor);
+  const base = parseHex(DEFAULT_SHADOW)!;
+  if (!target) return css;
+  const targetHsl = rgbToHsl(target.r, target.g, target.b);
+  const baseHsl = rgbToHsl(base.r, base.g, base.b);
+  const hueDelta = targetHsl.h - baseHsl.h;
+  const satRatio = baseHsl.s === 0 ? 1 : targetHsl.s / baseHsl.s;
+  if (hueDelta === 0 && satRatio === 1) return css;
+
+  return css.replace(/rgba\((\d+),(\d+),(\d+),([.\d]+)\)/g, (whole, r, g, b, a) => {
+    const hsl = rgbToHsl(Number(r), Number(g), Number(b));
+    if (!isShadowTone(hsl.h, hsl.s)) return whole;
+    const [nr, ng, nb] = hslToRgb(hsl.h + hueDelta, Math.max(0, Math.min(1, hsl.s * satRatio)), hsl.l);
+    return `rgba(${nr},${ng},${nb},${a})`;
+  });
+}
+
 const LOCKED_NODES: ShadowNode[] = [
   { id: 'system-mastery', label: 'SYSTEM MASTERY', tier: 'TIER IV', requirement: 'Complete 3 core protocols', x: 68, y: 24, size: 54, path: 'M 40 49 Q 52 31 68 24' },
   { id: 'autonomous-ops', label: 'AUTONOMOUS OPS', tier: 'TIER V', requirement: 'Stabilize the operator loop', x: 76, y: 52, size: 62, path: 'M 40 49 Q 58 47 76 52' },
@@ -74,7 +151,7 @@ const CSS = String.raw`
 .lps-stage.scan-ttb .lps-scan-beam::after { top:-90px; bottom:auto; left:0; right:0; width:auto; height:180px; background:linear-gradient(180deg,transparent,rgba(151,74,204,.11),transparent); }
 .lps-stage.scan-ttb.is-scanning .lps-scan-beam { animation-name:lps-scan-ttb; }
 @keyframes lps-scan-ttb { 0%{transform:translateY(0);opacity:0}9%{opacity:.9}78%{opacity:.75}100%{transform:translateY(46vh);opacity:0} }
-.lps-dust { position:absolute; z-index:4; width:var(--dust-size); height:var(--dust-size); left:var(--dust-x); top:var(--dust-y); border-radius:50%; pointer-events:none; background:color-mix(in srgb, var(--lps-shadow,#cb97f2) 78%, transparent); opacity:var(--dust-o); box-shadow:0 0 7px color-mix(in srgb, var(--lps-shadow,#cb97f2) 52%, transparent); animation:lps-dust-drift var(--dust-d) ease-in-out var(--dust-delay) infinite alternate; }
+.lps-dust { position:absolute; z-index:4; width:var(--dust-size); height:var(--dust-size); left:var(--dust-x); top:var(--dust-y); border-radius:50%; pointer-events:none; background:rgba(196,147,230,.55); opacity:var(--dust-o); box-shadow:0 0 7px rgba(172,96,226,.45); animation:lps-dust-drift var(--dust-d) ease-in-out var(--dust-delay) infinite alternate; }
 @keyframes lps-dust-drift { to{transform:translate3d(var(--dust-dx),var(--dust-dy),0) scale(1.7);opacity:.08} }
 .lps-active-node,.lps-locked-node { position:absolute; z-index:15; transform:translate(-50%,-50%); }
 .lps-active-node { left:40%; top:49%; width:clamp(60px,9vw,92px); height:clamp(60px,9vw,92px); display:grid; place-items:center; border-radius:50%; border:1px solid rgba(212,175,55,.82); color:#ffeaa7; background:radial-gradient(circle at 36% 32%,rgba(255,246,190,.2),transparent 28%),radial-gradient(circle,rgba(102,71,8,.42),rgba(12,10,7,.96) 68%); box-shadow:0 0 22px rgba(212,175,55,.32),inset 0 0 22px rgba(212,175,55,.12); animation:lps-core-breathe 2.8s ease-in-out infinite; }
@@ -169,12 +246,13 @@ export function LockedPathShadow({
     '--lps-scan-dur': `${(3.6 / Math.max(0.3, scanSpeed)).toFixed(2)}s`,
     '--lps-node-radius': shape.radius,
     '--lps-node-clip': shape.clip,
-    '--lps-shadow': shadowColor,
   };
+
+  const tintedCss = useMemo(() => tintStylesheet(CSS, shadowColor), [shadowColor]);
 
   return (
     <div ref={stageRef} className={`lps-stage ${scanClass} ${scanning ? 'is-scanning' : ''}`} style={stageStyle} onPointerMove={handlePointerMove} onPointerDown={handlePointerMove} onPointerLeave={(event) => { event.currentTarget.style.setProperty('--lps-x', '74%'); event.currentTarget.style.setProperty('--lps-y', '50%'); }}>
-      <style>{CSS}</style>
+      <style>{tintedCss}</style>
       <AtmosLayer particles={8} stars={14} />
       <div className="lps-noise" aria-hidden="true" />
       <div className="lps-scan-beam" aria-hidden="true" />
