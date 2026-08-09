@@ -27,3 +27,4 @@ audit_recovery.json
 
 # Vercel lokal (Token! nie committen)
 .env.local
+audit_recovery.json
