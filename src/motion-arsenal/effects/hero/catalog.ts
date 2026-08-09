@@ -7,6 +7,7 @@ import type { EffectEntry } from '../../types';
 // ---------------------------------------------------------------------------
 
 export const HERO_CATALOG: EffectEntry[] = [
+  { meta: { id: 'hero-3d-circle-text-scroll', name: 'CircleTextScroll3D', displayName: '3D Circle Text Scroll', category: 'hero', sourceWebsite: 'nox-original', sourceFiles: ['Codrops 3D circle text scroll', 'Vault: nox-3d-circle-text-scroll'], mode: 'nox-adapted', complexity: 'heavy', dependencies: ['three'], bestFor: ['3D Hero-Typografie', 'Scroll-Intros'], performanceNotes: 'DOM/CSS 3D ring; one scroll rAF while mounted.', mobileNotes: 'Ring skaliert responsiv und bleibt touch-scrollbar.', reducedMotionNotes: 'Statischer Ring ohne Scroll-Loop.', description: 'Scroll-gescrubbter 3D-Textrring mit deterministischen Wort-Offsets und Gold-Glow.', importPath: '@/motion-arsenal/effects/hero/CircleTextScroll3D', usageJsx: '<CircleTextScroll3D words={["NOX", "MOTION"]} />', props: [{ key: 'words', label: 'Words', type: 'text', default: 'NOX,MOTION', group: 'Content' }, { key: 'speed', label: 'Speed', type: 'range', default: 1, min: .1, max: 3, step: .1 }, { key: 'radius', label: 'Radius', type: 'range', default: 4, min: 2, max: 8, step: .5 }, { key: 'distortion', label: 'Distortion', type: 'range', default: .5, min: 0, max: 1, step: .1 }, { key: 'color', label: 'Color', type: 'color', default: '#d4a24a' }], productionSafe: true }, Component: lazy(() => import('./CircleTextScroll3D')) },
   {
     meta: {
       id: 'hero-massive-typography-reveal',

@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import type { EffectEntry } from '../../types';
 
 export const SCROLL_CATALOG: EffectEntry[] = [
+  { meta: { id: 'scroll-3d-scroll-text-parade', name: 'ScrollTextParade3D', displayName: '3D Scroll Text Parade', category: 'scroll', sourceWebsite: 'nox-original', sourceFiles: ['Codrops 3D scroll text', 'Vault: nox-3d-scroll-text-parade'], mode: 'nox-adapted', complexity: 'medium', dependencies: [], bestFor: ['Editorial-Headlines', 'Hero-Sectionen'], performanceNotes: 'Native CSS scroll timeline with transform animation.', mobileNotes: 'Native touch scroll.', reducedMotionNotes: 'Zeilen sofort lesbar.', description: 'Gestaffelte Headline-Zeilen marschieren per rotateX aus der Tiefe in die Leseposition.', importPath: '@/motion-arsenal/effects/scroll/ScrollTextParade3D', usageJsx: '<ScrollTextParade3D lines={["FORGE", "SIGNAL"]} />', props: [{ key: 'lines', label: 'Lines', type: 'text', default: 'FORGE,SIGNAL', group: 'Content' }, { key: 'depth', label: 'Depth', type: 'range', default: .5, min: 0, max: 1, step: .1 }, { key: 'speed', label: 'Speed', type: 'range', default: 1, min: .4, max: 3, step: .1 }, { key: 'stagger', label: 'Stagger', type: 'range', default: .15, min: 0, max: .4, step: .01 }], productionSafe: true }, Component: lazy(() => import('./ScrollTextParade3D')) },
   {
     meta: {
       id: 'scroll-pinned-product-stage',
