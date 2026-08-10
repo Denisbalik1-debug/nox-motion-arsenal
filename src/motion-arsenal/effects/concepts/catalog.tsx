@@ -6,15 +6,10 @@ const entries = [
   ['Lenticular Tilt', 'Interlaced Multi-Frame-Bild reagiert auf Tilt und Pointer.', 'WebGL Textur-Slices.'],
   ['Path-Follow Hero Scroll', 'Hero folgt einer SVG-Kurve durch die Scroll-Choreografie.', 'SVG path lookup und transforms.'],
   ['Magnetic Field Cards', 'Karten ziehen sich in einem begrenzten Feld zum Cursor.', 'Distanz-basierte Transform-Offsets.'],
-  ['Scroll-Driven CSS Reveal', 'Progressive In-View-Reveals mit nativen Scroll-Timelines.', 'animation-timeline: view() und IO Fallback.'],
-  ['Lenticular Scroll Image', 'Scroll-synchroner Interlace-Wechsel durch vorbereitete Bildframes.', 'Sprite-Strip und CSS-Maske.'],
   ['Backdrop Blur Grain Overlay', 'Material-Overlay aus Backdrop Blur, Grain und Goldkante.', 'backdrop-filter mit statischem SVG-Grain.'],
   ['View Transition API Cross-Fade', 'Dunkelraum-optimierter nativer Crossfade für DOM-Zustände.', 'document.startViewTransition mit Fallback.'],
   ['GSAP Flip Gallery Morph', 'Galerie-Kachel wächst per FLIP in den Detail-View.', 'FLIP transforms mit Fokus-Dialog-Fallback.'],
   ['Holographic Type Effect', 'Irideszente Gold-Typografie mit kontrollierter Lichtmaske.', 'background-clip und CSS masks.'],
-  ['Infinite Parallax Loop', 'Entkoppelter Endlos-Loop mit Parallax-Faktoren.', 'GSAP Observer Proxy-Scroll.'],
-  ['Horizontal Pin Gallery', 'Gepinnte horizontale Bilderstrecke mit Fortschrittsrail.', 'ScrollTrigger pin/scrub mit vertikalem Fallback.'],
-  ['SVG Metric Graph Draw', 'Eine Kennzahlenkurve zeichnet sich beim Scrollen.', 'SVG stroke-dashoffset.'],
   ['Tumbler Vault OTP', 'Mechanische OTP-Eingabe mit rollenden Ziffern.', 'CSS transform-Räder, Paste und Keyboard Support.'],
   ['Peel Reveal Modal', 'Eine aufrollende Ecke enthüllt einen Dialog.', 'Gradient-Curl und CSS transforms.'],
   ['Canvas Line Typography', 'Linien-Ornamente bilden eine technische Marken-Wordmark.', 'Canvas einmalig bei Mount und Resize.'],
@@ -48,7 +43,6 @@ const entries = [
   ['Warp Tunnel Depth', '⛔ **DUPLIKAT** — Kern-Mechanik (Gold-Streaks radial aus der Bildmitte, scroll-reaktiv, Tiefenstaffelung) ist bereits als Default-Variante `section-warp` in **NoxStarfieldDrift** umgesetzt. Batch-2-Review 08.08.2026: nicht bauen, stattdessen Verweis hier. Ersatzkandidat war Star Rating Gold Pop (forms, gebaut).', 'CSS Scroll-Driven Animations: Streaks sind DOM-Elemente (oder ein Canvas), deren `--speed`-CSS-Variable an `animation-timeline: scroll()` gekoppelt ist — Scroll-Tempo übersetzt sich direkt in Streak-Länge/Geschwindigkeit, kein rAF. Positionen/Winkel deterministisch via det()-PRNG (bei statischem DOM als CSS-Vars gerendert). Drei Ebenen (nah/mittel/fern) mit `scale` + unterschiedlichen `animation-range`s für Tiefe. Canvas-Variante: nur bei sehr vielen Streaks, rAF dann nur während aktiven Scrollens.'],
   ['WebGL Water Distortion Slider', 'Bild-Slider, bei dem Ziehen eine Wasser-Verzerrung auslöst: das aktuelle Bild entsättigt sich und wellt sich hinter dem neu hereinziehenden — Premium-Galerie-Feeling.', 'WebGL (Shader): Texturen beider Bilder, Displacement via fbm-Rauschen das mit Drag-Vektor skaliert; Übergang = Progress von 0→1 mit easeOut; Fallback: CSS-Blur-Slide.'],
   ['WebGPU Dust Dissolve Text', 'MSDF-Headline löst sich beim Scrollen in einen deterministischen Gold-Staub auf und setzt sich wieder zusammen — WebGPU/TSL-Showcase für Studio-Sektionen.', 'WebGPU + TSL (Three.js): MSDF-Text als Partikelquelle, Dissolve-Fortschritt via Uniform; Partikelpositionen aus det(i, salt)-PRNG vorberechnet. Fallback: CSS-Filter-Version (blur+opacity) ohne Partikel.'],
-  ['Word Fade Reading', 'Beim Scrollen leuchten die Wörter eines Absatzes nacheinander auf: Scroll-Fortschritt = Lesefortschritt, jedes Wort wird einzeln gold-gefüllt — Editorial-Storytelling mit klarer Tempo-Kontrolle (NOX-Variante des Scrollytelling-Wort-Fades).', 'JS+CSS: Wörter einmalig in Spans splitten; Scroll-Fortschritt des Absatzes via IntersectionObserver + rAF-Throttle (nur bei Scroll-Events); Opacity/Farbe je Wort aus `Fortschritt × Wortindex` (linear, kein Zufall). Nur opacity/color animiert, keine Layout-Änderung.'],
     ] as const;
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
