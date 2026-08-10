@@ -1,11 +1,24 @@
 import { useMemo, useRef } from 'react';
 import type { CSSProperties } from 'react';
 
-export interface ClippedSectionStackProps { sections?: string[]; accent?: string; depth?: number; }
+export interface ClippedSectionStackProps {
+  sections?: string[];
+  /** Panels als ein String mit | als Trenner — die Form, die das Control-Panel
+   *  liefert. Ohne diesen Weg blieb der Regler "Panels" wirkungslos, weil er
+   *  einen Text schickt, die Komponente aber nur ein Array kannte. */
+  panels?: string;
+  accent?: string;
+  depth?: number;
+}
 
-export default function ClippedSectionStack({ sections = ['ORIGIN', 'SIGNAL', 'MOTION', 'FORGE'], accent = '#d4a24a', depth = .6 }: ClippedSectionStackProps) {
+export default function ClippedSectionStack({ sections, panels, accent = '#d4a24a', depth = .6 }: ClippedSectionStackProps) {
   const host = useRef<HTMLDivElement>(null);
-  const items = useMemo(() => sections.slice(0, 8).map((label, index) => ({ label, index, rotate: (index % 2 ? -1 : 1) * (2 + index * .45) })), [sections]);
+  const labels = useMemo(() => {
+    if (sections?.length) return sections;
+    const fromPanels = panels?.split('|').map((entry) => entry.trim()).filter(Boolean);
+    return fromPanels?.length ? fromPanels : ['ORIGIN', 'SIGNAL', 'MOTION', 'FORGE'];
+  }, [sections, panels]);
+  const items = useMemo(() => labels.slice(0, 8).map((label, index) => ({ label, index, rotate: (index % 2 ? -1 : 1) * (2 + index * .45) })), [labels]);
   const onMove = (event: React.MouseEvent<HTMLDivElement>) => {
     const box = host.current?.getBoundingClientRect(); if (!box) return;
     host.current!.style.setProperty('--stack-x', `${((event.clientX - box.left) / box.width - .5) * depth * 16}px`);

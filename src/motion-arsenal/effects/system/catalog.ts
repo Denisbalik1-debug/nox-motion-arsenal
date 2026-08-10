@@ -330,4 +330,35 @@ export const SYSTEM_CATALOG: EffectEntry[] = [
   { meta: { id: 'system-counter-preloader', name: 'CounterPreloader', displayName: 'Counter Preloader', category: 'system', sourceWebsite: 'codrops', sourceFiles: ['counter preloader'], mode: 'nox-adapted', complexity: 'low', dependencies: [], bestFor: ['Page Loads', 'Launch Moments'], performanceNotes: 'Ein rAF bis 100.', mobileNotes: 'Lesbare Zahl.', reducedMotionNotes: 'Sofort 100.', description: 'Gold-Zaehler mit Balken und Clip-Path-Wipe.', importPath: '@/motion-arsenal/effects/system/CounterPreloader', usageJsx: '<CounterPreloader />', props: [{ key: 'duration', label: 'Dauer ms', type: 'range', default: 2200, min: 500, max: 5000, step: 100 }, { key: 'label', label: 'Label', type: 'text', default: 'LOADING SYSTEM' }, { key: 'color', label: 'Akzent', type: 'color', default: '#d4a24a' }], productionSafe: true }, Component: lazy(() => import('./CounterPreloader')) },
   { meta: { id: 'system-crt-screen-text', name: 'CrtScreenText', displayName: 'CRT Screen Text', category: 'system', sourceWebsite: 'nox-original', sourceFiles: ['NOX CRT terminal treatment'], mode: 'nox-adapted', complexity: 'low', dependencies: [], bestFor: ['Terminal UI', 'Retro Status'], performanceNotes: 'CSS-only scanline and glitch.', mobileNotes: 'Tap toggles the signal pulse.', reducedMotionNotes: 'Static scanline.', description: 'Monospace CRT status text with scanlines, phosphor glow and RGB ghosting.', importPath: '@/motion-arsenal/effects/system/CrtScreenText', usageJsx: '<CrtScreenText text="SIGNAL LOCKED" />', props: [{ key: 'text', label: 'Text', type: 'text', default: 'SIGNAL LOCKED' }, { key: 'flicker', label: 'Flicker', type: 'boolean', default: true }, { key: 'scanlines', label: 'Scanlines', type: 'boolean', default: true }, { key: 'color', label: 'Color', type: 'color', default: '#d4a24a' }], productionSafe: true }, Component: lazy(() => import('./CrtScreenText')) },
 ];
-export const BATCH6_SYSTEM_CATALOG: EffectEntry[] = [];
+export const BATCH6_SYSTEM_CATALOG: EffectEntry[] = [  {
+    meta: {
+      id: 'system-terminal-typewriter-hover',
+      name: 'TerminalTypewriterHover',
+      displayName: 'Terminal Typewriter Hover',
+      category: 'system',
+      sourceWebsite: 'nox-original',
+      sourceFiles: ['NOX System DNA', 'CSS-steps-Typewriter'],
+      mode: 'nox-adapted',
+      complexity: 'low',
+      dependencies: [],
+      bestFor: ['Log- und Statusausgaben in Dashboards', 'Entwickler- und Agenten-Oberflaechen', 'Feature-Listen mit Terminal-Charakter'],
+      performanceNotes: 'Die Animation laeuft ueber die Breite in ch-Einheiten mit steps(), also genau ein Zeichen pro Schritt - kein JS-Intervall und kein Timer.',
+      mobileNotes: 'Ohne Hover stehen die Zeilen vollstaendig da; ueber Tastaturfokus laesst sich das Tippen auch ohne Zeiger ausloesen.',
+      reducedMotionNotes: 'Zeilen stehen sofort vollstaendig, Cursor blinkt nicht.',
+      description: 'Log-Zeilen, die sich beim Hover Zeichen fuer Zeichen selbst tippen. Die Zeilen stehen vollstaendig im DOM - wer nicht hovert, sieht denselben Text, nur ohne Tippbewegung.',
+      importPath: '@/motion-arsenal/effects/system/TerminalTypewriterHover',
+      usageJsx: '<TerminalTypewriterHover lines="scan --deep|deploy ready" speed={1} />',
+      props: [
+        { key: 'lines', label: 'Zeilen (| trennt)', type: 'text', default: 'scan --target arsenal --deep|resolving 285 effects …|contract check: 0 violations|deploy ready', group: 'Content' },
+        { key: 'prompt', label: 'Prompt-Zeichen', type: 'text', default: '›', group: 'Content' },
+        { key: 'alwaysOn', label: 'Immer tippen', type: 'boolean', default: false, group: 'Motion' },
+        { key: 'speed', label: 'Tipp-Tempo', type: 'range', default: 1, min: 0.1, max: 3, step: 0.1, group: 'Motion' },
+        { key: 'cursor', label: 'Cursor', type: 'boolean', default: true, group: 'Motion' },
+        { key: 'color', label: 'Prompt', type: 'color', default: '#d4a24a', group: 'Color' },
+        { key: 'textColor', label: 'Text', type: 'color', default: '#d8d2c6', group: 'Color' },
+      ],
+      productionSafe: true,
+    },
+    Component: lazy(() => import('./TerminalTypewriterHover')),
+  },
+];
