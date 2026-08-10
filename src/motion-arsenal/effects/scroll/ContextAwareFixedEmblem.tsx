@@ -8,7 +8,10 @@ export default function ContextAwareFixedEmblem({ label = 'N', accent = '#d4a24a
   const [mode, setMode] = useState<'idle' | 'shrink' | 'away'>('idle');
   useEffect(() => {
     const check = () => { const node = emblem.current; if (!node) return; const box = node.getBoundingClientRect(); const targets = Array.from(document.querySelectorAll<HTMLElement>(collisionSelector)); const collision = targets.some((target) => { if (target === node || !target.getBoundingClientRect) return false; const r = target.getBoundingClientRect(); return r.bottom > box.top + 10 && r.top < box.bottom - 10 && r.right > box.left && r.left < box.right; }); setMode(collision ? 'shrink' : window.scrollY > 600 ? 'away' : 'idle'); };
-    check(); window.addEventListener('scroll', check, { passive: true }); window.addEventListener('resize', check); return () => { window.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
+    const intersection = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) setMode('shrink'); else check(); }, { threshold: .2 });
+    targetsForObserver().forEach((target) => intersection.observe(target));
+    check(); window.addEventListener('scroll', check, { passive: true }); window.addEventListener('resize', check); return () => { intersection.disconnect(); window.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
+    function targetsForObserver() { return Array.from(document.querySelectorAll<HTMLElement>(collisionSelector)); }
   }, [collisionSelector]);
   const style = { '--emblem-accent': accent } as CSSProperties;
   return <button ref={emblem} type="button" className={`nox-fixed-emblem nox-fixed-emblem--${mode}`} style={style} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top"><span>{label}</span><i aria-hidden="true" /><small>NOX</small><style>{CSS}</style></button>;
