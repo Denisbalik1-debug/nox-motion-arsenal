@@ -3,14 +3,8 @@ import type { EffectEntry } from '../../types';
 import { ConceptEffectPreview } from './ConceptEffectPreview';
 
 const entries = [
-  ['Bayer Dither Dissolve', 'Bayer-geditherter Abschnittswechsel mit Gold-Kante.', 'Canvas ImageData auf reduzierter Auflösung.'],
-  ['Inverse Glow Cursor', 'Invertierter Cursor-Spot mit nachziehendem Akzent-Ring.', 'CSS mix-blend-mode und transform-only rAF.'],
   ['Lenticular Tilt', 'Interlaced Multi-Frame-Bild reagiert auf Tilt und Pointer.', 'WebGL Textur-Slices.'],
-  ['Elastic Lag Grid', 'Gestaffeltes Grid folgt der Scrolltiefe mit elastischem Lag.', 'CSS Vars und transform-only rAF.'],
-  ['Glyph Matrix Rain', 'Deterministischer Glyphen-Regen als Terminal-Textur.', 'Canvas-Spalten mit PRNG.'],
-  ['Kinetic Twist Typo', 'Drehende Display-Typografie für große Marken-Statements.', 'SVG-Skeleton, optionaler Shader.'],
   ['Path-Follow Hero Scroll', 'Hero folgt einer SVG-Kurve durch die Scroll-Choreografie.', 'SVG path lookup und transforms.'],
-  ['Progressive Blur Stack', 'Fokus-Stack mit abgestuften Blur- und Opacity-Ebenen.', 'CSS @property und backdrop-filter.'],
   ['Magnetic Field Cards', 'Karten ziehen sich in einem begrenzten Feld zum Cursor.', 'Distanz-basierte Transform-Offsets.'],
   ['Scroll-Synced Typo Background', 'Große Marken-Typografie rotiert subtil mit der Scrolltiefe.', 'CSS Scroll-Driven Animations mit Fallback.'],
   ['Aurora Borealis Background', 'Ruhige, goldgesäumte Gradient-Atmosphäre ohne Canvas.', 'Transform-animierte Gradient-Blobs.'],
@@ -68,6 +62,7 @@ const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').re
 /** Provenance for concepts intentionally removed from the visible gallery after consolidation. */
 export const CONSOLIDATED_CONCEPTS: Partial<Record<(typeof entries)[number][0], string>> = {
   'Magnetic Field Cards': 'cursor-magnetic-cta',
+  'Warp Tunnel Depth': 'bg-nox-starfield-drift (Variante section-warp)',
   'CRT Screen Text': 'system-crt-screen-text',
   'Cube Spin Route Transition': 'transitions-cube-spin-route-transition',
   'Distorted Button Image Reveal': 'originkit-distorted-button-image-reveal',
