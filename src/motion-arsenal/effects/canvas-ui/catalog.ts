@@ -236,4 +236,5 @@ export const CANVAS_UI_CATALOG: EffectEntry[] = [
     },
     Component: lazy(() => import('./ParticleObject')),
   },
+  { meta: { id: 'canvasui-connected-grid-pulse', name: 'ConnectedGridPulse', displayName: 'Connected Grid Pulse', category: 'canvas-ui', sourceWebsite: 'nox-original', sourceFiles: ['deterministic SVG grid pulse'], mode: 'nox-original', complexity: 'medium', dependencies: [], bestFor: ['System Sections', 'Data Flow'], performanceNotes: 'Kleines SVG mit CSS-Pulsen.', mobileNotes: 'SVG skaliert responsiv.', reducedMotionNotes: 'Statisch.', description: 'Punkt-Grid verbindet sich mit Gold-Linien.', importPath: '@/motion-arsenal/effects/canvas-ui/ConnectedGridPulse', usageJsx: '<ConnectedGridPulse />', props: [{ key: 'columns', label: 'Spalten', type: 'range', default: 7, min: 3, max: 12, step: 1 }, { key: 'rows', label: 'Reihen', type: 'range', default: 4, min: 2, max: 8, step: 1 }, { key: 'accent', label: 'Akzent', type: 'color', default: '#d4a24a' }], productionSafe: true }, Component: lazy(() => import('./ConnectedGridPulse')) },
 ];
