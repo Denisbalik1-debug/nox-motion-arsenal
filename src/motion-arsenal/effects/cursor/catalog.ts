@@ -228,4 +228,5 @@ export const CURSOR_CATALOG: EffectEntry[] = [
     },
     Component: lazy(() => import('./CursorLabelBadge')),
   },
+  { meta: { id: 'cursor-magnetic-grid-navigation', name: 'MagneticGridNavigation', displayName: 'Magnetic Grid Navigation', category: 'cursor', sourceWebsite: 'nox-original', sourceFiles: ['Vault: nox-magnetic-grid-navigation'], mode: 'nox-adapted', complexity: 'medium', dependencies: [], bestFor: ['Navigation'], performanceNotes: 'Transform-only magnetic cells.', mobileNotes: 'Tap remains native.', reducedMotionNotes: 'Cells stay still.', description: 'A 3x3 navigation grid magnetizes toward the pointer.', importPath: '@/motion-arsenal/effects/cursor/MagneticGridNavigation', usageJsx: '<MagneticGridNavigation />', props: [], productionSafe: true }, Component: lazy(() => import('./MagneticGridNavigation')) },
 ];
