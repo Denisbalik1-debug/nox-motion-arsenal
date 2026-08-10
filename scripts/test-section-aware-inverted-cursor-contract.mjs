@@ -21,10 +21,10 @@ assert.ok(source.indexOf('!reduced && inView', rafCall) > rafCall,
 
 // --- 2. usePointer als Ref ------------------------------------------------------
 assert.ok(source.includes('usePointer(rootRef)'), 'muss usePointer(rootRef) verwenden');
-assert.ok(source.includes('pointer.current.x') && source.includes('pointer.current.y'),
-  'muss pointer.current.x / pointer.current.y verwenden (nicht destructured)');
-assert.ok(!source.match(/const\s*\{\s*x\s*,\s*y\s*\}\s*=\s*usePointer\(/),
-  'usePointer darf nicht destructured werden');
+assert.ok(source.includes('pointer.current.tx') && source.includes('pointer.current.ty'),
+  'muss pointer.current.tx / pointer.current.ty verwenden (echte Mausposition; x/y bleibt 0.5)');
+assert.ok(!source.match(/pointer\.current\.[xy]\s*\*/),
+  'usePointer x/y darf NICHT für Positionen verwendet werden (bleibt Container-Mitte)');
 
 // --- 3. IntersectionObserver + Cleanup ------------------------------------------
 assert.ok(source.includes('new IntersectionObserver'), 'muss IntersectionObserver verwenden');
@@ -36,6 +36,19 @@ assert.ok(source.includes('io.disconnect()'), 'muss io.disconnect() im Cleanup h
 assert.ok(source.includes('latch.current.inside'), 'muss Latch für Pointer-Inside verwenden');
 assert.ok(source.includes('if (!latch.current.inside) return;'),
   'Position-Zuweisung muss hinter dem Latch-Guard stehen');
+
+// --- 3b. Maus-basierte Theme-Bestimmung (primär, immersive-g-Verhalten) ----------
+// Der Cursor muss die Farbe an der Mausposition wechseln — nicht nur per
+// IntersectionObserver (der bei gleichzeitig sichtbaren Sektionen klemmt).
+assert.ok(source.includes('document.elementFromPoint('),
+  'muss Sektion unter der Maus per elementFromPoint bestimmen');
+assert.ok(source.includes("closest?.('[data-cursor-theme]')"),
+  'muss per closest die Theme-Sektion finden');
+assert.ok(source.includes('themeRef.current'),
+  'muss themeRef gegen Re-Render-Spam verwenden');
+const epPos = source.indexOf('document.elementFromPoint(');
+assert.ok(source.indexOf('applyTheme(', epPos) > epPos,
+  'Theme-Zuweisung muss nach der elementFromPoint-Bestimmung kommen');
 
 // --- 5. Deterministisch + kein Netzwerk -----------------------------------------
 assert.ok(!source.includes('Math.random('), 'keine unseeded Zufallswerte erlaubt (Math.random() als Aufruf)');

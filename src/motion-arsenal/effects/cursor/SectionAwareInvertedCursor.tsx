@@ -53,6 +53,15 @@ export function SectionAwareInvertedCursor({
   const pointer = usePointer(rootRef);
 
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  // themeRef verhindert Re-Render-Spam: nur bei echtem Wechsel setTheme.
+  const themeRef = useRef<'light' | 'dark'>('dark');
+  const applyTheme = (value: string | null) => {
+    if (value !== 'light' && value !== 'dark') return;
+    if (themeRef.current !== value) {
+      themeRef.current = value;
+      setTheme(value);
+    }
+  };
 
   const safeSize = clamp(size, 4, 40);
   const safeFollowSize = clamp(followSize, 10, 80);
@@ -80,10 +89,7 @@ export function SectionAwareInvertedCursor({
           }
         }
         if (best) {
-          const value = best.target.getAttribute('data-cursor-theme');
-          if (value === 'light' || value === 'dark') {
-            setTheme(value);
-          }
+          applyTheme(best.target.getAttribute('data-cursor-theme'));
         }
       },
       { root, threshold: [0, 0.25, 0.5, 0.75, 1] },
@@ -122,8 +128,21 @@ export function SectionAwareInvertedCursor({
     const width = root?.clientWidth ?? 0;
     const height = root?.clientHeight ?? 0;
 
-    const targetX = pointer.current.x * width;
-    const targetY = pointer.current.y * height;
+    // tx/ty = echte Mausposition (normalisiert 0..1). WICHTIG: usePointer setzt
+    // x/y NIE (bleiben 0.5 = Container-Mitte) — tx/ty ist die Zielposition.
+    const targetX = pointer.current.tx * width;
+    const targetY = pointer.current.ty * height;
+
+    // Sektion unter der Maus bestimmen (primär, wie immersive-g): der Cursor
+    // wechselt die Farbe dort, wo er gerade schwebt — auch wenn mehrere
+    // Sektionen gleichzeitig im Viewport sind. elementFromPoint liefert das
+    // oberste Element an der Mausposition; closest findet die Theme-Sektion.
+    if (root) {
+      const rect = root.getBoundingClientRect();
+      const el = document.elementFromPoint(rect.left + targetX, rect.top + targetY);
+      const section = el?.closest?.('[data-cursor-theme]') ?? null;
+      applyTheme(section?.getAttribute('data-cursor-theme') ?? null);
+    }
 
     // Haupt-Cursor: straffer Follow (20 % pro Frame ≈ 12 bei 60 fps).
     cursorPos.current.x += (targetX - cursorPos.current.x) * 0.2;
