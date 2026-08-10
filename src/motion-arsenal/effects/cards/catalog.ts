@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import type { EffectEntry } from '../../types';
 
 export const CARDS_CATALOG: EffectEntry[] = [
+  { meta: { id: 'cards-card-fan-deck', name: 'CardFanDeck', displayName: 'Card Fan Deck', category: 'cards', sourceWebsite: 'nox-original', sourceFiles: ['wearedevelopers 3D card fan', 'Vault: nox-card-fan-deck'], mode: 'nox-adapted', complexity: 'medium', dependencies: [], bestFor: ['Card-Showcases', 'Achievements', 'Onboarding'], performanceNotes: 'Nur CSS-Transforms und Transitionen, keine Render-Schleife.', mobileNotes: 'Pointer- und Fokus-Trigger sind touch-fähig.', reducedMotionNotes: 'Stapel bleibt flach, Fokus bleibt sichtbar.', description: 'Ein deterministisch gefächertes 3D-Kartendeck mit Deal-Interaktion und Gold-Kanten.', importPath: '@/motion-arsenal/effects/cards/CardFanDeck', usageJsx: '<CardFanDeck count={6} />', props: [{ key: 'count', label: 'Cards', type: 'range', default: 6, min: 3, max: 12, step: 1 }, { key: 'spread', label: 'Spread', type: 'range', default: 34, min: 10, max: 70, step: 1 }, { key: 'radius', label: 'Radius', type: 'range', default: 14, min: 0, max: 32, step: 1 }, { key: 'speed', label: 'Speed', type: 'range', default: 1, min: .1, max: 3, step: .1 }, { key: 'accent', label: 'Accent', type: 'color', default: '#d4a24a' }, { key: 'salt', label: 'Seed', type: 'range', default: 11, min: 1, max: 99, step: 1 }], productionSafe: true, status: 'production-safe' }, Component: lazy(() => import('./CardFanDeck')) },
   {
     meta: {
       id: 'cards-glass-metal-panel',

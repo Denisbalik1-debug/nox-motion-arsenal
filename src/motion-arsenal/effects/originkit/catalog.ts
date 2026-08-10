@@ -5,6 +5,7 @@ import type { EffectEntry } from '../../types';
 // tool, adapted from Framer runtime code to plain React (RenderTarget/
 // Framer CDN imports stripped, property-controls replaced by props/defaults).
 export const ORIGINKIT_CATALOG: EffectEntry[] = [
+  { meta: { id: 'originkit-button-border-glitch', name: 'ButtonBorderGlitch', displayName: 'Button Border Glitch', category: 'originkit', sourceWebsite: 'nox-original', sourceFiles: ['codemyui CSS button border glitch', 'Vault: nox-button-border-glitch'], mode: 'nox-adapted', complexity: 'low', dependencies: [], bestFor: ['Secondary CTAs', 'Retro-Buttons'], performanceNotes: 'Hover-only CSS steps animation.', mobileNotes: 'Focus-visible und Touch funktionieren.', reducedMotionNotes: 'Statischer Goldrahmen.', description: 'Ein CTA-Rahmen zerfällt beim Hover in Gold-, Rot- und Cyan-Segmente mit synchronem Text-Jitter.', importPath: '@/motion-arsenal/effects/originkit/ButtonBorderGlitch', usageJsx: '<ButtonBorderGlitch label="ACTIVATE SIGNAL" />', props: [{ key: 'label', label: 'Label', type: 'text', default: 'ACTIVATE SIGNAL' }, { key: 'intensity', label: 'Intensity', type: 'range', default: .5, min: 0, max: 1, step: .1 }, { key: 'speed', label: 'Speed', type: 'range', default: .8, min: .2, max: 2, step: .1 }, { key: 'color', label: 'Color', type: 'color', default: '#d4a24a' }], productionSafe: true, status: 'production-safe' }, Component: lazy(() => import('./ButtonBorderGlitch')) },
   // ═══════════ PORTED FROM ORIGINKIT (1:1 adapted) ═══════════
   {
     meta: {

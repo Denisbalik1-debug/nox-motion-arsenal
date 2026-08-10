@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import type { EffectEntry } from '../../types';
 
 export const CURSOR_CATALOG: EffectEntry[] = [
+  { meta: { id: 'cursor-ball-pit-sinkhole-reveal', name: 'BallPitSinkholeReveal', displayName: 'Ball Pit Sinkhole Reveal', category: 'cursor', sourceWebsite: 'nox-original', sourceFiles: ['codemyui cursor reveal', 'Vault: nox-ball-pit-sinkhole-reveal'], mode: 'nox-adapted', complexity: 'medium', dependencies: [], bestFor: ['Cursor-Reveals', 'Easter Eggs'], performanceNotes: 'Deterministische Canvas-Partikel; rAF endet bei Reduced Motion.', mobileNotes: 'Pointer Events unterstützen Maus und Touch.', reducedMotionNotes: 'Statischer Gold-Sinkhole-Reveal ohne Bewegung.', description: 'Eine deterministische Kugelgrube weicht dem Pointer und legt einen leuchtenden Gold-Sinkhole frei.', importPath: '@/motion-arsenal/effects/cursor/BallPitSinkholeReveal', usageJsx: '<BallPitSinkholeReveal balls={120} />', props: [{ key: 'balls', label: 'Balls', type: 'range', default: 120, min: 30, max: 300, step: 10 }, { key: 'holeRadius', label: 'Hole Radius', type: 'range', default: 70, min: 30, max: 150, step: 5 }, { key: 'sinkSpeed', label: 'Sink Speed', type: 'range', default: 1, min: .1, max: 3, step: .1 }], productionSafe: true, status: 'production-safe', fullBleed: true }, Component: lazy(() => import('./BallPitSinkholeReveal')) },
   {
     meta: {
       id: 'cursor-magnetic-cta',
