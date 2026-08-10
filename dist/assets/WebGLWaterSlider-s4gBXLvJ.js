@@ -1,0 +1,18 @@
+import{r as i,u as Y,j as l,l as Z,m as A}from"./index-Dteotqf0.js";import{N as g}from"./motionPresets-DdDKkMP6.js";function nt({images:h,seed:C=20260810}){const j=i.useRef(null),k=i.useRef(null),[m,E]=i.useState(.5),[L,D]=i.useState(!1),O=Y(),s=i.useRef({active:!1,x:.5,vel:0}),X=i.useMemo(()=>[`linear-gradient(135deg, ${g.gold}33, #0d1019 70%)`,`linear-gradient(225deg, ${g.gold}55, #0a0c10 60%)`],[]),$=h&&h.length>=2?h.slice(0,4):X;i.useEffect(()=>{const t=j.current;if(!t)return;const o=t.getContext("2d");if(!o)return;const r=document.createElement("canvas"),e=r.getContext("2d"),N=Math.min(window.devicePixelRatio||1,2),f=t.clientWidth,u=t.clientHeight;t.width=f*N,t.height=u*N;const n=160,a=Math.max(60,Math.floor(u/f*n));if(r.width=n,r.height=a,!e)return;const T=Z(C),x=Array.from({length:3},()=>T()*Math.PI*2),v=[.06,.04,.025],F=z=>{if(!e||!o)return;const b=o.createLinearGradient(0,0,f,u);b.addColorStop(0,g.gold),b.addColorStop(1,"#0a0c10"),e.fillStyle=b,e.fillRect(0,0,n,a);const U=e.getImageData(0,0,n,a);e.fillStyle="#0d1019",e.fillRect(0,0,n,a);const R=o.createLinearGradient(f,0,0,u);R.addColorStop(0,g.gold),R.addColorStop(1,"#14181f"),e.fillStyle=R,e.fillRect(0,0,n,a);const _=e.getImageData(0,0,n,a),S=performance.now()/1e3,d=e.createImageData(n,a),q=.05+s.current.vel*.35;for(let c=0;c<a;c++){const J=Math.sin(c*.35+S*1.4+x[0])*v[0]+Math.sin(c*.9+S*2.1+x[1])*v[1]+Math.sin(c*2.3+S*3+x[2])*v[2],K=Math.floor(J*n*q*.5);for(let w=0;w<n;w++){const Q=Math.floor(z*n),M=w<Q?U:_,V=A(w+K,0,n-1),y=(c*n+V)*4,p=(c*n+w)*4;d.data[p]=M.data[y],d.data[p+1]=M.data[y+1],d.data[p+2]=M.data[y+2],d.data[p+3]=255}}e.putImageData(d,0,0),o.imageSmoothingEnabled=!1,o.clearRect(0,0,t.width,t.height),o.drawImage(r,0,0,t.width,t.height)};let H=0;return F(m),()=>cancelAnimationFrame(H)},[$.length,C]);const P=t=>{const o=k.current;if(!o)return;const r=o.getBoundingClientRect(),e=A((t-r.left)/r.width,0,1);s.current.x=e,E(e)},G=t=>{O||(s.current.active=!0,s.current.vel=.6,D(!0),P(t.clientX))},W=t=>{s.current.active&&P(t.clientX)},I=()=>{s.current.active=!1,s.current.vel=0,D(!1)},B={"--wws-gold":g.gold,"--wws-pos":`${m*100}%`};return l.jsxs("div",{ref:k,className:"wws-root",style:B,onPointerDown:G,onPointerMove:W,onPointerUp:I,onPointerLeave:I,children:[l.jsx("canvas",{ref:j,className:"wws-canvas"}),l.jsx("div",{className:`wws-handle ${L?"wws-handle--active":""}`,style:{left:`${m*100}%`},children:l.jsx("span",{className:"wws-knob",children:"◂▸"})}),l.jsx("p",{className:"wws-hint",children:"DRAG TO DISTORT"}),l.jsx("style",{children:`
+.wws-root{position:absolute;inset:0;overflow:hidden;cursor:ew-resize;touch-action:none;
+  background:radial-gradient(120% 90% at 50% 30%,#0d1019,#06080c)}
+.wws-canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.wws-handle{position:absolute;top:0;bottom:0;width:2px;transform:translateX(-50%);
+  background:color-mix(in srgb,var(--wws-gold) 80%,transparent);
+  box-shadow:0 0 18px color-mix(in srgb,var(--wws-gold) 60%,transparent);pointer-events:none}
+.wws-handle--active{background:var(--wws-gold)}
+.wws-knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--wws-gold);color:#0a0c10;font:700 11px/1 ui-monospace,monospace;
+  padding:6px 8px;border-radius:8px;letter-spacing:.05em;white-space:nowrap}
+.wws-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  color:#8a8578;font:10px ui-monospace,monospace;letter-spacing:.3em;pointer-events:none}
+@media (prefers-reduced-motion:reduce){
+  .wws-canvas{filter:blur(2px)}
+  .wws-hint{display:none}
+}
+`})]})}export{nt as WebGLWaterSlider,nt as default};

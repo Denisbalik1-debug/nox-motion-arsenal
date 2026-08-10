@@ -1,0 +1,22 @@
+{
+  "sourceSha": "343609d0d27a4af584131178a32201f9b62bdc6e",
+  "generatedAt": "2026-08-10T18:11:01.953Z",
+  "workflowRunId": 31417743150,
+  "artifactId": 9074080805,
+  "artifactUrl": "https://github.com/Denisbalik1-debug/nox-motion-arsenal/actions/runs/31417743150/artifacts/9074080805",
+  "artifactDigest": "d2d4ef078ee098f0a07e7013f2748a48e7d2060d2dd04f217415bc6f8688709c",
+  "fileCount": 316,
+  "totalBytes": 3255643,
+  "binaryFiles": [
+    "effects/holographic/sparrow-base.png",
+    "effects/holographic/sparrow-mask.png"
+  ],
+  "chunks": [
+    "chunks/chunk-000.json",
+    "chunks/chunk-001.json",
+    "chunks/chunk-002.json",
+    "chunks/chunk-003.json",
+    "chunks/chunk-004.json",
+    "chunks/chunk-005.json"
+  ]
+}

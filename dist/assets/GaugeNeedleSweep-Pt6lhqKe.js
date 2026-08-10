@@ -1,0 +1,24 @@
+import{u as ae,r as n,o as ce,l as ie,v as de,j as s,m as j}from"./index-Dteotqf0.js";import{N as X,E as le}from"./motionPresets-DdDKkMP6.js";const h=-105,$=210,i=100,g=100,M=80,F=(N,k,u,R)=>{const v=R*Math.PI/180;return[N+u*Math.sin(v),k-u*Math.cos(v)]};function ue({value:N=75,min:k=0,max:u=100,ticks:R=11,sweep:v="min",overshoot:z=.5,speed:U=1,color:Y=X.gold,accentColor:q=X.redBright,label:y="",unit:E="",decimals:H=0,size:J=320,seed:C=7}){const o=ae(),I=n.useRef(null),P=ce(I),a=Math.min(k,u),D=Math.max(k,u),d=j(N,a,D),c=Math.max(.2,U),p=j(Math.round(R),3,31),K=j(z,0,1),S=D-a===0?1:D-a,T=v==="min"?0:j((d-a)/S,0,1),Q=(d-a)/S,_=n.useMemo(()=>ie(C),[C]),Z=n.useMemo(()=>Array.from({length:p},(t,e)=>({pct:p===1?0:e/(p-1),major:e%2===0||e===0||e===p-1,jitter:.5+_()*.5})),[p,_]),G=n.useMemo(()=>{const[t,e]=F(i,g,M,h),[r,l]=F(i,g,M,h+$);return`M ${t.toFixed(2)} ${e.toFixed(2)} A ${M} ${M} 0 1 1 ${r.toFixed(2)} ${l.toFixed(2)}`},[]),[m,L]=n.useState(!1),[ee,x]=n.useState(!1),[se,w]=n.useState(T*S+a),A=n.useRef(!1);n.useEffect(()=>{if(A.current){o?(w(d),x(!1)):x(!0);return}o?(A.current=!0,w(d),x(!1),L(!0)):P&&(A.current=!0,x(!0),L(!0))},[P,o,d]),de((t,e)=>{const r=Math.min(e/(.9/c),1);if(r>=1){w(d),x(!1);return}const l=1-Math.pow(2,-10*r);w(a+(d-a)*l)},ee&&!o);const O=se.toFixed(H),b=h+T*$,f=h+Q*$,V=(f-b)*.06*K,B=n.useRef(null);n.useEffect(()=>{const t=B.current;if(!t||o||!m)return;const e=t.animate([{transform:`rotate(${b.toFixed(2)}deg)`},{transform:`rotate(${(f+V).toFixed(2)}deg)`,offset:.72},{transform:`rotate(${f.toFixed(2)}deg)`}],{duration:950/c,delay:550/c,easing:"cubic-bezier(.34,1.56,.64,1)",fill:"both"});return()=>e.cancel()},[m,b,f,V,c,o]);const W=(t,e,r,l=le.outExpo)=>o?void 0:m?`${t} ${e.toFixed(2)}s ${l} ${r.toFixed(2)}s both`:"none";return s.jsxs("div",{ref:I,className:"gnds-root",style:{width:"100%",maxWidth:J,"--gnds-color":Y,"--gnds-accent":q},children:[s.jsx("style",{children:`
+        .gnds-root { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .gnds-svg { width: 100%; height: auto; display: block; overflow: visible; }
+        .gnds-track { fill: none; stroke: rgba(240,236,228,0.08); stroke-width: 7; stroke-linecap: round; }
+        .gnds-scale { fill: none; stroke: var(--gnds-color); stroke-width: 7; stroke-linecap: round;
+          filter: drop-shadow(0 0 6px color-mix(in srgb, var(--gnds-color) 45%, transparent)); }
+        .gnds-tick { stroke: rgba(240,236,228,0.5); stroke-width: 2.5; stroke-linecap: round;
+          opacity: 0; transform-origin: 100px 100px; }
+        .gnds-tick.major { stroke-width: 3.5; stroke: rgba(240,236,228,0.82); }
+        .gnds-needle-wrap { transform-origin: 100px 100px; }
+        .gnds-needle { stroke: var(--gnds-accent); stroke-width: 3; stroke-linecap: round;
+          filter: drop-shadow(0 0 5px color-mix(in srgb, var(--gnds-accent) 60%, transparent)); }
+        .gnds-hub { fill: var(--gnds-accent); }
+        .gnds-hub-ring { fill: rgba(3,4,8,0.9); stroke: color-mix(in srgb, var(--gnds-accent) 55%, transparent); stroke-width: 2; }
+        .gnds-value { font: 700 30px/1 var(--mono, ui-monospace, monospace); color: var(--gnds-color);
+          text-shadow: 0 0 14px color-mix(in srgb, var(--gnds-color) 40%, transparent);
+          font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+        .gnds-unit { font: 600 11px/1 var(--mono, ui-monospace, monospace); color: rgba(240,236,228,0.38);
+          letter-spacing: 0.22em; text-transform: uppercase; }
+        .gnds-label { font: 600 10px/1 var(--mono, ui-monospace, monospace); color: rgba(240,236,228,0.55);
+          letter-spacing: 0.26em; text-transform: uppercase; }
+        @keyframes gndsDraw { to { stroke-dashoffset: 0; } }
+        @keyframes gndsTickIn { to { opacity: 1; } }
+      `}),s.jsxs("svg",{className:"gnds-svg",viewBox:"0 0 200 138",role:"img","aria-label":`${y?y+": ":""}${O}${E}`,children:[s.jsx("path",{className:"gnds-track",d:G}),s.jsx("path",{className:"gnds-scale",d:G,pathLength:100,style:{strokeDasharray:100,strokeDashoffset:o?0:m?void 0:100,animation:W("gndsDraw",.7/c,.1/c)}}),Z.map((t,e)=>{const r=h+t.pct*$,l=t.major?66:70,[te,oe]=F(i,g,l,r),[ne,re]=F(i,g,74,r);return s.jsx("line",{className:`gnds-tick${t.major?" major":""}`,x1:te.toFixed(2),y1:oe.toFixed(2),x2:ne.toFixed(2),y2:re.toFixed(2),style:{animation:W("gndsTickIn",.25/c,(.22+e*.035)/c),opacity:o?1:m?void 0:0}},e)}),s.jsxs("g",{ref:B,className:"gnds-needle-wrap",style:{transform:o||!m?`rotate(${(o?f:b).toFixed(2)}deg)`:void 0},children:[s.jsx("line",{className:"gnds-needle",x1:i,y1:g,x2:i,y2:30}),s.jsx("circle",{className:"gnds-hub-ring",cx:i,cy:g,r:9}),s.jsx("circle",{className:"gnds-hub",cx:i,cy:g,r:4.5})]})]}),s.jsxs("div",{className:"gnds-value",children:[O,E?s.jsxs("span",{className:"gnds-unit",children:[" ",E]}):null]}),y?s.jsx("div",{className:"gnds-label",children:y}):null]})}export{ue as GaugeNeedleSweep,ue as default};

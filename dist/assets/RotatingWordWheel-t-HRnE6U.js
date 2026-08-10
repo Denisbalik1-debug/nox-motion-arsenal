@@ -1,0 +1,12 @@
+import{u as k,r,o as v,m as p,j as e}from"./index-Dteotqf0.js";import{N as b}from"./motionPresets-DdDKkMP6.js";function R({prefix:o="Wir bauen",words:s="Interfaces / Systeme / Erlebnisse / Marken",suffix:l="die bleiben.",speed:h=1,pause:w=2,color:g=b.gold,fontSize:f="clamp(1.5rem, 4.4vw, 3.2rem)"}){const i=k(),c=r.useRef(null),d=v(c),[m,x]=r.useState(0),t=r.useMemo(()=>s.split("/").map(n=>n.trim()).filter(Boolean),[s]);r.useEffect(()=>{x(0)},[s]),r.useEffect(()=>{if(i||!d||t.length<2)return;const n=p(w,.5,6)*1e3,a=window.setInterval(()=>{x(_=>(_+1)%t.length)},n);return()=>window.clearInterval(a)},[i,d,t.length,w]);const u={"--rww-color":g,"--rww-size":f,"--rww-dur":i?"0s":`${(.62/p(h,.1,3)).toFixed(3)}s`,"--rww-index":m};return e.jsxs("div",{ref:c,className:"nox-rww",style:u,children:[e.jsx("style",{children:j}),e.jsxs("p",{className:"nox-rww__line",children:[o&&e.jsx("span",{className:"nox-rww__static",children:o}),e.jsx("span",{className:"nox-rww__window",children:e.jsx("span",{className:"nox-rww__track",children:t.map((n,a)=>e.jsx("span",{className:"nox-rww__word","aria-current":a===m?"true":void 0,children:n},`${n}-${a}`))})}),l&&e.jsx("span",{className:"nox-rww__static",children:l})]})]})}const j=String.raw`
+.nox-rww { display:grid; place-items:center; width:100%; height:100%; padding:clamp(16px,4vw,44px); font-family:var(--sans,system-ui,sans-serif); }
+.nox-rww__line { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:.28em; max-width:20ch; margin:0; font-size:var(--rww-size); font-weight:720; line-height:1.22; letter-spacing:-.035em; color:#f0ebe1; text-align:center; }
+/* Fenster genau eine Zeile hoch; der Track rastet in Zeilenhoehen ein. */
+.nox-rww__window { display:inline-block; height:1.22em; overflow:hidden; vertical-align:bottom; -webkit-mask-image:linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); mask-image:linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); }
+.nox-rww__track { display:flex; flex-direction:column; transform:translateY(calc(var(--rww-index) * -1.22em)); transition:transform var(--rww-dur) cubic-bezier(.22,1,.36,1); }
+.nox-rww__word { display:block; height:1.22em; line-height:1.22em; color:var(--rww-color); white-space:nowrap; }
+@media (prefers-reduced-motion:reduce) {
+  .nox-rww__track { transition:none; }
+  .nox-rww__window { -webkit-mask-image:none; mask-image:none; }
+}
+`;export{R as RotatingWordWheel,R as default};

@@ -1,0 +1,15 @@
+import{u as S,r as a,m as d,j as h}from"./index-Dteotqf0.js";import{N as M}from"./motionPresets-DdDKkMP6.js";const r={left:"0 88%",right:"100% 88%",center:"50% 88%"};function $({text:c="Wir bauen *Motion-Systeme*, die eine Marke *ernst* wirken lassen — messbar schneller, ruhiger und *wiedererkennbar*.",color:v=M.gold,speed:g=1,skew:b=!0,thickness:k=.42,fontSize:_="clamp(1.1rem, 2.6vw, 1.9rem)",stagger:u=.18,direction:n="left",style:o="marker",trigger:t="scroll"}){const l=S(),m=a.useRef(null),[w,i]=a.useState(!1),z=a.useMemo(()=>c.split(/\*([^*]+)\*/g).map((e,s)=>({text:e,marked:s%2===1})).filter(e=>e.text.length>0),[c]);a.useEffect(()=>{i(!1)},[c,g,u,n,o,t]),a.useEffect(()=>{if(l||t==="always"){i(!0);return}if(t==="hover")return;const e=m.current;if(!e)return;const s=new IntersectionObserver(E=>{for(const j of E)j.isIntersecting&&(i(!0),s.disconnect())},{threshold:.3});return s.observe(e),()=>s.disconnect()},[l,c,g,u,n,o,t]);const x={marker:{size:`${d(k,.1,1).toFixed(2)}em`,position:r[n]??r.left},underline:{size:"0.12em",position:(r[n]??r.left).replace("88%","100%")},box:{size:"1.15em",position:(r[n]??r.left).replace("88%","50%")},strike:{size:"0.1em",position:(r[n]??r.left).replace("88%","54%")}},f=x[o]??x.marker,y={"--ghs-color":v,"--ghs-dur":`${d(.62/d(g,.1,3),.05,6).toFixed(3)}s`,"--ghs-height":f.size,"--ghs-pos":f.position,"--ghs-skew":b&&o==="marker"?"-1.6deg":"0deg","--ghs-size":_,"--ghs-radius":o==="box"?"4px":"2px"};let p=-1;return h.jsxs("div",{ref:m,className:`nox-ghs${w?" is-active":""}${t==="hover"?" on-hover":""}`,style:y,onMouseEnter:t==="hover"&&!l?()=>i(!0):void 0,onMouseLeave:t==="hover"&&!l?()=>i(!1):void 0,children:[h.jsx("style",{children:N}),h.jsx("p",{className:"nox-ghs__text",children:z.map((e,s)=>e.marked?(p+=1,h.jsx("span",{className:"nox-ghs__mark",style:{"--ghs-delay":`${(p*d(u,0,1)).toFixed(3)}s`},children:e.text},s)):h.jsx("span",{children:e.text},s))})]})}const N=String.raw`
+.nox-ghs { display:grid; place-items:center; width:100%; height:100%; padding:clamp(18px,5vw,52px); font-family:var(--sans,system-ui,sans-serif); }
+.nox-ghs__text { max-width:22ch; margin:0; font-size:var(--ghs-size); font-weight:600; line-height:1.5; letter-spacing:-.015em; color:#ece7db; }
+/* background-size wächst — der Text selbst wird dabei nie neu gezeichnet. */
+.nox-ghs__mark { background-image:linear-gradient(var(--ghs-color), var(--ghs-color)); background-repeat:no-repeat; background-position:var(--ghs-pos); background-size:0% var(--ghs-height); border-radius:var(--ghs-radius); transition:background-size var(--ghs-dur) cubic-bezier(.22,1,.36,1) var(--ghs-delay); }
+/* Bei 'box' liegt der Text auf der Flaeche — dunkle Schrift bleibt lesbar. */
+.nox-ghs.is-active .nox-ghs__mark { --ghs-on:1; }
+.nox-ghs__text { transition:color var(--ghs-dur) ease; }
+.nox-ghs.on-hover { cursor:default; }
+.nox-ghs.is-active .nox-ghs__mark { background-size:100% var(--ghs-height); }
+.nox-ghs__mark { display:inline-block; transform:skewX(var(--ghs-skew)); }
+@media (prefers-reduced-motion:reduce) {
+  .nox-ghs__mark { transition:none; background-size:100% var(--ghs-height); }
+}
+`;export{$ as GoldHighlightSweep,$ as default};

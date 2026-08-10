@@ -1,0 +1,18 @@
+import{j as a}from"./index-Dteotqf0.js";const f={spectrum:[359,16,33,45,58,58,58,96,146,183,225,265,303],gold:[28,34,40,45,48,45,40,36,30,26,34,42,48],ice:[188,196,204,210,218,224,210,200,192,186,198,208,216],ember:[4,10,16,22,28,20,12,6,2,8,14,20,26],mono:[0,0,0,0,0,0,0,0,0,0,0,0,0]},j=[40,45,50,55,60,65,70,65,60,55,50,45,40];function k(o,t){const s=t*(o.length-1),e=Math.floor(s),i=Math.min(e+1,o.length-1);return o[e]+(o[i]-o[e])*(s-e)}function M(o,t,s,e,i,l){const c=f[o]??f.spectrum,d=e-55,r=Math.max(2,Math.round(i)),h=o==="mono"?0:s,m=[];for(let n=0;n<r;n+=1){const g=r===1?0:n/(r-1),x=k(c,g),v=Math.max(0,Math.min(100,k(j,g)+d)),p=`hsl(${x.toFixed(1)},${h}%,${v.toFixed(1)}%)`;if(l<=0)m.push(p);else{const u=100/r,b=n*u,w=u*l;m.push(`${p} ${b.toFixed(2)}%`,`${p} ${(b+w).toFixed(2)}%`)}}return`linear-gradient(${t}deg,${m.join(",")})`}function $({palette:o="spectrum",gradientAngle:t=0,saturation:s=60,lightness:e=55,blendMode:i="color-dodge",showNote:l=!0,motion:c="scroll",bandCount:d=13,contrast:r=0}={}){const h=M(o,t,s,e,d,Math.max(0,Math.min(1,r)));return a.jsxs("div",{className:`holographic-mask-scroll-demo motion-${c}`,children:[a.jsx("style",{children:`
+        .holographic-mask-scroll-demo { position:relative; width:100%; height:100%; overflow:hidden; background:#08090d; }
+        .holographic-mask-scroll-demo .shader { position:relative; width:100%; height:100%; overflow:hidden; backface-visibility:hidden; }
+        .holographic-mask-scroll-demo .shader-layer { background:black; mix-blend-mode:multiply; position:absolute; inset:0; width:100%; height:100%; background-position:center; }
+        .holographic-mask-scroll-demo .specular { mix-blend-mode:var(--holo-blend,color-dodge); background-attachment:fixed; }
+        .holographic-mask-scroll-demo .mask { mix-blend-mode:multiply; object-fit:cover; }
+        .holographic-mask-scroll-demo .gradient-sparrow { background-image:var(--holo-gradient); }
+        /* 'scroll' ist das Original: die feste Verankerung laesst den Verlauf
+           beim Seitenscroll hinter der Maske durchwandern. 'drift' loest ihn
+           davon und bewegt ihn von selbst, 'static' laesst ihn stehen. */
+        .holographic-mask-scroll-demo.motion-drift .specular { background-attachment:scroll; background-size:100% 260%; animation:holo-drift 14s linear infinite; }
+        .holographic-mask-scroll-demo.motion-static .specular { background-attachment:scroll; }
+        @keyframes holo-drift { from { background-position:0 0; } to { background-position:0 -260%; } }
+        @media (prefers-reduced-motion:reduce) { .holographic-mask-scroll-demo.motion-drift .specular { animation:none; } }
+        .holographic-mask-scroll-demo .holo-base { width:100%; height:100%; display:block; object-fit:cover; }
+        .holographic-mask-scroll-demo .holo-note { position:absolute; z-index:3; left:14px; bottom:10px; color:#eee6d8; font:9px var(--mono,monospace); letter-spacing:.13em; }
+        @media (prefers-reduced-motion:reduce) { .holographic-mask-scroll-demo .specular { background-attachment:scroll; } }
+      `}),a.jsxs("div",{className:"shader",children:[a.jsx("img",{className:"holo-base",src:"/effects/holographic/sparrow-base.png",alt:"Silhouette design of a sparrow sitting on a branch"}),a.jsx("div",{className:"shader-layer specular gradient-sparrow",style:{"--holo-gradient":h,"--holo-blend":i},children:a.jsx("img",{className:"shader-layer mask",src:"/effects/holographic/sparrow-mask.png",alt:"","aria-hidden":"true"})})]}),l&&a.jsx("span",{className:"holo-note",children:"SCROLL THE PAGE · FIXED-BACKGROUND MASK SHADER"})]})}export{$ as default};
